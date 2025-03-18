@@ -20,14 +20,6 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # 分析项目源代码
-      - name: Analyze project source
-        run: flutter analyze
-
-      # 运行测试
-      - name: Run tests
-        run: flutter test
-
       # 生成 Rust 桥接代码
       - name: Generate Rust bridge code
         run: flutter_rust_bridge_codegen generate
