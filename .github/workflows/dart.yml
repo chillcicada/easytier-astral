@@ -1,11 +1,21 @@
 name: Dart and Flutter Build
 
 on:
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用 Windows 主机
+    runs-on: windows-latest
+
+    # 调整 GITHUB_TOKEN 的权限
+    permissions:
+      contents: write  # 允许写入仓库内容（上传文件）
+      releases: write  # 允许创建和管理 Release
 
     steps:
       - uses: actions/checkout@v4
@@ -13,23 +23,34 @@ jobs:
       # 安装 Flutter
       - name: Install Flutter
         run: |
+          echo "Cloning Flutter stable branch..."
           git clone https://github.com/flutter/flutter.git -b stable
+          echo "Adding Flutter to PATH..."
           echo "$env:GITHUB_WORKSPACE\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "Flutter installation completed."
 
       # 安装 Flutter 依赖
       - name: Install Flutter dependencies
-        run: flutter pub get
+        run: |
+          echo "Fetching Flutter dependencies..."
+          flutter pub get
+          echo "Flutter dependencies installed."
 
       # 编译 Flutter Windows 应用
       - name: Build Flutter Windows Release
-        run: flutter build windows --release
+        run: |
+          echo "Building Flutter Windows Release..."
+          flutter build windows --release
+          echo "Flutter Windows Release build completed."
 
       # 压缩 build\windows\x64\runner\Release 目录
       - name: Compress Release Directory
         run: |
+          echo "Compressing Release directory..."
           $releaseDir = "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release"
           $zipFile = "$env:GITHUB_WORKSPACE\release.zip"
           Compress-Archive -Path $releaseDir -DestinationPath $zipFile
+          echo "Release directory compressed to $zipFile."
 
       # 上传压缩包作为 Artifact
       - name: Upload Release Artifact
@@ -37,3 +58,13 @@ jobs:
         with:
           name: release
           path: ${{ github.workspace }}/release.zip
+
+      # 创建 GitHub Release 并上传压缩包
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ inputs.version }}
+          draft: true
+          files: ${{ github.workspace }}/release.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ inputs.version }}
