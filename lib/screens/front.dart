@@ -1,6 +1,7 @@
 // 导入必要的包
 import 'dart:convert';
-
+import 'dart:io';
+import 'dart:math';
 import 'package:astral/config/app_config.dart';
 import 'package:astral/src/rust/api/simple.dart';
 import 'package:astral/src/rust/frb_generated.dart';
@@ -127,6 +128,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       _buildServerListCard,
       _buildVersionInfoCard,
     ];
+    // 启动内存监控
   }
 
   // 添加焦点变化监听方法
@@ -464,10 +466,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 childCount: _cardBuilders.length,
                 itemBuilder: (context, index) {
                   // 直接从列表中获取构建函数并调用
-                  return ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 100),
-                    child: _cardBuilders[index](colorScheme),
-                  );
+                  return _cardBuilders[index](colorScheme);
                 },
               ),
             ),

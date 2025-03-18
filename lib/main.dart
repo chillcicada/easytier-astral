@@ -13,6 +13,7 @@ Future<void> main() async {
   // 初始化应用信息
   await AppInfoUtil.init();
   await windowManager.ensureInitialized();
+  // 获取pid
   // 设置窗口属性
   await setupWindow();
   await AppConfig.init();

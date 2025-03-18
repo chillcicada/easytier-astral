@@ -177,178 +177,150 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   // 显示公共服务器列表
-  // 显示公共服务器列表
   void _showPublicServerList(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Consumer(
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.public),
+              const SizedBox(width: 8),
+              const Text('公共服务器列表'),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  _fetchEasyTierStatus();
+                },
+                tooltip: '刷新服务器列表',
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            // 调整高度，使其不会过高
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Consumer(
               builder: (context, ref, child) {
                 final publicServers = ref.watch(pServerProvider);
 
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.public),
-                          const SizedBox(width: 8),
-                          const Text(
-                            '公共服务器列表',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.refresh),
-                            onPressed: () {
-                              // 不关闭底部表单，直接刷新数据
-                              _fetchEasyTierStatus();
-                            },
-                            tooltip: '刷新服务器列表',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
-                            tooltip: '关闭',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(),
-                    Expanded(
-                      child: publicServers.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text('暂无公共服务器数据'),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      _fetchEasyTierStatus();
-                                    },
-                                    child: const Text('获取公共服务器数据'),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: scrollController,
-                              itemCount: publicServers.length,
-                              itemBuilder: (context, index) {
-                                final server = publicServers[index];
-                                return ListTile(
-                                  leading: Icon(
-                                    server.isOfficialServer
-                                        ? Icons.verified_user
-                                        : Icons.person,
-                                    color: server.isOfficialServer
-                                        ? Colors.green
-                                        : Colors.blue,
-                                  ),
-                                  title: Text(server.name),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '地址: ${server.address}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        'IP: ${server.ip}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        '提供商: ${server.provider}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        '版本: ${server.version}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Flexible(
-                                            child: Chip(
-                                              label: Text(
-                                                server.isOfficialServer
-                                                    ? '官方'
-                                                    : '第三方',
-                                                style: const TextStyle(
-                                                    fontSize: 10),
-                                              ),
-                                              backgroundColor:
-                                                  server.isOfficialServer
-                                                      ? Colors.green
-                                                          .withOpacity(0.2)
-                                                      : Colors.blue
-                                                          .withOpacity(0.2),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              labelPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 4),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Flexible(
-                                            child: Chip(
-                                              label: Text(
-                                                server.isTransferable
-                                                    ? '可转发'
-                                                    : '不可转发',
-                                                style: const TextStyle(
-                                                    fontSize: 10),
-                                              ),
-                                              backgroundColor: server
-                                                      .isTransferable
-                                                  ? Colors.orange
-                                                      .withOpacity(0.2)
-                                                  : Colors.red.withOpacity(0.2),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              labelPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 4),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  isThreeLine: true,
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.add_circle),
-                                    color: Colors.green,
-                                    onPressed: () =>
-                                        _addPublicServerToList(server),
-                                    tooltip: '添加到我的服务器',
-                                  ),
-                                );
+                return publicServers.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('暂无公共服务器数据'),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                _fetchEasyTierStatus();
                               },
+                              child: const Text('获取公共服务器数据'),
                             ),
-                    ),
-                  ],
-                );
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        // 修改为ListView.builder，移除separated
+                        itemCount: publicServers.length,
+                        itemBuilder: (context, index) {
+                          final server = publicServers[index];
+                          return Column(
+                            children: [
+                              ListTile(
+                                leading: Icon(
+                                  server.isOfficialServer
+                                      ? Icons.verified_user
+                                      : Icons.person,
+                                  color: server.isOfficialServer
+                                      ? Colors.green
+                                      : Colors.blue,
+                                ),
+                                title: Text(server.name),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '地址: ${server.address}',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'IP: ${server.ip}',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Chip(
+                                            label: Text(
+                                              server.isOfficialServer
+                                                  ? '官方'
+                                                  : '第三方',
+                                              style:
+                                                  const TextStyle(fontSize: 10),
+                                            ),
+                                            backgroundColor: server
+                                                    .isOfficialServer
+                                                ? Colors.green.withOpacity(0.2)
+                                                : Colors.blue.withOpacity(0.2),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            labelPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 4),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Chip(
+                                            label: Text(
+                                              server.isTransferable
+                                                  ? '可转发'
+                                                  : '不可转发',
+                                              style:
+                                                  const TextStyle(fontSize: 10),
+                                            ),
+                                            backgroundColor: server
+                                                    .isTransferable
+                                                ? Colors.orange.withOpacity(0.2)
+                                                : Colors.red.withOpacity(0.2),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            labelPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                isThreeLine: true,
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.add_circle),
+                                  color: Colors.green,
+                                  onPressed: () =>
+                                      _addPublicServerToList(server),
+                                  tooltip: '添加到我的服务器',
+                                ),
+                              ),
+                              if (index < publicServers.length - 1)
+                                const Divider(height: 1),
+                            ],
+                          );
+                        },
+                      );
               },
-            );
-          },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('关闭'),
+            ),
+          ],
         );
       },
     );
@@ -812,12 +784,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       Card(
         child: Column(
           children: [
-            ListTile(
-              leading: const Icon(Icons.dns),
-              title: const Text('已选中的服务器'),
-              subtitle: Text(serverIP),
-            ),
             ExpansionTile(
+              initiallyExpanded: false,
               leading: const Icon(Icons.list),
               title: const Text('服务器列表'),
               children: [

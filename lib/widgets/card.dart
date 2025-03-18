@@ -39,6 +39,7 @@ class _FloatingCardState extends State<FloatingCard> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: widget.maxWidth ?? double.infinity,
+            minHeight: widget.height ?? 74, // 默认最小高度为74
           ),
           child: AnimatedContainer(
             duration: widget.duration,
