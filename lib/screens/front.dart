@@ -225,8 +225,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             roomPassword: roomPassword,
             severurl: ssServerip,
             flag: FlagsC(
-                defaultProtocol: ref.read(advancedConfigProvider)['defaultProtocol'] ??
-                    "tcp",
+                defaultProtocol:
+                    ref.read(advancedConfigProvider)['defaultProtocol'] ??
+                        "tcp",
                 devName: ref.read(advancedConfigProvider)['devName'] ?? "",
                 enableEncryption:
                     ref.read(advancedConfigProvider)['enableEncryption'] ??
@@ -252,8 +253,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ref.read(advancedConfigProvider)['relayAllPeerRpc'] ??
                         false,
                 disableUdpHolePunching:
-                    ref.read(advancedConfigProvider)['disableUdpHolePunching'] ?? false,
-                dataCompressAlgo: ref.read(advancedConfigProvider)['dataCompressAlgo'] ?? "None",
+                    ref.read(advancedConfigProvider)['disableUdpHolePunching'] ??
+                        false,
+                dataCompressAlgo: ref.read(advancedConfigProvider)['dataCompressAlgo'] ==
+                        "Invalid"
+                    ? 0
+                    : ref.read(advancedConfigProvider)['dataCompressAlgo'] == "None"
+                        ? 1
+                        : ref.read(advancedConfigProvider)['dataCompressAlgo'] == "Zstd"
+                            ? 2
+                            : 1,
                 bindDevice: ref.read(advancedConfigProvider)['bindDevice'] ?? true,
                 enableKcpProxy: ref.read(advancedConfigProvider)['enableKcpProxy'] ?? false,
                 disableKcpInput: ref.read(advancedConfigProvider)['disableKcpInput'] ?? false,
