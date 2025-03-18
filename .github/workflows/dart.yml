@@ -20,8 +20,20 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-
-
       # 编译 Flutter Windows 应用
       - name: Build Flutter Windows Release
         run: flutter build windows --release
+
+      # 压缩 build\windows\x64\runner\Release 目录
+      - name: Compress Release Directory
+        run: |
+          $releaseDir = "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release"
+          $zipFile = "$env:GITHUB_WORKSPACE\release.zip"
+          Compress-Archive -Path $releaseDir -DestinationPath $zipFile
+
+      # 上传压缩包作为 Artifact
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: ${{ github.workspace }}/release.zip
