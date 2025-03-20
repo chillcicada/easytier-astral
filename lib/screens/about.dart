@@ -1,6 +1,7 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:astral/utils/app_info.dart';
 
@@ -72,7 +73,7 @@ class InfoPage extends StatelessWidget {
               // 静态按钮
               ElevatedButton.icon(
                 icon: const Icon(Icons.group_add),
-                label: const Text('加入QQ群'),
+                label: const Text('加入QQ群: 1030199465'),
                 style: ElevatedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -95,6 +96,30 @@ class InfoPage extends StatelessWidget {
                   }
                 },
               ),
+              const SizedBox(height: 15),
+              // 复制QQ群号按钮
+              ElevatedButton.icon(
+                icon: const Icon(Icons.copy),
+                label: const Text('复制QQ群号: 1030199465'),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 5,
+                ),
+                onPressed: () async {
+                  await Clipboard.setData(
+                      const ClipboardData(text: '1030199465'));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('QQ群号已复制到剪贴板')),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
               const SizedBox(height: 20),
               // 版权信息
               Text(
