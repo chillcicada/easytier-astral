@@ -49,10 +49,10 @@ jobs:
       - name: 🐦 安装 Flutter
         run: |
           git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
+          chmod +x $HOME/flutter/bin/flutter
           flutter --version
 
       - name: 📚 安装 Flutter 依赖
@@ -68,7 +68,6 @@ jobs:
 
       - name: 🐦 设置 Flutter
         run: |
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
@@ -93,7 +92,6 @@ jobs:
 
       - name: 🐦 设置 Flutter
         run: |
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
@@ -118,7 +116,6 @@ jobs:
 
       - name: 🐦 设置 Flutter
         run: |
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
@@ -143,7 +140,6 @@ jobs:
 
       - name: 🐦 设置 Flutter
         run: |
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
@@ -168,7 +164,6 @@ jobs:
 
       - name: 🐦 设置 Flutter
         run: |
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           echo "PATH: $PATH"
           which flutter
