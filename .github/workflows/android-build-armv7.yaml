@@ -74,3 +74,5 @@ jobs:
         with:
           name: app-release-armeabi-v7a
           path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          retention-days: 1
+          if-no-files-found: error
