@@ -1,0 +1,28 @@
+name: 🚀 Android 主工作流
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    uses: ./.github/workflows/android-setup.yaml
+
+  build-all:
+    needs: setup
+    uses: ./.github/workflows/android-build-all.yaml
+
+  build-x86:
+    needs: setup
+    uses: ./.github/workflows/android-build-x86.yaml
+
+  build-x86_64:
+    needs: setup
+    uses: ./.github/workflows/android-build-x86_64.yaml
+
+  build-arm64:
+    needs: setup
+    uses: ./.github/workflows/android-build-arm64.yaml
+
+  build-armv7:
+    needs: setup
+    uses: ./.github/workflows/android-build-armv7.yaml
