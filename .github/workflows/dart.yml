@@ -24,7 +24,7 @@ jobs:
       - name: 📦 下载其他工作流的构件
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: "🛠️ Android 构建 armeabi-v7a 架构 APK"
+          workflow: "android-build-armv7.yaml"
           name: app-release-armeabi-v7a
           path: ./downloaded-apks
           search_artifacts: true
