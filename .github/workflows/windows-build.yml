@@ -51,21 +51,18 @@ jobs:
           Copy-Item -Path "$dllSourceDir\*" -Destination $releaseDir -Recurse -Force
           echo "DLL 文件已复制到 $releaseDir！"
 
-      # 创建或获取 Draft Release
-      - name: 🚀 创建或获取 Draft Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: autobuild  # 固定标签
-          release_name: Auto Build
-          draft: true  # 创建为草稿
-          prerelease: false
+      # 压缩 Release 目录
+      - name: 📦 压缩 Release 目录
+        run: |
+          echo "正在压缩 Release 目录..."
+          $releaseDir = "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release"
+          $zipFile = "$env:GITHUB_WORKSPACE\astral-windows.zip"
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipFile -Force
+          echo "Release 目录已压缩为 $zipFile！"
 
-      # 上传 Release 目录作为 Artifact
-      - name: 📤 上传 Release 目录
+      # 上传压缩后的 Release 目录作为 Artifact
+      - name: 📤 上传压缩后的 Release 目录
         uses: actions/upload-artifact@v4
         with:
           name: release
-          path: ${{ github.workspace }}/build/windows/x64/runner/Release
+          path: ${{ github.workspace }}/astral-windows.zip
