@@ -1003,7 +1003,7 @@ Widget _buildHopsInfo(List<NodeHopStats> hops, ColorScheme colorScheme) {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      hops[i].nodeName,
+                      hops[i].nodeName + " ms:" + hops[i].latencyMs.toString(),
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onPrimaryContainer,
