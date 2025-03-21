@@ -6,7 +6,7 @@ on:
       base_branch:
         description: '基础分支 (例如: v0.0.0)'
         required: true
-        default: 'v'
+        default: 'v1.'
         type: string
       head_branch:
         description: '目标分支 (例如: main)'
