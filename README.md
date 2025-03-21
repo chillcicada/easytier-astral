@@ -14,7 +14,7 @@
 ## 使用教程
 
 
-1. ​**下载并安装**  
+1. ​**下载并安装**  1
    前往 [GitHub 项目页面](https://github.com/ldoubil/astral) 下载最新版本的 AstralET。
 
 2. ​**启动应用**  
