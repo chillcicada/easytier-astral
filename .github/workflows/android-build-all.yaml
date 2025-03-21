@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # 确保有写入权限
+      packages: write
     steps:
       - name: 🛠️ 检出代码仓库
         uses: actions/checkout@v4
