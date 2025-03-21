@@ -80,7 +80,7 @@ jobs:
               commits = f.read()
           
           # 设置模型和生成参数
-          model = genai.GenerativeModel('gemini-pro')
+          model = genai.GenerativeModel('gemini-1.5-flash')  # 修改为 Gemini 2.0 Flash
           prompt = f"""
           请根据以下Git提交记录，生成一份用户友好的更新日志。
           将内容分类为"新功能"、"改进"、"修复"等类别。
