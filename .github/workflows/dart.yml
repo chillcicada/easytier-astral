@@ -58,7 +58,7 @@ jobs:
       - name: 🤖 生成分支差异提交内容
         id: generate_changelog
         env:
-          GOOGLE_API_KEY: ${{ secrets.GITHUB_GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE }}
         run: |
           # 获取两个分支之间的提交信息
           COMMITS=$(git log --pretty=format:"%h - %s (%an)" ${{ github.event.inputs.base_branch }}..${{ github.event.inputs.head_branch }})
