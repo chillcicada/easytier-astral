@@ -26,21 +26,18 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          ndk-version: '27.2.12479018'  # 使用 NDK 27
+          ndk-version: '27.2.12479018'  # 确保与 build.gradle 一致
           cmake-version: '3.18.1'
 
-      # ✅ 列出安装的 NDK 版本（调试用）
-      - name: List Installed NDK Versions
+      # ✅ 清理 Gradle 缓存
+      - name: Clean Gradle Cache
         run: |
-          echo "Listing installed NDK versions..."
-          $ndkDir = "$env:ANDROID_HOME\ndk"
-          if (Test-Path $ndkDir) {
-            Get-ChildItem -Path $ndkDir
-          } else {
-            echo "NDK directory $ndkDir does not exist."
-          }
+          echo "Cleaning Gradle cache..."
+          ./gradlew clean
+          rm -rf ~/.gradle/caches
+          echo "Gradle cache cleaned."
 
-      # ✅ 自动检测 NDK 路径并配置
+      # ✅ 自动检测 NDK 路径
       - name: Configure NDK Path
         run: |
           echo "Configuring NDK path..."
@@ -50,15 +47,6 @@ jobs:
           }
           echo "ndk.dir=$ndkRoot" | Out-File -FilePath "$env:GITHUB_WORKSPACE\android\local.properties" -Encoding utf8 -Append
           echo "NDK path configured to $ndkRoot."
-
-      # ✅ 缓存 Flutter，优化构建速度
-      - name: Cache Flutter
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/flutter
-          key: flutter-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: |
-            flutter-${{ runner.os }}-
 
       # ✅ 安装 Flutter
       - name: Install Flutter
@@ -83,7 +71,7 @@ jobs:
           flutter build apk --release
           echo "Flutter Android Release build completed."
 
-      # ✅ 压缩 APK（仅打包 APK 文件）
+      # ✅ 压缩 APK
       - name: Compress APK
         run: |
           echo "Compressing APK..."
