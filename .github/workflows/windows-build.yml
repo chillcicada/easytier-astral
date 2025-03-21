@@ -63,26 +63,6 @@ jobs:
           draft: true  # 创建为草稿
           prerelease: false
 
-      # 将 Release 目录打包为 ZIP 文件
-      - name: 📦 打包 Release 目录为 ZIP
-        run: |
-          echo "正在打包 Release 目录为 ZIP 文件..."
-          $releaseDir = "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release"
-          $zipPath = "$env:GITHUB_WORKSPACE\release.zip"
-          Compress-Archive -Path "$releaseDir\*" -DestinationPath $zipPath -Force
-          echo "Release 目录已打包为 $zipPath！"
-
-      # 上传 ZIP 文件到 Draft Release
-      - name: 📤 上传 ZIP 文件到 Draft Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/release.zip
-          asset_name: release.zip  # 唯一资产名称
-          asset_content_type: application/zip
-
       # 上传 Release 目录作为 Artifact
       - name: 📤 上传 Release 目录
         uses: actions/upload-artifact@v4
