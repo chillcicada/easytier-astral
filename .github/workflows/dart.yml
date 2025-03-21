@@ -15,17 +15,21 @@ jobs:
     # 调整 GITHUB_TOKEN 的权限
     permissions:
       contents: write  # 允许写入仓库内容（上传文件）
+      actions: read    # 允许读取工作流程
 
     steps:
-      - name: 📦 下载最新构建的 APK
-        uses: actions/download-artifact@v4
+      - name: 检出代码
+        uses: actions/checkout@v4
+        
+      - name: 📦 下载其他工作流的构件
+        uses: dawidd6/action-download-artifact@v2
         with:
+          workflow: "🛠️ Android 构建 armeabi-v7a 架构 APK"
           name: app-release-armeabi-v7a
           path: ./downloaded-apks
-          # 移除了不支持的 workflow 和 run_id 参数
-          # 使用 pattern 参数来匹配文件名
-          pattern: '*.apk'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          search_artifacts: true
+          if_no_artifact_found: warn
+          
       - name: 📝 列出下载的文件
         run: |
           echo "已下载的文件列表:"
