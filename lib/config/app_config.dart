@@ -39,7 +39,7 @@ class AdvancedConfig implements ConfigModel {
   AdvancedConfig({
     this.defaultProtocol = "tcp",
     this.devName = "",
-    this.enableEncryption = true,
+    this.enableEncryption = false,
     this.enableIpv6 = true,
     this.mtu = 1380,
     this.latencyFirst = false,
@@ -86,27 +86,27 @@ class AdvancedConfig implements ConfigModel {
 
   @override
   Map<String, dynamic> toJson() => {
-        'defaultProtocol': defaultProtocol,
-        'devName': devName,
-        'enableEncryption': enableEncryption,
-        'enableIpv6': enableIpv6,
-        'mtu': mtu,
-        'latencyFirst': latencyFirst,
-        'enableExitNode': enableExitNode,
-        'proxyForwardBySystem': proxyForwardBySystem,
-        'noTun': noTun,
-        'useSmoltcp': useSmoltcp,
-        'relayNetworkWhitelist': relayNetworkWhitelist,
-        'disableP2p': disableP2p,
-        'relayAllPeerRpc': relayAllPeerRpc,
-        'disableUdpHolePunching': disableUdpHolePunching,
-        'multiThread': multiThread,
-        'dataCompressAlgo': dataCompressAlgo,
-        'bindDevice': bindDevice,
-        'enableKcpProxy': enableKcpProxy,
-        'disableKcpInput': disableKcpInput,
-        'disableRelayKcp': disableRelayKcp,
-      };
+    'defaultProtocol': defaultProtocol,
+    'devName': devName,
+    'enableEncryption': enableEncryption,
+    'enableIpv6': enableIpv6,
+    'mtu': mtu,
+    'latencyFirst': latencyFirst,
+    'enableExitNode': enableExitNode,
+    'proxyForwardBySystem': proxyForwardBySystem,
+    'noTun': noTun,
+    'useSmoltcp': useSmoltcp,
+    'relayNetworkWhitelist': relayNetworkWhitelist,
+    'disableP2p': disableP2p,
+    'relayAllPeerRpc': relayAllPeerRpc,
+    'disableUdpHolePunching': disableUdpHolePunching,
+    'multiThread': multiThread,
+    'dataCompressAlgo': dataCompressAlgo,
+    'bindDevice': bindDevice,
+    'enableKcpProxy': enableKcpProxy,
+    'disableKcpInput': disableKcpInput,
+    'disableRelayKcp': disableRelayKcp,
+  };
 }
 
 // 配置模型类 - 保持原有结构
@@ -130,10 +130,7 @@ class ThemeConfig implements ConfigModel {
   }
 
   @override
-  Map<String, dynamic> toJson() => {
-        'mode': mode,
-        'seedColor': seedColor,
-      };
+  Map<String, dynamic> toJson() => {'mode': mode, 'seedColor': seedColor};
 }
 
 class ServerConfig implements ConfigModel {
@@ -174,15 +171,15 @@ class ServerConfig implements ConfigModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'url': url,
-        'name': name,
-        'selected': selected,
-        'tcp': tcp,
-        'udp': udp,
-        'ws': ws,
-        'wss': wss,
-        'quic': quic,
-      };
+    'url': url,
+    'name': name,
+    'selected': selected,
+    'tcp': tcp,
+    'udp': udp,
+    'ws': ws,
+    'wss': wss,
+    'quic': quic,
+  };
 }
 
 // 创建一个新的服务器列表配置类
@@ -192,38 +189,37 @@ class ServerListConfig implements ConfigModel {
   @override
   String get configKey => 'server';
 
-  ServerListConfig({
-    required this.servers,
-  });
+  ServerListConfig({required this.servers});
 
   factory ServerListConfig.fromJson(Map<String, dynamic> json) {
     List<ServerConfig> serverList = [];
 
     if (json['list'] is List) {
       try {
-        serverList = (json['list'] as List).map((item) {
-          // 安全地将 Map<dynamic, dynamic> 转换为 Map<String, dynamic>
-          if (item is Map) {
-            Map<String, dynamic> serverMap = {};
-            item.forEach((key, value) {
-              if (key is String) {
-                serverMap[key] = value;
+        serverList =
+            (json['list'] as List).map((item) {
+              // 安全地将 Map<dynamic, dynamic> 转换为 Map<String, dynamic>
+              if (item is Map) {
+                Map<String, dynamic> serverMap = {};
+                item.forEach((key, value) {
+                  if (key is String) {
+                    serverMap[key] = value;
+                  }
+                });
+                return ServerConfig.fromJson(serverMap);
               }
-            });
-            return ServerConfig.fromJson(serverMap);
-          }
-          // 如果不是 Map，返回默认服务器配置
-          return ServerConfig(
-            url: 'public.easytier.cn:11010',
-            name: '公共服务器',
-            selected: true,
-            tcp: true,
-            udp: true,
-            ws: false,
-            wss: false,
-            quic: false,
-          );
-        }).toList();
+              // 如果不是 Map，返回默认服务器配置
+              return ServerConfig(
+                url: 'public.easytier.cn:11010',
+                name: '公共服务器',
+                selected: true,
+                tcp: true,
+                udp: true,
+                ws: false,
+                wss: false,
+                quic: false,
+              );
+            }).toList();
 
         // 确保至少有一个服务器被选中
         if (!serverList.any((server) => server.selected) &&
@@ -261,7 +257,7 @@ class ServerListConfig implements ConfigModel {
           ws: false,
           wss: false,
           quic: false,
-        )
+        ),
       ];
     }
 
@@ -270,8 +266,8 @@ class ServerListConfig implements ConfigModel {
 
   @override
   Map<String, dynamic> toJson() => {
-        'list': servers.map((server) => server.toJson()).toList(),
-      };
+    'list': servers.map((server) => server.toJson()).toList(),
+  };
 }
 
 class RoomConfig implements ConfigModel {
@@ -281,10 +277,7 @@ class RoomConfig implements ConfigModel {
   @override
   String get configKey => 'room';
 
-  RoomConfig({
-    this.name = 'kevin',
-    this.password = 'kevin',
-  });
+  RoomConfig({this.name = 'kevin', this.password = 'kevin'});
 
   factory RoomConfig.fromJson(Map<String, dynamic> json) {
     return RoomConfig(
@@ -293,10 +286,7 @@ class RoomConfig implements ConfigModel {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'password': password,
-      };
+  Map<String, dynamic> toJson() => {'name': name, 'password': password};
 }
 
 class UserConfig implements ConfigModel {
@@ -305,19 +295,13 @@ class UserConfig implements ConfigModel {
   @override
   String get configKey => 'user';
 
-  UserConfig({
-    required this.name,
-  });
+  UserConfig({required this.name});
 
   factory UserConfig.fromJson(Map<String, dynamic> json) {
-    return UserConfig(
-      name: json['name'] ?? Platform.localHostname,
-    );
+    return UserConfig(name: json['name'] ?? Platform.localHostname);
   }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-      };
+  Map<String, dynamic> toJson() => {'name': name};
 }
 
 class NetworkConfig implements ConfigModel {
@@ -327,10 +311,7 @@ class NetworkConfig implements ConfigModel {
   @override
   String get configKey => 'network';
 
-  NetworkConfig({
-    this.virtualIP = '',
-    this.dynamicIP = true,
-  });
+  NetworkConfig({this.virtualIP = '', this.dynamicIP = true});
 
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
@@ -340,9 +321,9 @@ class NetworkConfig implements ConfigModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'virtualIP': virtualIP,
-        'dynamicIP': dynamicIP,
-      };
+    'virtualIP': virtualIP,
+    'dynamicIP': dynamicIP,
+  };
 }
 
 class SystemConfig implements ConfigModel {
@@ -352,10 +333,7 @@ class SystemConfig implements ConfigModel {
   @override
   String get configKey => 'system';
 
-  SystemConfig({
-    this.closeToTray = true,
-    this.enablePing = true,
-  });
+  SystemConfig({this.closeToTray = true, this.enablePing = true});
 
   factory SystemConfig.fromJson(Map<String, dynamic> json) {
     return SystemConfig(
@@ -365,9 +343,9 @@ class SystemConfig implements ConfigModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'closeToTray': closeToTray,
-        'enablePing': enablePing,
-      };
+    'closeToTray': closeToTray,
+    'enablePing': enablePing,
+  };
 }
 
 // 配置管理器
@@ -423,18 +401,20 @@ class AppConfig {
     // 注册服务器列表配置
     _registerConfig<ServerListConfig>(
       (json) => ServerListConfig.fromJson(json),
-      ServerListConfig(servers: [
-        ServerConfig(
-          url: 'public.easytier.cn:11010',
-          name: '公共服务器',
-          selected: true,
-          tcp: true,
-          udp: true,
-          ws: false,
-          wss: false,
-          quic: false,
-        )
-      ]),
+      ServerListConfig(
+        servers: [
+          ServerConfig(
+            url: 'public.easytier.cn:11010',
+            name: '公共服务器',
+            selected: true,
+            tcp: true,
+            udp: true,
+            ws: false,
+            wss: false,
+            quic: false,
+          ),
+        ],
+      ),
     );
 
     // 注册高级配置
@@ -487,10 +467,9 @@ class AppConfig {
       // 尝试使用备用目录
       try {
         // 使用应用文档目录作为备用目录
-        final appDocDir = Directory(path.join(
-          Directory.current.path,
-          'config',
-        ));
+        final appDocDir = Directory(
+          path.join(Directory.current.path, 'config'),
+        );
 
         // 确保目录存在
         if (!appDocDir.existsSync()) {
@@ -538,7 +517,8 @@ class AppConfig {
     // 打印服务器列表，用于调试
     for (var server in _serverConfigs) {
       print(
-          '服务器: ${server.name} (${server.url}), 选中: ${server.selected}, 协议: TCP=${server.tcp}, UDP=${server.udp}, WS=${server.ws}, WSS=${server.wss}, QUIC=${server.quic}');
+        '服务器: ${server.name} (${server.url}), 选中: ${server.selected}, 协议: TCP=${server.tcp}, UDP=${server.udp}, WS=${server.ws}, WSS=${server.wss}, QUIC=${server.quic}',
+      );
     }
   }
 
@@ -600,7 +580,8 @@ class AppConfig {
 
       // 确保配置模型已更新
       await updateModel<ServerListConfig>(
-          ServerListConfig(servers: _serverConfigs));
+        ServerListConfig(servers: _serverConfigs),
+      );
 
       // 强制刷新 Hive 存储
       await _configBox.flush();
@@ -626,20 +607,18 @@ class AppConfig {
 
   Future<void> setThemeMode(ThemeMode mode) async {
     final modeString = mode.toString().split('.').last.toLowerCase();
-    await updateModel<ThemeConfig>(ThemeConfig(
-      mode: modeString,
-      seedColor: theme.seedColor,
-    ));
+    await updateModel<ThemeConfig>(
+      ThemeConfig(mode: modeString, seedColor: theme.seedColor),
+    );
   }
 
   // 主题色设置
   Color get seedColor => Color(theme.seedColor);
 
   Future<void> setSeedColor(Color color) async {
-    await updateModel<ThemeConfig>(ThemeConfig(
-      mode: theme.mode,
-      seedColor: color.value,
-    ));
+    await updateModel<ThemeConfig>(
+      ThemeConfig(mode: theme.mode, seedColor: color.value),
+    );
   }
 
   // 服务器列表设置
@@ -651,25 +630,27 @@ class AppConfig {
     try {
       print('设置服务器列表: ${servers.length} 个服务器');
 
-      _serverConfigs = servers.map((server) {
-        // 确保所有必要的字段都存在
-        return ServerConfig(
-          url: server['url'] ?? '',
-          name: server['name'] ?? '',
-          selected: server['selected'] ?? false,
-          tcp: server['tcp'] ?? true,
-          udp: server['udp'] ?? true,
-          ws: server['ws'] ?? false,
-          wss: server['wss'] ?? false,
-          quic: server['quic'] ?? false,
-        );
-      }).toList();
+      _serverConfigs =
+          servers.map((server) {
+            // 确保所有必要的字段都存在
+            return ServerConfig(
+              url: server['url'] ?? '',
+              name: server['name'] ?? '',
+              selected: server['selected'] ?? false,
+              tcp: server['tcp'] ?? true,
+              udp: server['udp'] ?? true,
+              ws: server['ws'] ?? false,
+              wss: server['wss'] ?? false,
+              quic: server['quic'] ?? false,
+            );
+          }).toList();
 
       await _saveServerList();
 
       // 打印保存后的服务器列表，用于调试
       print(
-          '服务器列表已更新: ${_serverConfigs.map((s) => '${s.name}(${s.url})').join(', ')}');
+        '服务器列表已更新: ${_serverConfigs.map((s) => '${s.name}(${s.url})').join(', ')}',
+      );
     } catch (e) {
       print('设置服务器列表时出错: $e');
     }
@@ -681,17 +662,15 @@ class AppConfig {
   String get roomPassword => room.password;
 
   Future<void> setRoomName(String name) async {
-    await updateModel<RoomConfig>(RoomConfig(
-      name: name,
-      password: room.password,
-    ));
+    await updateModel<RoomConfig>(
+      RoomConfig(name: name, password: room.password),
+    );
   }
 
   Future<void> setRoomPassword(String password) async {
-    await updateModel<RoomConfig>(RoomConfig(
-      name: room.name,
-      password: password,
-    ));
+    await updateModel<RoomConfig>(
+      RoomConfig(name: room.name, password: password),
+    );
   }
 
   // 用户配置
@@ -708,17 +687,15 @@ class AppConfig {
   bool get dynamicIP => network.dynamicIP;
 
   Future<void> setVirtualIP(String ip) async {
-    await updateModel<NetworkConfig>(NetworkConfig(
-      virtualIP: ip,
-      dynamicIP: network.dynamicIP,
-    ));
+    await updateModel<NetworkConfig>(
+      NetworkConfig(virtualIP: ip, dynamicIP: network.dynamicIP),
+    );
   }
 
   Future<void> setDynamicIP(bool enabled) async {
-    await updateModel<NetworkConfig>(NetworkConfig(
-      virtualIP: network.virtualIP,
-      dynamicIP: enabled,
-    ));
+    await updateModel<NetworkConfig>(
+      NetworkConfig(virtualIP: network.virtualIP, dynamicIP: enabled),
+    );
   }
 
   // 系统配置
@@ -727,17 +704,15 @@ class AppConfig {
   bool get enablePing => system.enablePing;
 
   Future<void> setCloseToTray(bool enabled) async {
-    await updateModel<SystemConfig>(SystemConfig(
-      closeToTray: enabled,
-      enablePing: system.enablePing,
-    ));
+    await updateModel<SystemConfig>(
+      SystemConfig(closeToTray: enabled, enablePing: system.enablePing),
+    );
   }
 
   Future<void> setEnablePing(bool enabled) async {
-    await updateModel<SystemConfig>(SystemConfig(
-      closeToTray: system.closeToTray,
-      enablePing: enabled,
-    ));
+    await updateModel<SystemConfig>(
+      SystemConfig(closeToTray: system.closeToTray, enablePing: enabled),
+    );
   }
 
   // 通用配置获取方法
@@ -780,53 +755,57 @@ class AppConfig {
 
   // 高级配置 setter 方法
   Future<void> setDefaultProtocol(String value) async {
-    await updateModel<AdvancedConfig>(AdvancedConfig(
-      defaultProtocol: value,
-      devName: advanced.devName,
-      enableEncryption: advanced.enableEncryption,
-      enableIpv6: advanced.enableIpv6,
-      mtu: advanced.mtu,
-      latencyFirst: advanced.latencyFirst,
-      enableExitNode: advanced.enableExitNode,
-      proxyForwardBySystem: advanced.proxyForwardBySystem,
-      noTun: advanced.noTun,
-      useSmoltcp: advanced.useSmoltcp,
-      relayNetworkWhitelist: advanced.relayNetworkWhitelist,
-      disableP2p: advanced.disableP2p,
-      relayAllPeerRpc: advanced.relayAllPeerRpc,
-      disableUdpHolePunching: advanced.disableUdpHolePunching,
-      multiThread: advanced.multiThread,
-      dataCompressAlgo: advanced.dataCompressAlgo,
-      bindDevice: advanced.bindDevice,
-      enableKcpProxy: advanced.enableKcpProxy,
-      disableKcpInput: advanced.disableKcpInput,
-      disableRelayKcp: advanced.disableRelayKcp,
-    ));
+    await updateModel<AdvancedConfig>(
+      AdvancedConfig(
+        defaultProtocol: value,
+        devName: advanced.devName,
+        enableEncryption: advanced.enableEncryption,
+        enableIpv6: advanced.enableIpv6,
+        mtu: advanced.mtu,
+        latencyFirst: advanced.latencyFirst,
+        enableExitNode: advanced.enableExitNode,
+        proxyForwardBySystem: advanced.proxyForwardBySystem,
+        noTun: advanced.noTun,
+        useSmoltcp: advanced.useSmoltcp,
+        relayNetworkWhitelist: advanced.relayNetworkWhitelist,
+        disableP2p: advanced.disableP2p,
+        relayAllPeerRpc: advanced.relayAllPeerRpc,
+        disableUdpHolePunching: advanced.disableUdpHolePunching,
+        multiThread: advanced.multiThread,
+        dataCompressAlgo: advanced.dataCompressAlgo,
+        bindDevice: advanced.bindDevice,
+        enableKcpProxy: advanced.enableKcpProxy,
+        disableKcpInput: advanced.disableKcpInput,
+        disableRelayKcp: advanced.disableRelayKcp,
+      ),
+    );
   }
 
   Future<void> setDevName(String value) async {
-    await updateModel<AdvancedConfig>(AdvancedConfig(
-      defaultProtocol: advanced.defaultProtocol,
-      devName: value,
-      enableEncryption: advanced.enableEncryption,
-      enableIpv6: advanced.enableIpv6,
-      mtu: advanced.mtu,
-      latencyFirst: advanced.latencyFirst,
-      enableExitNode: advanced.enableExitNode,
-      proxyForwardBySystem: advanced.proxyForwardBySystem,
-      noTun: advanced.noTun,
-      useSmoltcp: advanced.useSmoltcp,
-      relayNetworkWhitelist: advanced.relayNetworkWhitelist,
-      disableP2p: advanced.disableP2p,
-      relayAllPeerRpc: advanced.relayAllPeerRpc,
-      disableUdpHolePunching: advanced.disableUdpHolePunching,
-      multiThread: advanced.multiThread,
-      dataCompressAlgo: advanced.dataCompressAlgo,
-      bindDevice: advanced.bindDevice,
-      enableKcpProxy: advanced.enableKcpProxy,
-      disableKcpInput: advanced.disableKcpInput,
-      disableRelayKcp: advanced.disableRelayKcp,
-    ));
+    await updateModel<AdvancedConfig>(
+      AdvancedConfig(
+        defaultProtocol: advanced.defaultProtocol,
+        devName: value,
+        enableEncryption: advanced.enableEncryption,
+        enableIpv6: advanced.enableIpv6,
+        mtu: advanced.mtu,
+        latencyFirst: advanced.latencyFirst,
+        enableExitNode: advanced.enableExitNode,
+        proxyForwardBySystem: advanced.proxyForwardBySystem,
+        noTun: advanced.noTun,
+        useSmoltcp: advanced.useSmoltcp,
+        relayNetworkWhitelist: advanced.relayNetworkWhitelist,
+        disableP2p: advanced.disableP2p,
+        relayAllPeerRpc: advanced.relayAllPeerRpc,
+        disableUdpHolePunching: advanced.disableUdpHolePunching,
+        multiThread: advanced.multiThread,
+        dataCompressAlgo: advanced.dataCompressAlgo,
+        bindDevice: advanced.bindDevice,
+        enableKcpProxy: advanced.enableKcpProxy,
+        disableKcpInput: advanced.disableKcpInput,
+        disableRelayKcp: advanced.disableRelayKcp,
+      ),
+    );
   }
 
   // 更新高级配置的通用方法
@@ -852,30 +831,32 @@ class AppConfig {
     bool? disableKcpInput,
     bool? disableRelayKcp,
   }) async {
-    await updateModel<AdvancedConfig>(AdvancedConfig(
-      defaultProtocol: defaultProtocol ?? advanced.defaultProtocol,
-      devName: devName ?? advanced.devName,
-      enableEncryption: enableEncryption ?? advanced.enableEncryption,
-      enableIpv6: enableIpv6 ?? advanced.enableIpv6,
-      mtu: mtu ?? advanced.mtu,
-      latencyFirst: latencyFirst ?? advanced.latencyFirst,
-      enableExitNode: enableExitNode ?? advanced.enableExitNode,
-      proxyForwardBySystem:
-          proxyForwardBySystem ?? advanced.proxyForwardBySystem,
-      noTun: noTun ?? advanced.noTun,
-      useSmoltcp: useSmoltcp ?? advanced.useSmoltcp,
-      relayNetworkWhitelist:
-          relayNetworkWhitelist ?? advanced.relayNetworkWhitelist,
-      disableP2p: disableP2p ?? advanced.disableP2p,
-      relayAllPeerRpc: relayAllPeerRpc ?? advanced.relayAllPeerRpc,
-      disableUdpHolePunching:
-          disableUdpHolePunching ?? advanced.disableUdpHolePunching,
-      multiThread: multiThread ?? advanced.multiThread,
-      dataCompressAlgo: dataCompressAlgo ?? advanced.dataCompressAlgo,
-      bindDevice: bindDevice ?? advanced.bindDevice,
-      enableKcpProxy: enableKcpProxy ?? advanced.enableKcpProxy,
-      disableKcpInput: disableKcpInput ?? advanced.disableKcpInput,
-      disableRelayKcp: disableRelayKcp ?? advanced.disableRelayKcp,
-    ));
+    await updateModel<AdvancedConfig>(
+      AdvancedConfig(
+        defaultProtocol: defaultProtocol ?? advanced.defaultProtocol,
+        devName: devName ?? advanced.devName,
+        enableEncryption: enableEncryption ?? advanced.enableEncryption,
+        enableIpv6: enableIpv6 ?? advanced.enableIpv6,
+        mtu: mtu ?? advanced.mtu,
+        latencyFirst: latencyFirst ?? advanced.latencyFirst,
+        enableExitNode: enableExitNode ?? advanced.enableExitNode,
+        proxyForwardBySystem:
+            proxyForwardBySystem ?? advanced.proxyForwardBySystem,
+        noTun: noTun ?? advanced.noTun,
+        useSmoltcp: useSmoltcp ?? advanced.useSmoltcp,
+        relayNetworkWhitelist:
+            relayNetworkWhitelist ?? advanced.relayNetworkWhitelist,
+        disableP2p: disableP2p ?? advanced.disableP2p,
+        relayAllPeerRpc: relayAllPeerRpc ?? advanced.relayAllPeerRpc,
+        disableUdpHolePunching:
+            disableUdpHolePunching ?? advanced.disableUdpHolePunching,
+        multiThread: multiThread ?? advanced.multiThread,
+        dataCompressAlgo: dataCompressAlgo ?? advanced.dataCompressAlgo,
+        bindDevice: bindDevice ?? advanced.bindDevice,
+        enableKcpProxy: enableKcpProxy ?? advanced.enableKcpProxy,
+        disableKcpInput: disableKcpInput ?? advanced.disableKcpInput,
+        disableRelayKcp: disableRelayKcp ?? advanced.disableRelayKcp,
+      ),
+    );
   }
 }
