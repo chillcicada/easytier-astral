@@ -1046,20 +1046,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           });
                         },
                       ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('启用出口节点'),
-                        subtitle: const Text('允许作为网络出口节点'),
-                        value: _enableExitNode,
-                        onChanged: (value) {
-                          setState(() {
-                            _enableExitNode = value;
-                            ref
-                                .read(advancedConfigProvider.notifier)
-                                .updateConfig('enableExitNode', value);
-                          });
-                        },
-                      ),
+                      // SwitchListTile(
+                      //   contentPadding: EdgeInsets.zero,
+                      //   title: const Text('启用出口节点'),
+                      //   subtitle: const Text('允许作为网络出口节点'),
+                      //   value: _enableExitNode,
+                      //   onChanged: (value) {
+                      //     setState(() {
+                      //       _enableExitNode = value;
+                      //       ref
+                      //           .read(advancedConfigProvider.notifier)
+                      //           .updateConfig('enableExitNode', value);
+                      //     });
+                      //   },
+                      // ),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('系统代理转发'),

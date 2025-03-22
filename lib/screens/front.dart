@@ -16,6 +16,7 @@ import '../widgets/card.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../utils/runin.dart';
 import 'package:vpn_service_plugin/vpn_service_plugin.dart';
+import 'package:process_run/process_run.dart'; // 添加这一行
 
 enum ConnectionState { notStarted, connecting, connected }
 
@@ -101,7 +102,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   String username = "";
 
   bool _isAutoIP = true; // 只用于控制IP自动/手动模式
-
+  double _connectionProgress = 0.0; // 连接进度，用于显示进度条动画
   List<String> Serverip = [""];
   List<ServerConfig> Serveripz = [];
   int _uploadBytes = 0;
@@ -121,6 +122,78 @@ class _HomePageState extends ConsumerState<HomePage> {
   late final FocusNode _usernameControllerFocusNode;
   late final FocusNode _roomNameControllerFocusNode;
   late final FocusNode _roomPasswordControllerFocusNode;
+
+  // 防火墙状态
+  bool _domainFirewallEnabled = true;
+  bool _privateFirewallEnabled = true;
+  bool _publicFirewallEnabled = true;
+
+  // 记录初始防火墙状态
+  bool? _initialDomainState;
+  bool? _initialPrivateState;
+  bool? _initialPublicState;
+
+  Widget _buildFirewallCard(ColorScheme colorScheme) {
+    return FloatingCard(
+      colorScheme: colorScheme,
+      maxWidth: 600,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.security, color: colorScheme.primary, size: 22),
+              const SizedBox(width: 8),
+              // 使用 Expanded 包裹文本，防止溢出
+              Expanded(
+                child: const Text(
+                  '系统防火墙',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: () => _toggleAllFirewall(!_domainFirewallEnabled),
+                icon:
+                    Icon(_domainFirewallEnabled ? Icons.lock : Icons.lock_open),
+                label: Text(_domainFirewallEnabled ? '一键关闭' : '一键开启'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 防火墙状态列表
+          _buildFirewallStatus('域网络', _domainFirewallEnabled, colorScheme),
+          const SizedBox(height: 8),
+          _buildFirewallStatus('专用网络', _privateFirewallEnabled, colorScheme),
+          const SizedBox(height: 8),
+          _buildFirewallStatus('公用网络', _publicFirewallEnabled, colorScheme),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleAllFirewall(bool enable) async {
+    var shell = Shell();
+    try {
+      await shell.run(
+          'netsh advfirewall set allprofiles state ${enable ? "on" : "off"}');
+      setState(() {
+        _domainFirewallEnabled = enable;
+        _privateFirewallEnabled = enable;
+        _publicFirewallEnabled = enable;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('防火墙操作失败: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -152,6 +225,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       _buildUserInfoCard,
       _buildRoomInfoCard,
       _buildServerListCard,
+      if (Platform.isWindows) _buildFirewallCard,
       _buildVersionInfoCard,
     ];
     if (Platform.isAndroid) {
@@ -168,6 +242,41 @@ class _HomePageState extends ConsumerState<HomePage> {
         // 在这里处理VPN停止后的逻辑
       });
     }
+
+    // 初始化防火墙状态
+    if (Platform.isWindows) _initFirewallStatus();
+  }
+
+  // 初始化防火墙状态
+  Future<void> _initFirewallStatus() async {
+    var shell = Shell();
+
+    // 获取域防火墙状态
+    var domainResult = await shell.run('netsh advfirewall show domainprofile');
+    _domainFirewallEnabled = domainResult[0]
+        .stdout
+        .toString()
+        .contains('State                                 ON');
+    _initialDomainState = _domainFirewallEnabled;
+
+    // 获取专用防火墙状态
+    var privateResult =
+        await shell.run('netsh advfirewall show privateprofile');
+    _privateFirewallEnabled = privateResult[0]
+        .stdout
+        .toString()
+        .contains('State                                 ON');
+    _initialPrivateState = _privateFirewallEnabled;
+
+    // 获取公用防火墙状态
+    var publicResult = await shell.run('netsh advfirewall show publicprofile');
+    _publicFirewallEnabled = publicResult[0]
+        .stdout
+        .toString()
+        .contains('State                                 ON');
+    _initialPublicState = _publicFirewallEnabled;
+
+    setState(() {});
   }
 
   // 添加焦点变化监听方法
@@ -277,16 +386,51 @@ class _HomePageState extends ConsumerState<HomePage> {
     _roomPasswordControllerFocusNode.removeListener(_onRoomPasswordFocusChange);
     _roomPasswordControllerFocusNode.dispose();
 
+    // 恢复初始防火墙状态
+    if (Platform.isWindows) _restoreFirewallStatus();
+
     super.dispose();
+  }
+
+  Future<void> _restoreFirewallStatus() async {
+    if (_initialDomainState != null &&
+        _initialPrivateState != null &&
+        _initialPublicState != null) {
+      var shell = Shell();
+
+      // 恢复域防火墙状态
+      await shell.run(
+          'netsh advfirewall set domainprofile state ${_initialDomainState! ? "on" : "off"}');
+
+      // 恢复专用防火墙状态
+      await shell.run(
+          'netsh advfirewall set privateprofile state ${_initialPrivateState! ? "on" : "off"}');
+
+      // 恢复公用防火墙状态
+      await shell.run(
+          'netsh advfirewall set publicprofile state ${_initialPublicState! ? "on" : "off"}');
+    }
   }
 
   void toggleRunning() {
     setState(() {
       isRunning = !isRunning;
       if (isRunning) {
+        _connectionProgress = 0.0; // 重置进度
         // 切换到连接中状态
         _connectionState = ConnectionState.connecting;
+        // 添加进度条自增定时器
+        Timer.periodic(const Duration(milliseconds: 100), (progressTimer) {
+          if (!mounted || _connectionState != ConnectionState.connecting) {
+            progressTimer.cancel();
+            return;
+          }
 
+          setState(() {
+            // 每100毫秒增加1%，最大到95%（留5%给实际连接成功）
+            _connectionProgress = min(_connectionProgress + 1, 95);
+          });
+        });
         //利用 Serveripz 重组
         List<String> ssServerip = [];
         for (var item in Serveripz) {
@@ -451,9 +595,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             return;
           }
 
-          setState(() {
-            runningTime += const Duration(seconds: 1);
-          });
+          // 更新运行时间
+          // 检查是否已连接
+          if (_connectionState == ConnectionState.connected) {
+            setState(() {
+              runningTime += const Duration(seconds: 1);
+            });
+          }
         });
       } else {
         vpnPlugin.stopVpn();
@@ -596,73 +744,143 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 使用 LayoutBuilder 来处理布局变化，同时保留状态
     return Scaffold(
-      body: LayoutBuilder(builder: (context, constraints) {
-        // 根据约束计算列数
-        final columnCount = _getColumnCount(constraints.maxWidth);
+        body: LayoutBuilder(builder: (context, constraints) {
+          // 根据约束计算列数
+          final columnCount = _getColumnCount(constraints.maxWidth);
 
-        return CustomScrollView(
-          // 添加这个属性来控制滚动行为
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // 替换原有的 SliverList 为 SliverPadding + SliverGrid
-            SliverPadding(
-              padding: const EdgeInsets.all(16.0),
-              sliver: SliverMasonryGrid.count(
-                crossAxisCount: columnCount, // 使用计算出的列数
-                mainAxisSpacing: 16, // 主轴间距
-                crossAxisSpacing: 16, // 交叉轴间距
-                childCount: _cardBuilders.length,
-                itemBuilder: (context, index) {
-                  // 直接从列表中获取构建函数并调用
-                  return _cardBuilders[index](colorScheme);
-                },
-              ),
-            ),
-          ],
-        );
-      }),
-      floatingActionButton: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        width: _connectionState != ConnectionState.notStarted ? 180 : 100,
-        height: 60,
-        child: FloatingActionButton.extended(
-          onPressed: _connectionState == ConnectionState.connecting
-              ? null
-              : toggleRunning,
-          extendedPadding: const EdgeInsets.symmetric(horizontal: 2),
-          splashColor: _connectionState != ConnectionState.notStarted
-              ? colorScheme.onTertiary.withOpacity(0.2)
-              : colorScheme.onPrimary.withOpacity(0.2),
-          highlightElevation: 6,
-          elevation: 2,
-          icon: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 150),
-            switchInCurve: Curves.easeInOut,
-            switchOutCurve: Curves.easeInOut,
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: animation,
-                  child: child,
+          return CustomScrollView(
+            // 添加这个属性来控制滚动行为
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // 替换原有的 SliverList 为 SliverPadding + SliverGrid
+              SliverPadding(
+                padding: const EdgeInsets.all(16.0),
+                sliver: SliverMasonryGrid.count(
+                  crossAxisCount: columnCount, // 使用计算出的列数
+                  mainAxisSpacing: 16, // 主轴间距
+                  crossAxisSpacing: 16, // 交叉轴间距
+                  childCount: _cardBuilders.length,
+                  itemBuilder: (context, index) {
+                    // 直接从列表中获取构建函数并调用
+                    return _cardBuilders[index](colorScheme);
+                  },
                 ),
-              );
-            },
-            child: _getButtonIcon(_connectionState),
+              ),
+            ],
+          );
+        }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: Container(
+          margin: const EdgeInsets.only(bottom: 16, right: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end, // 确保右对齐
+            children: [
+              SizedBox(
+                height: 14, // 固定高度，包含进度条高度(6px)和底部边距(8px)
+                width: 180, // 固定宽度与按钮一致
+                child: AnimatedSlide(
+                  duration: const Duration(milliseconds: 300),
+                  offset: _connectionState == ConnectionState.connecting
+                      ? Offset.zero
+                      : const Offset(0, 1.0),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _connectionState == ConnectionState.connecting
+                        ? 1.0
+                        : 0.0,
+                    child: Container(
+                      width: 180,
+                      height: 6,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      // 其余进度条代码保持不变
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey(
+                            'progress_${_connectionState == ConnectionState.connecting}'), // 添加key以重置动画
+                        tween: Tween<double>(begin: 0.0, end: 1.0),
+                        duration: const Duration(seconds: 10), // 10秒完成动画
+                        curve: Curves.easeInOut,
+                        builder: (context, value, _) {
+                          // 更新进度值，但不通过setState
+                          _connectionProgress = value * 100;
+                          return FractionallySizedBox(
+                            widthFactor: value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    colorScheme.tertiary,
+                                    colorScheme.primary,
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // 按钮
+              Align(
+                alignment: Alignment.centerRight, // 将按钮右对齐
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  width: _connectionState != ConnectionState.notStarted
+                      ? 180
+                      : 100,
+                  height: 60,
+                  child: FloatingActionButton.extended(
+                    onPressed: _connectionState == ConnectionState.connecting
+                        ? null
+                        : toggleRunning,
+                    extendedPadding: const EdgeInsets.symmetric(horizontal: 2),
+                    splashColor: _connectionState != ConnectionState.notStarted
+                        ? colorScheme.onTertiary.withAlpha(51)
+                        : colorScheme.onPrimary.withAlpha(51),
+                    highlightElevation: 6,
+                    elevation: 2,
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: _getButtonIcon(_connectionState),
+                    ),
+                    label: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 0),
+                      switchInCurve: Curves.easeOutQuad,
+                      switchOutCurve: Curves.easeInQuad,
+                      child: _getButtonLabel(_connectionState),
+                    ),
+                    backgroundColor:
+                        _getButtonColor(_connectionState, colorScheme),
+                    foregroundColor: _getButtonForegroundColor(
+                        _connectionState, colorScheme),
+                  ),
+                ),
+              ),
+            ],
           ),
-          label: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 0),
-            switchInCurve: Curves.easeOutQuad,
-            switchOutCurve: Curves.easeInQuad,
-            child: _getButtonLabel(_connectionState),
-          ),
-          backgroundColor: _getButtonColor(_connectionState, colorScheme),
-          foregroundColor:
-              _getButtonForegroundColor(_connectionState, colorScheme),
-        ),
-      ),
-    );
+        ));
   }
 
   // 修改为接受宽度参数，而不是使用 MediaQuery
@@ -1192,12 +1410,60 @@ Widget _buildVersionInfoCard(ColorScheme colorScheme) {
           future: easytierVersion(),
           builder: (context, snapshot) {
             String version = snapshot.hasData ? snapshot.data! : "加载中...";
-            return _buildVersionItem(
-                'ET内核版本', version, Icons.memory, colorScheme);
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.memory, size: 20, color: colorScheme.primary),
+                const SizedBox(width: 12),
+                const Text(
+                  'ET内核版本:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    version,
+                    style: TextStyle(
+                      color: colorScheme.secondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
           },
         ),
       ],
     ),
+  );
+}
+
+Widget _buildFirewallStatus(
+    String label, bool enabled, ColorScheme colorScheme) {
+  return Row(
+    children: [
+      Icon(
+        enabled ? Icons.check_circle : Icons.cancel,
+        color: enabled ? Colors.green : Colors.red,
+        size: 20,
+      ),
+      const SizedBox(width: 8),
+      Text(label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          )),
+      const Spacer(),
+      Text(
+        enabled ? '已启用' : '已禁用',
+        style: TextStyle(
+          color: enabled ? Colors.green : Colors.red,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ],
   );
 }
 

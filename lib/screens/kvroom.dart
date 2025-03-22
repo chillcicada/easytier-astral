@@ -45,7 +45,8 @@ class RoomPage extends ConsumerStatefulWidget {
   const RoomPage({super.key});
 
   @override
-  ConsumerState<RoomPage> createState() => _RoomPageState(); // 修改为 ConsumerState
+  ConsumerState<RoomPage> createState() =>
+      _RoomPageState(); // 修改为 ConsumerState
 }
 
 class _RoomPageState extends ConsumerState<RoomPage> {
@@ -83,14 +84,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     if (searchQuery.isEmpty) {
       filteredPlayers = List.from(players); // 如果搜索为空，显示所有玩家
     } else {
-      filteredPlayers =
-          players
-              .where(
-                (player) => player.name.toLowerCase().contains(
+      filteredPlayers = players
+          .where(
+            (player) => player.name.toLowerCase().contains(
                   searchQuery.toLowerCase(),
                 ),
-              )
-              .toList(); // 根据名称过滤玩家
+          )
+          .toList(); // 根据名称过滤玩家
     }
   }
 
@@ -298,20 +298,19 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     return FloatingCard(
       colorScheme: colorScheme,
       maxWidth: double.infinity,
-      child:
-          isSmallScreen
-              ? _buildMobilePlayerListItem(
-                player,
-                colorScheme,
-                latencyColor,
-                connectionIcon,
-              )
-              : _buildDesktopPlayerListItem(
-                player,
-                colorScheme,
-                latencyColor,
-                connectionIcon,
-              ),
+      child: isSmallScreen
+          ? _buildMobilePlayerListItem(
+              player,
+              colorScheme,
+              latencyColor,
+              connectionIcon,
+            )
+          : _buildDesktopPlayerListItem(
+              player,
+              colorScheme,
+              latencyColor,
+              connectionIcon,
+            ),
     );
   }
 
@@ -323,10 +322,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     IconData connectionIcon,
   ) {
     // 处理显示名称
-    String displayName =
-        player.name.startsWith('PublicServer_')
-            ? player.name.substring('PublicServer_'.length)
-            : player.name;
+    String displayName = player.name.startsWith('PublicServer_')
+        ? player.name.substring('PublicServer_'.length)
+        : player.name;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -435,7 +433,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   Expanded(
                     child: _buildNetworkDataItem(
                       '上传',
-                      '${player.uploadSpeed} KB/s',
+                      _formatSpeed(player.uploadSpeed), // 使用格式化方法
                       Icons.upload,
                       colorScheme.primary,
                     ),
@@ -443,7 +441,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   Expanded(
                     child: _buildNetworkDataItem(
                       '下载',
-                      '${player.downloadSpeed} KB/s',
+                      _formatSpeed(player.downloadSpeed), // 使用格式化方法
                       Icons.download,
                       colorScheme.secondary,
                     ),
@@ -485,10 +483,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     Color latencyColor,
     IconData connectionIcon,
   ) {
-    String displayName =
-        player.name.startsWith('PublicServer_')
-            ? player.name.substring('PublicServer_'.length)
-            : player.name;
+    String displayName = player.name.startsWith('PublicServer_')
+        ? player.name.substring('PublicServer_'.length)
+        : player.name;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -614,7 +611,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   Expanded(
                     child: _buildNetworkDataItem(
                       '上传',
-                      '${player.uploadSpeed} KB/s',
+                      _formatSpeed(player.uploadSpeed), // 使用格式化方法
                       Icons.upload,
                       colorScheme.primary,
                     ),
@@ -622,7 +619,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   Expanded(
                     child: _buildNetworkDataItem(
                       '下载',
-                      '${player.downloadSpeed} KB/s',
+                      _formatSpeed(player.downloadSpeed), // 使用格式化方法
                       Icons.download,
                       colorScheme.secondary,
                     ),
@@ -657,6 +654,19 @@ class _RoomPageState extends ConsumerState<RoomPage> {
         ),
       ],
     );
+  }
+
+  // 添加一个速度单位转换的辅助方法
+  String _formatSpeed(int speedInKB) {
+    if (speedInKB >= 1048576) {
+      // >= 1024 * 1024 KB (1 GB/s)
+      return '${(speedInKB / 1048576).toStringAsFixed(2)} GB/s';
+    } else if (speedInKB >= 1024) {
+      // >= 1024 KB (1 MB/s)
+      return '${(speedInKB / 1024).toStringAsFixed(2)} MB/s';
+    } else {
+      return '$speedInKB KB/s';
+    }
   }
 
   // 更紧凑的网络数据项
@@ -938,15 +948,14 @@ class _PlayerSearchDelegate extends SearchDelegate<String> {
 
   // 修改方法签名，添加 BuildContext 参数
   Widget _buildSearchResults(BuildContext context) {
-    final filteredPlayers =
-        query.isEmpty
-            ? players
-            : players
-                .where(
-                  (player) =>
-                      player.name.toLowerCase().contains(query.toLowerCase()),
-                )
-                .toList();
+    final filteredPlayers = query.isEmpty
+        ? players
+        : players
+            .where(
+              (player) =>
+                  player.name.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
 
     if (filteredPlayers.isEmpty) {
       return Center(

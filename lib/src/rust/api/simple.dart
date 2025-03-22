@@ -37,22 +37,23 @@ Future<KVNetworkStatus> getNetworkStatus() =>
 Future<String> getRunningInfo() =>
     RustLib.instance.api.crateApiSimpleGetRunningInfo();
 
-Future<void> createServer(
-        {required String username,
-        required bool enableDhcp,
-        required String specifiedIp,
-        required String roomName,
-        required String roomPassword,
-        required List<String> severurl,
-        required FlagsC flag}) =>
-    RustLib.instance.api.crateApiSimpleCreateServer(
-        username: username,
-        enableDhcp: enableDhcp,
-        specifiedIp: specifiedIp,
-        roomName: roomName,
-        roomPassword: roomPassword,
-        severurl: severurl,
-        flag: flag);
+Future<void> createServer({
+  required String username,
+  required bool enableDhcp,
+  required String specifiedIp,
+  required String roomName,
+  required String roomPassword,
+  required List<String> severurl,
+  required FlagsC flag,
+}) => RustLib.instance.api.crateApiSimpleCreateServer(
+  username: username,
+  enableDhcp: enableDhcp,
+  specifiedIp: specifiedIp,
+  roomName: roomName,
+  roomPassword: roomPassword,
+  severurl: severurl,
+  flag: flag,
+);
 
 Future<void> closeAllServer() =>
     RustLib.instance.api.crateApiSimpleCloseAllServer();
@@ -172,10 +173,7 @@ class KVNetworkStatus {
   final BigInt totalNodes;
   final List<KVNodeInfo> nodes;
 
-  const KVNetworkStatus({
-    required this.totalNodes,
-    required this.nodes,
-  });
+  const KVNetworkStatus({required this.totalNodes, required this.nodes});
 
   @override
   int get hashCode => totalNodes.hashCode ^ nodes.hashCode;
