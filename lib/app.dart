@@ -1,4 +1,5 @@
 // 导入必要的Flutter包和自定义模块
+import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:io';
@@ -61,8 +62,22 @@ class _MyAppState extends State<MyApp> {
     // 设置托盘菜单
     final Menu menu = Menu();
     await menu.buildFrom([
-      MenuItemLabel(label: '打开应用', onClicked: (menuItem) => _appWindow!.show()),
-      MenuItemLabel(label: '退出', onClicked: (menuItem) => exit(0)),
+      MenuItemLabel(
+          label: '打开应用',
+          onClicked: (menuItem) async {
+            // 改进窗口显示逻辑，防止白屏
+            await _appWindow!.show();
+            // 添加短暂延迟后强制刷新窗口
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (mounted) setState(() {});
+          }),
+      MenuItemLabel(
+          label: '退出',
+          onClicked: (menuItem) async {
+            // 使用更优雅的方式关闭应用程序
+            closeAllServer();
+            await _appWindow!.close();
+          }),
     ]);
 
     // 设置托盘菜单
@@ -110,6 +125,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    closeAllServer();
     // 返回应用程序的根Widget
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 隐藏调试标签

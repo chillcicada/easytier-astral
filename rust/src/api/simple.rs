@@ -38,112 +38,7 @@ use serde_json::json;
 use tokio::runtime::Runtime;
 pub use tokio::task::JoinHandle;
 
-// pub struct Ipv4Addr {
-//     pub addr: u32,
-// }
-// pub struct Ipv4Inet {
-//     pub address: Option<Ipv4Addr>,
-//     pub network_length: u32,
-// }
 
-// pub struct StunInfo {
-//     pub udp_nat_type: i32,
-//     pub tcp_nat_type: i32,
-//     pub last_update_time: i64,
-//     pub public_ip: Vec<String>,
-//     pub min_port: u32,
-//     pub max_port: u32,
-// }
-// pub struct PeerFeatureFlag {
-//     pub is_public_server: bool,
-//     pub avoid_relay_data: bool,
-//     pub kcp_input: bool,
-//     pub no_relay_kcp: bool,
-// }
-// pub struct Route {
-//     pub peer_id: u32,
-//     pub ipv4_addr: Option<Ipv4Inet>,
-//     pub next_hop_peer_id: u32,
-//     pub cost: i32,
-//     pub path_latency: i32,
-//     pub proxy_cidrs: Vec<String>,
-//     pub hostname: String,
-//     pub stun_info: Option<StunInfo>,
-//     pub inst_id: String,
-//     pub version: String,
-//     pub feature_flag: Option<PeerFeatureFlag>,
-//     pub next_hop_peer_id_latency_first: Option<u32>,
-//     pub cost_latency_first: Option<i32>,
-//     pub path_latency_latency_first: Option<i32>,
-// }
-// pub struct Url {
-//     pub url: String,
-// }
-// pub struct TunnelInfo {
-//     pub tunnel_type: String,
-//     pub local_addr: Option<Url>,
-//     pub remote_addr: Option<Url>,
-// }
-
-// pub struct PeerConnStats {
-//     pub rx_bytes: u64,
-//     pub tx_bytes: u64,
-//     pub rx_packets: u64,
-//     pub tx_packets: u64,
-//     pub latency_us: u64,
-// }
-// pub struct PeerConnInfo {
-//     pub conn_id: String,
-//     pub my_peer_id: u32,
-//     pub peer_id: u32,
-//     pub features: Vec<String>,
-//     pub tunnel: Option<TunnelInfo>,
-//     pub stats: Option<PeerConnStats>,
-//     pub loss_rate: f32,
-//     pub is_client: bool,
-//     pub network_name: String,
-// }
-// pub struct PeerInfo {
-//     pub peer_id: u32,
-//     pub conns: Vec<PeerConnInfo>,
-// }
-
-// pub struct PeerRoutePair {
-//     pub route: Option<Route>,
-//     pub peer: Option<PeerInfo>,
-// }
-// pub struct Runin {
-//     pub dev_name: String,
-//     pub my_node_info: Option<MyNodeInfo>,
-//     pub events: Vec<String>,
-//     pub routes: Vec<Route>,
-//     pub peers: Vec<PeerInfo>,
-//     pub peer_route_pairs: Vec<PeerRoutePair>,
-//     pub running: bool,
-//     pub error_msg: Option<String>,
-// }
-// pub struct Ipv6Addr {
-//     pub part1: u32,
-//     pub part2: u32,
-//     pub part3: u32,
-//     pub part4: u32,
-// }
-// pub struct GetIpListResponse {
-//     pub public_ipv4: Option<Ipv4Addr>,
-//     pub interface_ipv4s: Vec<Ipv4Addr>,
-//     pub public_ipv6: Option<Ipv6Addr>,
-//     pub interface_ipv6s: Vec<Ipv6Addr>,
-//     pub listeners: Vec<Url>,
-// }
-// pub struct MyNodeInfo {
-//     pub virtual_ipv4: Option<Ipv4Inet>,
-//     pub hostname: String,
-//     pub version: String,
-//     pub ips: Option<GetIpListResponse>,
-//     pub stun_info: Option<StunInfo>,
-//     pub listeners: Vec<Url>,
-//     pub vpn_portal_cfg: Option<String>,
-// }
 
 static INSTANCE_MAP: Lazy<DashMap<String, NetworkInstance>> = Lazy::new(DashMap::new);
 // 创建一个 NetworkInstance 类型变量 储存当前服务器
@@ -164,6 +59,8 @@ fn create_config() -> TomlConfigLoader {
     // cfg.set_inst_name(name);
     cfg
 }
+
+
 
 // 添加一个函数来获取对等节点和路由信息
 pub fn get_peers_and_routes() -> Result<(Vec<PeerInfo>, Vec<Route>), String> {
@@ -1002,13 +899,10 @@ pub fn set_network_interface_hops(hop: i32) -> bool {
     // 遍历所有实例
     #[cfg(target_os = "windows")]
     {
-        use std::ffi::OsStr;
-        use std::iter::once;
-        use std::os::windows::ffi::OsStrExt;
-        use winapi::shared::winerror::ERROR_SUCCESS;
-        use winapi::um::iphlpapi::SetIfEntry;
-        use winapi::um::iphlpapi::GetIfEntry;
-        use winapi::um::iptypes::MIB_IFROW;
+        use std::process::Command;
+        // 导入Windows特定的CommandExt特性和CREATE_NO_WINDOW标志
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
         
         let mut success = true;
         
@@ -1021,50 +915,31 @@ pub fn set_network_interface_hops(hop: i32) -> bool {
                 
                 if !dev_name.is_empty() {
                     println!("设置EasyTier网卡 {} 的跃点数为 {}", dev_name, hop);
-                    
-                    // 使用WinAPI设置网卡跃点
-                    unsafe {
-                        // 首先需要获取网卡的索引
-                        let wide_name: Vec<u16> = OsStr::new(&dev_name)
-                            .encode_wide()
-                            .chain(once(0))
-                            .collect();
+                    // 使用Windows命令行工具设置网卡跃点数，并添加CREATE_NO_WINDOW标志
+                    let output = Command::new("netsh")
+                        .args(&[
+                            "interface", 
+                            "ipv4", 
+                            "set", 
+                            "interface", 
+                            &dev_name, 
+                            &format!("metric={}", hop)
+                        ])
+                        .creation_flags(CREATE_NO_WINDOW) // 添加这一行来隐藏窗口
+                        .output();
                         
-                        // 创建MIB_IFROW结构体
-                        let mut if_row: MIB_IFROW = std::mem::zeroed();
-                        
-                        // 查找匹配的网卡
-                        let mut found = false;
-                        
-                        // 从1开始遍历网卡索引
-                        for index in 1..100 { // 设置一个合理的上限
-                            if_row.dwIndex = index;
-                            
-                            // 获取网卡信息
-                            if GetIfEntry(&mut if_row) == ERROR_SUCCESS {
-                                // 检查网卡名称是否匹配
-                                let if_name = &if_row.wszName[0..255]; // 最大长度为256
-                                if if_name.starts_with(&wide_name[..wide_name.len()-1]) {
-                                    found = true;
-                                    
-                                    // 设置跃点值
-                                    if_row.dwForwardMetric1 = hop as u32;
-                                    
-                                    // 应用更改
-                                    let result = SetIfEntry(&if_row);
-                                    if result == ERROR_SUCCESS {
-                                        println!("成功设置EasyTier网卡 {} 的跃点数为 {}", dev_name, hop);
-                                    } else {
-                                        println!("设置EasyTier网卡 {} 跃点数失败，错误码: {}", dev_name, result);
-                                        success = false;
-                                    }
-                                    break;
-                                }
+                    match output {
+                        Ok(output) => {
+                            if output.status.success() {
+                                println!("成功设置EasyTier网卡 {} 的跃点数为 {}", dev_name, hop);
+                            } else {
+                                let error = String::from_utf8_lossy(&output.stderr);
+                                println!("设置EasyTier网卡 {} 跃点数失败: {}", dev_name, error);
+                                success = false;
                             }
-                        }
-                        
-                        if !found {
-                            println!("未找到网卡: {}", dev_name);
+                        },
+                        Err(e) => {
+                            println!("执行命令失败: {}", e);
                             success = false;
                         }
                     }
@@ -1097,4 +972,10 @@ pub fn init_app() {
     lazy_static::initialize(&RT);
     // Default utilities - feel free to customize
     flutter_rust_bridge::setup_default_user_utils();
+
+       // 注册关闭钩子，确保程序退出时清理资源
+       std::panic::set_hook(Box::new(|_| {
+        println!("程序发生异常，正在清理资源...");
+        close_all_server();
+    }));
 }

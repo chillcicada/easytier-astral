@@ -57,6 +57,7 @@ final pServerProvider = StateProvider<List<Pserver>>((ref) => []);
 // 将 State 改为 ConsumerState
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   late List<Map<String, dynamic>> _serverList;
+  late TextEditingController _overlapValueController;
   final _appConfig = AppConfig();
   bool _closeToTray = false; // 添加关闭进入托盘变量
   bool _pingEnabled = true; // 添加全局ping开关
@@ -96,7 +97,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _closeToTray = _appConfig.closeToTray; // 初始化托盘设置
     // 初始化全局ping开关
     _pingEnabled = _appConfig.enablePing;
-
+    _overlapValueController = TextEditingController();
+// 添加监听器以在provider值变化时更新控制器文本
+    ref.listenManual(networkOverlapValueProvider, (previous, next) {
+      // 只有当文本框不是焦点时才更新文本，避免干扰用户输入
+      if (!_overlapValueController.text.isEmpty &&
+          !FocusScope.of(context).hasFocus) {
+        _overlapValueController.text = next.toString();
+      }
+    });
+    // 设置初始值
+    _overlapValueController.text =
+        ref.read(networkOverlapValueProvider).toString();
     // 初始化高级设置
     final advancedConfig = ref.read(advancedConfigProvider);
     _defaultProtocol = advancedConfig['defaultProtocol'] ?? "tcp";
@@ -875,31 +887,53 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   ),
                   if (ref.watch(networkOverlapEnabledProvider))
-                    SizedBox(
-                      width: 100,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: '跃点值',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 8),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                labelText: '跃点值',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                              ),
+                              keyboardType: TextInputType.number,
+                              controller:
+                                  _overlapValueController, // 使用类成员变量的控制器
+                              onChanged: (value) {
+                                final overlapValue = int.tryParse(value) ?? 0;
+                                ref
+                                    .read(networkOverlapProvider.notifier)
+                                    .setValue(overlapValue);
+                              },
+                            ),
                           ),
-                          keyboardType: TextInputType.number,
-                          controller: TextEditingController(
-                            text: ref
-                                .watch(networkOverlapValueProvider)
-                                .toString(),
-                          ),
-                          onChanged: (value) {
-                            final overlapValue = int.tryParse(value) ?? 0;
-                            ref
-                                .read(networkOverlapProvider.notifier)
-                                .setValue(overlapValue);
-                          },
                         ),
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 16.0),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // 获取当前跃点值并应用
+                              final overlapValue =
+                                  ref.read(networkOverlapValueProvider);
+                              // 调用Rust函数设置跃点值
+                              setNetworkInterfaceHops(hop: overlapValue);
+                              // 显示应用成功提示
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('已应用网卡跃点设置')),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 8),
+                            ),
+                            child: const Text('应用'),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -1017,30 +1051,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // 安全设置
-                      const ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          '安全设置',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('启用加密'),
-                        subtitle: const Text('加密网络流量以提高安全性'),
-                        value: _enableEncryption,
-                        onChanged: (value) {
-                          setState(() {
-                            _enableEncryption = value;
-                            ref
-                                .read(advancedConfigProvider.notifier)
-                                .updateConfig('enableEncryption', value);
-                          });
-                        },
-                      ),
-
                       // 网络设置
                       const ListTile(
                         contentPadding: EdgeInsets.zero,

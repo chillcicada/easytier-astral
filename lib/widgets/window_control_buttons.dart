@@ -1,3 +1,4 @@
+import 'package:astral/src/rust/api/simple.dart';
 import 'package:astral/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
@@ -73,7 +74,7 @@ class _WindowControlsState extends State<WindowControls> with WindowListener {
   Widget build(BuildContext context) {
     // 添加调试信息
     Logger.info("构建窗口控制按钮，当前最大化状态: $_isMaximized");
-    
+
     return Row(
       children: [
         IconButton(
@@ -107,6 +108,7 @@ class _WindowControlsState extends State<WindowControls> with WindowListener {
               // 替换托盘提示为系统通知
               _winNotifyPlugin.showNotificationPluginTemplate(message);
             } else {
+              closeAllServer();
               windowManager.close();
             }
           },

@@ -469,15 +469,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ref.read(advancedConfigProvider)['defaultProtocol'] ??
                         "tcp",
                 devName: ref.read(advancedConfigProvider)['devName'] ?? "",
-                enableEncryption:
-                    ref.read(advancedConfigProvider)['enableEncryption'] ??
-                        true,
+                enableEncryption: true,
                 enableIpv6:
                     ref.read(advancedConfigProvider)['enableIpv6'] ?? true,
-                mtu: ref.read(advancedConfigProvider)['mtu'] ??
-                    (ref.read(advancedConfigProvider)['enableEncryption'] ?? true
-                        ? 1360
-                        : 1380),
+                mtu: 1360,
                 multiThread:
                     ref.read(advancedConfigProvider)['multiThread'] ?? true,
                 latencyFirst:
@@ -496,10 +491,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ref.read(advancedConfigProvider)['relayAllPeerRpc'] ??
                         false,
                 disableUdpHolePunching:
-                    ref.read(advancedConfigProvider)['disableUdpHolePunching'] ?? false,
-                dataCompressAlgo: ref.read(advancedConfigProvider)['dataCompressAlgo'] == "Invalid"
+                    ref.read(advancedConfigProvider)['disableUdpHolePunching'] ??
+                        false,
+                dataCompressAlgo: ref
+                            .read(advancedConfigProvider)['dataCompressAlgo'] ==
+                        "Invalid"
                     ? 0
-                    : ref.read(advancedConfigProvider)['dataCompressAlgo'] == "None"
+                    : ref.read(advancedConfigProvider)['dataCompressAlgo'] ==
+                            "None"
                         ? 1
                         : ref.read(advancedConfigProvider)['dataCompressAlgo'] == "Zstd"
                             ? 2
@@ -529,10 +528,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           // 获取所有IP列表
           List<String> llk = await getAllIps();
           // 更新VPN状态
-          ref.read(vpnStatusProvider.notifier).updateStatus(
-                routes: llk,
-                ipv4Addr: publicIP, // 添加IP地址参数
-              );
+          if (Platform.isAndroid) {
+            ref.read(vpnStatusProvider.notifier).updateStatus(
+                  routes: llk,
+                  ipv4Addr: publicIP, // 添加IP地址参数
+                );
+          }
           // 更新网络流量数据
           _updateNetworkStats(networkStatus.nodes);
 
