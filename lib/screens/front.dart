@@ -2,15 +2,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'package:astral/config/app_config.dart';
 import 'package:astral/src/rust/api/simple.dart';
-import 'package:astral/src/rust/frb_generated.dart';
+import 'package:astral/sys/k_stare.dart';
 import 'package:astral/utils/kv_state.dart';
 import 'package:astral/utils/app_info.dart';
 import 'package:astral/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // 替换 provider 导入
 import '../widgets/card.dart';
@@ -104,8 +102,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   bool _isAutoIP = true; // 只用于控制IP自动/手动模式
   double _connectionProgress = 0.0; // 连接进度，用于显示进度条动画
-  List<String> Serverip = [""];
-  List<ServerConfig> Serveripz = [];
   int _uploadBytes = 0;
   int _downloadBytes = 0;
   int _lastUploadBytes = 0;
@@ -434,21 +430,21 @@ class _HomePageState extends ConsumerState<HomePage> {
         });
         //利用 Serveripz 重组
         List<String> ssServerip = [];
-        for (var item in Serveripz) {
+        for (var item in ref.read(KConfig.provider).servers) {
           if (item.tcp) {
-            ssServerip.add("tcp://" + item.url);
+            ssServerip.add("tcp://${item.url}");
           }
           if (item.udp) {
-            ssServerip.add("udp://" + item.url);
+            ssServerip.add("udp://${item.url}");
           }
           if (item.ws) {
-            ssServerip.add("ws://" + item.url);
+            ssServerip.add("ws://${item.url}");
           }
           if (item.wss) {
-            ssServerip.add("wss://" + item.url);
+            ssServerip.add("wss://${item.url}");
           }
           if (item.quic) {
-            ssServerip.add("quic://" + item.url);
+            ssServerip.add("quic://${item.url}");
           }
         }
         // 复制 创建服务器
@@ -520,7 +516,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
           // 获取网络状态
           final networkStatus = await getNetworkStatus();
-          final networkStatus2 = await getRunningInfo();
           ref.read(nodesProvider.notifier).setNodes(networkStatus.nodes);
 
           // 获取所有IP列表
@@ -712,10 +707,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     roomName = ref.watch(roomNameProvider);
     roomPassword = ref.watch(roomPasswordProvider);
     username = ref.watch(usernameProvider);
-    Serverip = ref.watch(serverIPProvider);
-    // 从 selectedServerProvider 获取服务器配置列表
-    final serverConfigs =
-        ref.watch(selectedServerProvider) as List<ServerConfig>;
 
     if (Platform.isAndroid) {
       // 监听 VPN 状态,当状态为运行中时返回 true
@@ -747,8 +738,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
       });
     }
-
-    Serveripz = serverConfigs;
 
     // 使用 LayoutBuilder 来处理布局变化，同时保留状态
     return Scaffold(

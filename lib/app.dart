@@ -1,26 +1,28 @@
 // 导入必要的Flutter包和自定义模块
+import 'package:astral/model/config_model.dart';
 import 'package:astral/src/rust/api/simple.dart';
+import 'package:astral/utils/serverjs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'screens/Home.dart';
 import 'config/themeconfiguration.dart' as theme_config;
-import 'config/app_config.dart';
-
+import 'package:astral/sys/k_stare.dart';
 // 仅在桌面平台导入系统托盘
 import 'package:system_tray/system_tray.dart' if (dart.library.html) '';
 
 // 定义应用程序的主要StatefulWidget
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
 // 应用程序的状态管理类
-class _MyAppState extends State<MyApp> {
-  // 主题相关的状态变量
+class _MyAppState extends ConsumerState<MyApp> {
+  // 主题相关的状态变量 => _WindowControlsState();
   late ThemeMode _themeMode;
   late bool useMaterial3;
   late Color _seedColor;
@@ -35,11 +37,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     closeAllServer();
 
-    // 从配置中加载设置
-    final config = AppConfig();
-    _themeMode = config.themeMode;
     useMaterial3 = true;
-    _seedColor = config.seedColor;
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       // 桌面平台代码
       _systemTray = SystemTray();
@@ -97,25 +95,21 @@ class _MyAppState extends State<MyApp> {
 
   // 切换主题模式的方法
   void toggleThemeMode() {
-    setState(() {
-      if (_themeMode == ThemeMode.light) {
-        _themeMode = ThemeMode.dark;
-      } else if (_themeMode == ThemeMode.dark) {
-        _themeMode = ThemeMode.system;
-      } else {
-        _themeMode = ThemeMode.light;
-      }
-      AppConfig().setThemeMode(_themeMode);
-    });
+    if (_themeMode == ThemeMode.light) {
+      _themeMode = ThemeMode.dark;
+    } else if (_themeMode == ThemeMode.dark) {
+      _themeMode = ThemeMode.system;
+    } else {
+      _themeMode = ThemeMode.light;
+    }
+    ref.read(KConfig.provider.notifier).setThemeMode(_themeMode);
   }
 
   // 更改主题色的方法
   void changeSeedColor(Color color) {
     // 使用 Future.microtask 延迟状态更新，避免在当前帧中触发重建
-    setState(() {
-      _seedColor = color;
-      AppConfig().setSeedColor(color);
-    });
+    _seedColor = color;
+    ref.read(KConfig.provider.notifier).setSeedColor(color);
   }
 
   // 更改底部导航栏选中索引的方法
@@ -127,6 +121,12 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // 从配置中加载设置
+    _themeMode =
+        ref.watch(KConfig.provider.select((config) => config.themeMode));
+    _seedColor =
+        ref.watch(KConfig.provider.select((config) => config.seedColor));
+
     // 返回应用程序的根Widget
     return MaterialApp(
       debugShowCheckedModeBanner: false, // 隐藏调试标签

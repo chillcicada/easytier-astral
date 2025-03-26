@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:astral/model/config_model.dart';
 import 'package:astral/src/rust/api/simple.dart';
+import 'package:astral/sys/k_stare.dart';
 import 'package:astral/utils/app_info.dart';
 import 'package:astral/utils/logger.dart';
 import 'package:astral/utils/up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // 添加 Riverpod 导入
-import '../config/app_config.dart';
 import '../utils/ping_util.dart';
 import 'package:astral/utils/kv_state.dart';
 import 'package:http/http.dart' as http; // 添加 http 包导入
@@ -56,52 +57,45 @@ final pServerProvider = StateProvider<List<Pserver>>((ref) => []);
 
 // 将 State 改为 ConsumerState
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  late List<Map<String, dynamic>> _serverList;
+  late List<ServerConfig> _serverList;
   late TextEditingController _overlapValueController;
-  final _appConfig = AppConfig();
-  bool _closeToTray = false; // 添加关闭进入托盘变量
-  bool _pingEnabled = true; // 添加全局ping开关
+  late bool _closeToTray; // 添加关闭进入托盘变量
+  late bool _pingEnabled; // 添加全局ping开关
 
-  // 添加高级选项变量
   String _defaultProtocol = "tcp";
   String _devName = "";
-  bool _enableEncryption = true;
   bool _enableIpv6 = true;
-  int _mtu = 1380;
   bool _latencyFirst = false;
-  bool _enableExitNode = false;
-  bool _proxyForwardBySystem = false;
-  bool _noTun = false;
-  bool _useSmoltcp = false;
   String _relayNetworkWhitelist = "*";
-  bool _disableP2p = false;
-  bool _relayAllPeerRpc = false;
   bool _disableUdpHolePunching = false;
   bool _multiThread = true;
   String _dataCompressAlgo = "None";
-  bool _bindDevice = true;
   bool _enableKcpProxy = false;
-  bool _disableKcpInput = false;
   bool _disableRelayKcp = true;
-
-  String serverIP = "";
-  // 添加 ping 相关状态
-  Map<String, int?> pingResults = {};
 
   @override
   void initState() {
     super.initState();
-    // 从 Riverpod 获取服务器列表
-    _serverList = ref.read(serverListProvider);
-    serverIP = _getSelectedServersString();
-    _closeToTray = _appConfig.closeToTray; // 初始化托盘设置
-    // 初始化全局ping开关
-    _pingEnabled = _appConfig.enablePing;
+    final Cg = ref.watch(KConfig.provider);
+
+    _defaultProtocol = Cg.defaultProtocol;
+    _devName = Cg.devName;
+    _enableIpv6 = Cg.enableIpv6;
+    _latencyFirst = Cg.latencyFirst;
+    _relayNetworkWhitelist = Cg.relayNetworkWhitelist;
+    _disableUdpHolePunching = Cg.disableUdpHolePunching;
+    _multiThread = Cg.multiThread;
+    _dataCompressAlgo = Cg.dataCompressAlgo;
+    _enableKcpProxy = Cg.enableKcpProxy;
+    _disableRelayKcp = Cg.disableRelayKcp;
+    _serverList = Cg.servers;
+    _closeToTray = Cg.closeToTray; // 初始化托盘设置
+    _pingEnabled = Cg.pingEnabled;
+
     _overlapValueController = TextEditingController();
-// 添加监听器以在provider值变化时更新控制器文本
     ref.listenManual(networkOverlapValueProvider, (previous, next) {
       // 只有当文本框不是焦点时才更新文本，避免干扰用户输入
-      if (!_overlapValueController.text.isEmpty &&
+      if (_overlapValueController.text.isNotEmpty &&
           !FocusScope.of(context).hasFocus) {
         _overlapValueController.text = next.toString();
       }
@@ -109,46 +103,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // 设置初始值
     _overlapValueController.text =
         ref.read(networkOverlapValueProvider).toString();
-    // 初始化高级设置
-    final advancedConfig = ref.read(advancedConfigProvider);
-    _defaultProtocol = advancedConfig['defaultProtocol'] ?? "tcp";
-    _devName = advancedConfig['devName'] ?? "";
-    _enableEncryption = advancedConfig['enableEncryption'] ?? true;
-    _enableIpv6 = advancedConfig['enableIpv6'] ?? true;
-    _mtu = advancedConfig['mtu'] ?? 1380;
-    _latencyFirst = advancedConfig['latencyFirst'] ?? false;
-    _enableExitNode = advancedConfig['enableExitNode'] ?? false;
-    _proxyForwardBySystem = advancedConfig['proxyForwardBySystem'] ?? false;
-    _noTun = advancedConfig['noTun'] ?? false;
-    _useSmoltcp = advancedConfig['useSmoltcp'] ?? false;
-    _relayNetworkWhitelist = advancedConfig['relayNetworkWhitelist'] ?? "*";
-    _disableP2p = advancedConfig['disableP2p'] ?? false;
-    _relayAllPeerRpc = advancedConfig['relayAllPeerRpc'] ?? false;
-    _disableUdpHolePunching = advancedConfig['disableUdpHolePunching'] ?? false;
-    _multiThread = advancedConfig['multiThread'] ?? true;
-    _dataCompressAlgo = advancedConfig['dataCompressAlgo'] ?? "None";
-    _bindDevice = advancedConfig['bindDevice'] ?? true;
-    _enableKcpProxy = advancedConfig['enableKcpProxy'] ?? false;
-    _disableKcpInput = advancedConfig['disableKcpInput'] ?? false;
-    _disableRelayKcp = advancedConfig['disableRelayKcp'] ?? true;
 
-    // 初始化 ping 状态
-    for (var server in _serverList) {
-      pingResults[server['url']] = null;
-    }
-
-    // 开始 ping 所有服务器
     _startPingAllServers();
-  }
-
-  // 获取选中的服务器字符串
-  String _getSelectedServersString() {
-    final selected =
-        _serverList.where((server) => server['selected'] == true).toList();
-    if (selected.isEmpty && _serverList.isNotEmpty) {
-      return _serverList.first['url'];
-    }
-    return selected.map((server) => server['url']).join(', ');
   }
 
   // 添加一个计时器变量来控制 ping 操作
@@ -168,7 +124,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
       if (_pingEnabled) {
         for (var server in _serverList) {
-          _pingServerOnce(server['url']);
+          _pingServerOnce(server.url);
         }
       }
     });
@@ -183,13 +139,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   // 执行单次 ping 操作
-  Future<void> _pingServerOnce(String server) async {
-    final pingResult = await PingUtil.ping(server);
+  Future<void> _pingServerOnce(String serverUrl) async {
+    try {
+      // 对指定服务器执行ping操作
+      final pingResult = await PingUtil.ping(serverUrl);
 
-    if (mounted) {
-      setState(() {
-        pingResults[server] = pingResult;
-      });
+      // 获取当前服务器列表
+      final serverList = ref.read(KConfig.provider).servers;
+
+      // 更新对应服务器的ping值
+      final updatedServers = serverList.map((server) {
+        if (server.url == serverUrl) {
+          return ServerConfig(
+            url: server.url,
+            name: server.name,
+            selected: server.selected,
+            tcp: server.tcp,
+            udp: server.udp,
+            ws: server.ws,
+            wss: server.wss,
+            quic: server.quic,
+            ms: pingResult ?? 0,
+          );
+        }
+        return server;
+      }).toList();
+
+      // 更新配置
+      ref.read(KConfig.provider.notifier).setServers(updatedServers);
+    } catch (e) {
+      Logger.info('Ping服务器失败: $e');
     }
   }
 
@@ -347,11 +326,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   void _addPublicServerToList(Pserver publicServer) {
     // 检查是否已存在相同地址的服务器
     final existingServer = _serverList.firstWhere(
-      (server) => server['url'] == publicServer.ip,
-      orElse: () => <String, dynamic>{},
+      (server) => server.url == publicServer.ip,
+      orElse: () => ServerConfig(
+          url: '',
+          name: '',
+          selected: false,
+          tcp: true,
+          udp: true,
+          ws: false,
+          wss: false,
+          quic: false),
     );
 
-    if (existingServer.isNotEmpty) {
+    if (existingServer.url.isNotEmpty) {
       // 已存在相同地址的服务器
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -362,23 +349,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       return;
     }
 
-    setState(() {
-      // 添加新服务器，默认不选中，使用IP地址而不是address
-      _serverList.add({
-        'url': publicServer.ip,
-        'name': publicServer.name,
-        'selected': false,
-        'tcp': true,
-        'udp': true,
-        'ws': false,
-        'wss': false,
-        'quic': false,
-      });
-      _appConfig.setServerList(_serverList);
-
-      // 初始化新服务器的 ping 状态
-      pingResults[publicServer.ip] = null;
-    });
+    ref.read(KConfig.provider.notifier).addServer(ServerConfig(
+          url: publicServer.ip,
+          name: publicServer.name,
+          selected: false,
+          tcp: true,
+          udp: true,
+          ws: false,
+          wss: false,
+          quic: false,
+        ));
 
     // 显示添加成功提示
     ScaffoldMessenger.of(context).showSnackBar(
@@ -397,16 +377,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   // 切换全局ping状态
   void _togglePingStatus(bool value) {
-    setState(() {
-      _pingEnabled = value;
-      _appConfig.setEnablePing(_pingEnabled);
-      if (!_pingEnabled) {
-        // 如果关闭ping，清空所有结果
-        for (var server in _serverList) {
-          pingResults[server['url']] = null;
-        }
-      }
-    });
+    _pingEnabled = value;
+    ref.read(KConfig.provider.notifier).setPingEnabled(value);
+    if (!_pingEnabled) {}
   }
 
   // 添加服务器对话框
@@ -511,21 +484,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (result != null) {
       setState(() {
-        // 添加新服务器，默认不选中，包含协议设置
-        _serverList.add({
-          'url': result['url'],
-          'name': result['name'],
-          'selected': false,
-          'tcp': result['tcp'] ?? true,
-          'udp': result['udp'] ?? true,
-          'ws': result['ws'] ?? false,
-          'wss': result['wss'] ?? false,
-          'quic': result['quic'] ?? false,
-        });
-        _appConfig.setServerList(_serverList);
-
-        // 初始化新服务器的 ping 状态
-        pingResults[result['url']] = null;
+        ref.read(KConfig.provider.notifier).addServer(ServerConfig(
+              url: result['url'],
+              name: result['name'],
+              selected: false,
+              tcp: result['tcp'] ?? true,
+              udp: result['udp'] ?? true,
+              ws: result['ws'] ?? false,
+              wss: result['wss'] ?? false,
+              quic: result['quic'] ?? false,
+            ));
       });
     }
   }
@@ -533,14 +501,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // 编辑服务器对话框
   Future<void> _showEditServerDialog(int index) async {
     final server = _serverList[index];
-    final urlController = TextEditingController(text: server['url']);
-    final nameController = TextEditingController(text: server['name']);
+    final urlController = TextEditingController(text: server.url);
+    final nameController = TextEditingController(text: server.name);
     // 初始化协议开关状态
-    bool tcpEnabled = server['tcp'] ?? true;
-    bool udpEnabled = server['udp'] ?? true;
-    bool wsEnabled = server['ws'] ?? false;
-    bool wssEnabled = server['wss'] ?? false;
-    bool quicEnabled = server['quic'] ?? false;
+    bool tcpEnabled = server.tcp;
+    bool udpEnabled = server.udp;
+    bool wsEnabled = server.ws;
+    bool wssEnabled = server.wss;
+    bool quicEnabled = server.quic;
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -632,31 +600,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
 
     if (result != null) {
-      final oldUrl = server['url'];
-      setState(() {
-        _serverList[index] = {
-          'url': result['url'],
-          'name': result['name'],
-          'selected': server['selected'],
-          'tcp': result['tcp'] ?? true,
-          'udp': result['udp'] ?? true,
-          'ws': result['ws'] ?? false,
-          'wss': result['wss'] ?? false,
-          'quic': result['quic'] ?? false,
-        };
-        _appConfig.setServerList(_serverList);
-
-        // 更新 ping 状态
-        if (oldUrl != result['url']) {
-          pingResults[result['url']] = pingResults[oldUrl];
-          pingResults.remove(oldUrl);
-        }
-
-        // 更新当前选中的服务器显示
-        serverIP = _getSelectedServersString();
-        // 使用 Riverpod 更新服务器列表
-        ref.read(serverListProvider.notifier).setServerList(_serverList);
-      });
+      final oldUrl = server.url;
+      _serverList[index] = ServerConfig(
+        url: result['url'],
+        name: result['name'],
+        selected: server.selected,
+        tcp: result['tcp'] ?? true,
+        udp: result['udp'] ?? true,
+        ws: result['ws'] ?? false,
+        wss: result['wss'] ?? false,
+        quic: result['quic'] ?? false,
+      );
+      ref.read(KConfig.provider.notifier).setServers(_serverList);
     }
   }
 
@@ -682,50 +637,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (confirm == true) {
       final server = _serverList[index];
-
-      setState(() {
-        _serverList.removeAt(index);
-        _appConfig.setServerList(_serverList);
-
-        // 移除 ping 状态
-        pingResults.remove(server['url']);
-
-        // 确保至少有一个服务器被选中
-        if (_serverList.isNotEmpty &&
-            !_serverList.any((server) => server['selected'] == true)) {
-          _serverList.first['selected'] = true;
-        }
-
-        // 更新当前选中的服务器显示
-        serverIP = _getSelectedServersString();
-        // 使用 Riverpod 更新服务器列表
-        ref.read(serverListProvider.notifier).setServerList(_serverList);
-      });
+      ref.read(KConfig.provider.notifier).removeServer(server);
     }
   }
 
   // 切换服务器选中状态
   void _toggleServerSelection(int index) {
-    setState(() {
-      _serverList[index]['selected'] =
-          !(_serverList[index]['selected'] ?? false);
-      _appConfig.setServerList(_serverList);
+    List<ServerConfig> currentServers = List.from(_serverList);
 
-      // 更新当前选中的服务器显示
-      serverIP = _getSelectedServersString();
+    // 通过创建新实例来更新选中状态
+    currentServers = currentServers
+        .map((server) => ServerConfig(
+              url: server.url,
+              name: server.name,
+              selected: false,
+              tcp: server.tcp,
+              udp: server.udp,
+              ws: server.ws,
+              wss: server.wss,
+              quic: server.quic,
+            ))
+        .toList();
 
-      // 使用 Riverpod 更新服务器列表
-      ref.read(serverListProvider.notifier).setServerList(_serverList);
-    });
+    // 设置当前选中的服务器
+    currentServers[index] = ServerConfig(
+      url: currentServers[index].url,
+      name: currentServers[index].name,
+      selected: true,
+      tcp: currentServers[index].tcp,
+      udp: currentServers[index].udp,
+      ws: currentServers[index].ws,
+      wss: currentServers[index].wss,
+      quic: currentServers[index].quic,
+    );
+
+    // 更新服务器列表
+    ref.read(KConfig.provider.notifier).setServers(currentServers);
   }
 
   // 添加构建 ping 显示组件的方法
-  Widget _buildPingWidget(String url) {
-    final pingResult = pingResults[url];
+  Widget _buildPingWidget(ServerConfig se) {
+    final pingResult = se.ms;
     if (!_pingEnabled) {
       return const Text('Ping已关闭', style: TextStyle(color: Colors.grey));
-    } else if (pingResult == null) {
-      return const Text('测试中...', style: TextStyle(color: Colors.grey));
     } else {
       return Text(
         '${pingResult}ms',
@@ -739,10 +693,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   // 添加一个方法来显示服务器支持的协议
-  Widget _buildProtocolChips(Map<String, dynamic> server) {
+  Widget _buildProtocolChips(ServerConfig server) {
     List<Widget> chips = [];
 
-    if (server['tcp'] == true) {
+    if (server.tcp == true) {
       chips.add(Chip(
         label: const Text('TCP', style: TextStyle(fontSize: 10)),
         backgroundColor: Colors.blue.withOpacity(0.2),
@@ -751,7 +705,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ));
     }
 
-    if (server['udp'] == true) {
+    if (server.udp == true) {
       chips.add(Chip(
         label: const Text('UDP', style: TextStyle(fontSize: 10)),
         backgroundColor: Colors.green.withOpacity(0.2),
@@ -760,7 +714,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ));
     }
 
-    if (server['ws'] == true) {
+    if (server.ws == true) {
       chips.add(Chip(
         label: const Text('WS', style: TextStyle(fontSize: 10)),
         backgroundColor: Colors.orange.withOpacity(0.2),
@@ -769,7 +723,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ));
     }
 
-    if (server['wss'] == true) {
+    if (server.wss == true) {
       chips.add(Chip(
         label: const Text('WSS', style: TextStyle(fontSize: 10)),
         backgroundColor: Colors.purple.withOpacity(0.2),
@@ -778,7 +732,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ));
     }
 
-    if (server['quic'] == true) {
+    if (server.quic == true) {
       chips.add(Chip(
         label: const Text('QUIC', style: TextStyle(fontSize: 10)),
         backgroundColor: Colors.teal.withOpacity(0.2),
@@ -812,7 +766,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   itemCount: _serverList.length,
                   itemBuilder: (context, index) {
                     final server = _serverList[index];
-                    final isSelected = server['selected'] == true;
+                    final isSelected = server.selected == true;
 
                     return ListTile(
                       leading: Icon(
@@ -823,18 +777,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              server['name'],
+                              server.name,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          _buildPingWidget(server['url']),
+                          _buildPingWidget(server),
                         ],
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(server['url']),
+                          Text(server.url),
                           const SizedBox(height: 4),
                           _buildProtocolChips(server),
                         ],
@@ -963,7 +917,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               onChanged: (value) {
                 setState(() {
                   _closeToTray = value;
-                  _appConfig.setCloseToTray(value);
+                  ref.read(KConfig.provider.notifier).setCloseToTray(value);
                 });
               },
             ),
