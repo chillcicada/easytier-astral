@@ -52,7 +52,7 @@ jobs:
 
       - name: 🛠️ 构建 macOS 应用
         run: |
-          flutter build macos --release  # 指定 ARM64 平台
+          flutter build macos --release --dart-define=FLUTTER_APP_ARCH=arm64  # 指定 ARM64 平台
 
       - name: 📦 打包应用
         run: |
