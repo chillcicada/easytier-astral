@@ -1,5 +1,6 @@
 import 'package:astral/k/app_s/Aps.dart';
 import 'package:astral/screens/home_page.dart';
+import 'package:astral/screens/settings_page.dart';
 import 'package:astral/wid/bottom_nav.dart';
 import 'package:astral/wid/left_nav.dart';
 import 'package:astral/wid/status_bar.dart';
@@ -50,16 +51,10 @@ class _MainScreenState extends State<MainScreen>
       page: const HomePage(),
     ),
     NavigationItem(
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
-      label: '主页',
-      page: const HomePage(),
-    ),
-    NavigationItem(
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
-      label: '主页',
-      page: const HomePage(),
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings,
+      label: '设置',
+      page: const SettingsPage(),
     ),
   ];
   List<Widget> get _pages => navigationItems.map((item) => item.page).toList();
