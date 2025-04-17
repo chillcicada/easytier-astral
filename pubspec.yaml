@@ -2,7 +2,7 @@ name: astral
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -21,33 +21,30 @@ version: 1.0.0+1
 environment:
   sdk: ^3.7.2
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
+# Dependencies 指定了你的包正常工作所需的其他依赖包。
+# 要自动将你的包依赖升级到最新版本，
+# 可以运行 `flutter pub upgrade --major-versions`。或者，
+# 你也可以通过手动修改下面的版本号来更新依赖，
+# 使用 pub.dev 上可用的最新版本。要查看哪些依赖有新版本可用，
+# 请运行 `flutter pub outdated`。
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   rust_lib_astral:
     path: rust_builder
   flutter_rust_bridge: 2.9.0
+  signals_flutter: ^6.0.2
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  window_manager: ^0.4.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.13
   integration_test:
     sdk: flutter
 
@@ -56,7 +53,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
