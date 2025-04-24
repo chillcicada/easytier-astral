@@ -3,8 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  flutter_localization
   isar_flutter_libs
-  permission_handler_windows
   screen_retriever_windows
   window_manager
 )

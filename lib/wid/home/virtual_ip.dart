@@ -17,7 +17,7 @@ class VirtualIpBox extends StatelessWidget {
               SizedBox(width: 8),
               Text(
                 '虚拟 IP',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
               ),
             ],
           ),

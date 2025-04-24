@@ -23,9 +23,9 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   flutter_staggered_grid_view: ^0.7.0
   uuid: ^4.5.1
-  compress: ^0.1.3
   jwt_decoder: ^2.0.1
   dart_jsonwebtoken: ^3.2.0
+  flutter_localization: ^0.3.2
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +40,17 @@ flutter:
   uses-material-design: true
 
   
+  fonts:
+    - family: MiSans
+      fonts:
+        - asset: fonts/MiSans-Bold.ttf
+        - asset: fonts/MiSans-Demibold.ttf
+        - asset: fonts/MiSans-ExtraLight.ttf
+        - asset: fonts/MiSans-Heavy.ttf
+        - asset: fonts/MiSans-Light.ttf
+        - asset: fonts/MiSans-Medium.ttf
+        - asset: fonts/MiSans-Normal.ttf
+        - asset: fonts/MiSans-Regular.ttf
+        - asset: fonts/MiSans-Semibold.ttf
+        - asset: fonts/MiSans-Thin.ttf
+
