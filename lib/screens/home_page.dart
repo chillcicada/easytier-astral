@@ -46,5 +46,5 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: const ConnectButton(),
     );
-  }
+  } 
 }

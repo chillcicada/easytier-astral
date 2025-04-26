@@ -350,7 +350,29 @@ pub struct NetworkInstance {
     fetch_node_info: bool,
 }
 
+/// Represents an instance of an EasyTier network.
+/// It holds the configuration and manages the lifecycle of an EasyTier process.
+///
+/// 代表一个 EasyTier 网络实例。
+/// 它持有配置并管理 EasyTier 进程的生命周期。
+///
+/// # Fields
+///
+/// * `config`: The configuration loader for this network instance. (此网络实例的配置加载器。)
+/// * `launcher`: An optional `EasyTierLauncher` that manages the actual EasyTier process. (一个可选的 `EasyTierLauncher`，用于管理实际的 EasyTier 进程。)
+/// * `fetch_node_info`: A boolean flag indicating whether to fetch node information. (一个布尔标志，指示是否获取节点信息。)
 impl NetworkInstance {
+    /// Creates a new `NetworkInstance` with the given configuration.
+    ///
+    /// 使用给定的配置创建一个新的 `NetworkInstance`。
+    ///
+    /// # Arguments
+    ///
+    /// * `config`: The configuration loader (`TomlConfigLoader`) for the instance. (实例的配置加载器 (`TomlConfigLoader`)。)
+    ///
+    /// # Returns
+    ///
+    /// A new `NetworkInstance`. (一个新的 `NetworkInstance`。)
     pub fn new(config: TomlConfigLoader) -> Self {
         Self {
             config,
@@ -359,15 +381,44 @@ impl NetworkInstance {
         }
     }
 
+    /// Sets the `fetch_node_info` flag for the instance.
+    /// This is a builder pattern method.
+    ///
+    /// 设置实例的 `fetch_node_info` 标志。
+    /// 这是一个构建器模式的方法。
+    ///
+    /// # Arguments
+    ///
+    /// * `fetch_node_info`: The boolean value to set. (要设置的布尔值。)
+    ///
+    /// # Returns
+    ///
+    /// The modified `NetworkInstance`. (修改后的 `NetworkInstance`。)
     pub fn set_fetch_node_info(mut self, fetch_node_info: bool) -> Self {
         self.fetch_node_info = fetch_node_info;
         self
     }
 
+    /// Checks if the EasyTier instance associated with this `NetworkInstance` is currently running.
+    ///
+    /// 检查与此 `NetworkInstance` 关联的 EasyTier 实例当前是否正在运行。
+    ///
+    /// # Returns
+    ///
+    /// `true` if the instance is running, `false` otherwise. (如果实例正在运行，则返回 `true`，否则返回 `false`。)
     pub fn is_easytier_running(&self) -> bool {
         self.launcher.is_some() && self.launcher.as_ref().unwrap().running()
     }
 
+    /// Retrieves runtime information about the running EasyTier instance.
+    ///
+    /// 获取正在运行的 EasyTier 实例的运行时信息。
+    ///
+    /// # Returns
+    ///
+    /// An `Option<NetworkInstanceRunningInfo>` containing the runtime information if the instance is running,
+    /// otherwise `None`.
+    /// (如果实例正在运行，则返回包含运行时信息的 `Option<NetworkInstanceRunningInfo>`，否则返回 `None`。)
     pub fn get_running_info(&self) -> Option<NetworkInstanceRunningInfo> {
         if self.launcher.is_none() {
             return None;
@@ -395,12 +446,29 @@ impl NetworkInstance {
         })
     }
 
+    /// Sets the file descriptor for the TUN device if the EasyTier instance is running.
+    ///
+    /// 如果 EasyTier 实例正在运行，则设置 TUN 设备的文件描述符。
+    ///
+    /// # Arguments
+    ///
+    /// * `tun_fd`: The file descriptor (`i32`) of the TUN device. (TUN 设备的文件描述符 (`i32`)。)
     pub fn set_tun_fd(&mut self, tun_fd: i32) {
         if let Some(launcher) = self.launcher.as_ref() {
             launcher.data.tun_fd.write().unwrap().replace(tun_fd);
         }
     }
 
+    /// Starts the EasyTier instance if it's not already running.
+    /// If it's already running, it returns a new event subscriber.
+    ///
+    /// 如果 EasyTier 实例尚未运行，则启动它。
+    /// 如果它已经在运行，则返回一个新的事件订阅者。
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing an `EventBusSubscriber` on success, or an `anyhow::Error` on failure.
+    /// (成功时返回包含 `EventBusSubscriber` 的 `Result`，失败时返回 `anyhow::Error`。)
     pub fn start(&mut self) -> Result<EventBusSubscriber, anyhow::Error> {
         if self.is_easytier_running() {
             return Ok(self.subscribe_event().unwrap());
@@ -418,6 +486,15 @@ impl NetworkInstance {
         Ok(ev)
     }
 
+    /// Subscribes to the event bus of the running EasyTier instance.
+    ///
+    /// 订阅正在运行的 EasyTier 实例的事件总线。
+    ///
+    /// # Returns
+    ///
+    /// An `Option<broadcast::Receiver<GlobalCtxEvent>>` which is a receiver for global context events
+    /// if the instance is running, otherwise `None`.
+    /// (如果实例正在运行，则返回用于接收全局上下文事件的 `Option<broadcast::Receiver<GlobalCtxEvent>>`，否则返回 `None`。)
     fn subscribe_event(&self) -> Option<broadcast::Receiver<GlobalCtxEvent>> {
         if let Some(launcher) = self.launcher.as_ref() {
             Some(launcher.data.event_subscriber.read().unwrap().subscribe())
@@ -426,6 +503,16 @@ impl NetworkInstance {
         }
     }
 
+    /// Waits asynchronously for the EasyTier instance to stop.
+    ///
+    /// 异步等待 EasyTier 实例停止。
+    ///
+    /// # Returns
+    ///
+    /// An `Option<String>` containing an error message if the instance stopped due to an error,
+    /// or `None` if the instance is not running or stopped cleanly.
+    /// (如果实例因错误而停止，则返回包含错误消息的 `Option<String>`，
+    /// 如果实例未运行或正常停止，则返回 `None`。)
     pub async fn wait(&self) -> Option<String> {
         if let Some(launcher) = self.launcher.as_ref() {
             launcher.data.instance_stop_notifier.notified().await;

@@ -6,18 +6,12 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `create_and_store_network_instance`, `create_config`
+// These functions are ignored because they are not marked as `pub`: `create_and_store_network_instance`, `peer_conn_info_to_string`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `KVNetworkStatus`, `KVNodeConnectionStats`, `KVNodeInfo`, `NodeHopStats`, `RT`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `deref`, `initialize`
 
-Future<(List<PeerInfo>, List<Route>)> getPeersAndRoutes() =>
-    RustLib.instance.api.crateApiSimpleGetPeersAndRoutes();
-
-Future<List<PeerRoutePair>> getPeerRoutePairs() =>
-    RustLib.instance.api.crateApiSimpleGetPeerRoutePairs();
-
-Future<MyNodeInfo> getNodeInfo() =>
-    RustLib.instance.api.crateApiSimpleGetNodeInfo();
+Future<JoinHandle> handleEvent({required EventBusSubscriber events}) =>
+    RustLib.instance.api.crateApiSimpleHandleEvent(events: events);
 
 Future<String> easytierVersion() =>
     RustLib.instance.api.crateApiSimpleEasytierVersion();
@@ -25,8 +19,7 @@ Future<String> easytierVersion() =>
 Future<bool> isEasytierRunning() =>
     RustLib.instance.api.crateApiSimpleIsEasytierRunning();
 
-Future<List<String>> getAllIps() =>
-    RustLib.instance.api.crateApiSimpleGetAllIps();
+Future<List<String>> getIps() => RustLib.instance.api.crateApiSimpleGetIps();
 
 Future<void> setTunFd({required int fd}) =>
     RustLib.instance.api.crateApiSimpleSetTunFd(fd: fd);
@@ -34,7 +27,7 @@ Future<void> setTunFd({required int fd}) =>
 Future<String> getRunningInfo() =>
     RustLib.instance.api.crateApiSimpleGetRunningInfo();
 
-Future<void> createServer({
+Future<JoinHandleResultString> createServer({
   required String username,
   required bool enableDhcp,
   required String specifiedIp,
@@ -54,8 +47,7 @@ Future<void> createServer({
   flag: flag,
 );
 
-Future<void> closeAllServer() =>
-    RustLib.instance.api.crateApiSimpleCloseAllServer();
+Future<void> closeServer() => RustLib.instance.api.crateApiSimpleCloseServer();
 
 Future<NetworkInterfaceHops> getNetworkInterfaceHops() =>
     RustLib.instance.api.crateApiSimpleGetNetworkInterfaceHops();
@@ -65,17 +57,14 @@ Future<bool> setNetworkInterfaceHops({required int hop}) =>
 
 Future<void> initApp() => RustLib.instance.api.crateApiSimpleInitApp();
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MyNodeInfo>>
-abstract class MyNodeInfo implements RustOpaqueInterface {}
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<EventBusSubscriber>>
+abstract class EventBusSubscriber implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PeerInfo>>
-abstract class PeerInfo implements RustOpaqueInterface {}
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< JoinHandle < () >>>
+abstract class JoinHandle implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PeerRoutePair>>
-abstract class PeerRoutePair implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Route>>
-abstract class Route implements RustOpaqueInterface {}
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JoinHandle < Result < () , String > >>>
+abstract class JoinHandleResultString implements RustOpaqueInterface {}
 
 class FlagsC {
   final String defaultProtocol;
@@ -91,8 +80,6 @@ class FlagsC {
   final bool disableP2P;
   final bool relayAllPeerRpc;
   final bool disableUdpHolePunching;
-
-  /// string ipv6_listener = 14; \[deprecated = true\]; use -l udp://\[::\]:12345 instead
   final bool multiThread;
   final int dataCompressAlgo;
   final bool bindDevice;

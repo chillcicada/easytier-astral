@@ -1,7 +1,7 @@
 pub use std::collections::BTreeMap;
-//use BTreeMap
-use dashmap::DashMap;
+use std::sync::Mutex;
 
+use easytier::common::scoped_task::ScopedTask;
 pub use easytier::{
     common::{
         self,
@@ -37,105 +37,140 @@ pub use tokio::task::JoinHandle;
 
 
 
-static INSTANCE_MAP: Lazy<DashMap<String, NetworkInstance>> = Lazy::new(DashMap::new);
+static INSTANCE: Mutex<Option<NetworkInstance>> = Mutex::new(None);
 // 创建一个 NetworkInstance 类型变量 储存当前服务器
 lazy_static! {
     static ref RT: Runtime = Runtime::new().expect("创建 Tokio 运行时失败");
 }
 
-fn create_config() -> TomlConfigLoader {
-    let mut cfg = TomlConfigLoader::default();
-    // 构造 PeerConfig 实例并设置 peers
-
-
-    // cfg.set_inst_name("default".to_string());
-    // cfg.set_inst_name(name);
-    cfg
+fn peer_conn_info_to_string(p: proto::cli::PeerConnInfo) -> String {
+    format!(
+        "my_peer_id: {}, dst_peer_id: {}, tunnel_info: {:?}",
+        p.my_peer_id, p.peer_id, p.tunnel
+    )
 }
 
+pub fn handle_event(mut events: EventBusSubscriber) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        loop {
+            match events.recv().await {
+                Ok(e) => {
+                    //  println!("Received event: {:?}", e);
+                    match e {
+                        GlobalCtxEvent::PeerAdded(p) => {
+                            println!("{}",format!("新节点已添加。节点ID: {}", p));
+                        }
 
+                        GlobalCtxEvent::PeerRemoved(p) => {
+                            println!("{}",format!("节点已移除。节点ID: {}", p));
+                        }
 
-// 添加一个函数来获取对等节点和路由信息
-pub fn get_peers_and_routes() -> Result<(Vec<PeerInfo>, Vec<Route>), String> {
-    if let Some(instance) = INSTANCE_MAP.iter().next() {
-        // 获取运行信息
-        if let Some(info) = instance.get_running_info() {
-            return Ok((info.peers, info.routes));
-        }
-        return Err("无法获取运行信息".to_string());
-    }
-    Err("没有运行中的网络实例".to_string())
-}
+                        GlobalCtxEvent::PeerConnAdded(p) => {
+                            println!("{}",format!(
+                                "新节点连接已添加。连接信息: {}",
+                                peer_conn_info_to_string(p)
+                            ));
+                        }
+                        GlobalCtxEvent::PeerConnRemoved(p) => {
+                            println!("{}",format!(
+                                "节点连接已移除。连接信息: {}",
+                                peer_conn_info_to_string(p)
+                            ));
+                        }
+                        GlobalCtxEvent::ListenerAddFailed(p, msg) => {
+                            println!("{}",format!(
+                                "监听器添加失败。监听器: {}, 消息: {}",
+                                p, msg
+                            ));
+                        }
+                        GlobalCtxEvent::ListenerAcceptFailed(p, msg) => {
+                            println!("{}",format!(
+                                "监听器接受失败。监听器: {}, 消息: {}",
+                                p, msg
+                            ));
+                        }
+                        GlobalCtxEvent::ListenerAdded(p) => {
+                            if p.scheme() == "ring" {
+                                continue;
+                            }
+                            println!("{}",format!("新监听器已添加。监听器: {}", p));
+                        }
+                        GlobalCtxEvent::ConnectionAccepted(local, remote) => {
+                            println!("{}",format!(
+                                "新连接已接受。本地: {}, 远程: {}",
+                                local, remote
+                            ));
+                        }
+                        GlobalCtxEvent::ConnectionError(local, remote, err) => {
+                            println!("{}",format!(
+                                "连接错误。本地: {}, 远程: {}, 错误: {}",
+                                local, remote, err
+                            ));
+                        }
+                        GlobalCtxEvent::TunDeviceReady(dev) => {
+                            println!("{}",format!("TUN 设备就绪。设备: {}", dev));
+                        }
+                        GlobalCtxEvent::TunDeviceError(err) => {
+                            println!("{}",format!("TUN 设备错误。错误: {}", err));
+                        }
+                        GlobalCtxEvent::Connecting(dst) => {
+                            println!("{}",format!("正在连接到节点。目标: {}", dst));
+                        }
+                        GlobalCtxEvent::ConnectError(dst, ip_version, err) => {
+                            println!("{}",format!(
+                                "连接到节点错误。目标: {}, IP版本: {}, 错误: {}",
+                                dst, ip_version, err
+                            ));
+                        }
+                        GlobalCtxEvent::VpnPortalClientConnected(portal, client_addr) => {
+                            println!("{}",format!(
+                                "VPN 门户客户端已连接。门户: {}, 客户端地址: {}",
+                                portal, client_addr
+                            ));
+                        }
+                        GlobalCtxEvent::VpnPortalClientDisconnected(portal, client_addr) => {
+                            println!("{}",format!(
+                                "VPN 门户客户端已断开连接。门户: {}, 客户端地址: {}",
+                                portal, client_addr
+                            ));
+                        }
+                        GlobalCtxEvent::DhcpIpv4Changed(old, new) => {
+                            println!("{}",format!("DHCP IP 已更改。旧: {:?}, 新: {:?}", old, new));
+                        }
+                        GlobalCtxEvent::DhcpIpv4Conflicted(ip) => {
+                            println!("{}",format!("DHCP IP 冲突。IP: {:?}", ip));
+                        }
+                        GlobalCtxEvent::PortForwardAdded(cfg) => {
+                            println!("{}",format!(
+                                "端口转发已添加。本地: {}, 远程: {}, 协议: {}",
+                                cfg.bind_addr.unwrap().to_string(),
+                                cfg.dst_addr.unwrap().to_string(),
+                                cfg.socket_type().as_str_name()
+                            ));
+                        }
 
-// 如果需要获取配对后的信息，可以使用这个函数
-pub fn get_peer_route_pairs() -> Result<Vec<PeerRoutePair>, String> {
-    if let Some(instance) = INSTANCE_MAP.iter().next() {
-        // 获取运行信息
-        if let Some(info) = instance.get_running_info() {
-            let mut pairs = info.peer_route_pairs;
-
-            // 如果存在本地节点信息，添加到结果中
-            if let Some(my_node_info) = &info.my_node_info {
-                // 获取本地节点ID
-                let my_peer_id = info
-                    .peers
-                    .iter()
-                    .find(|p| p.conns.iter().any(|c| c.is_client == false))
-                    .map(|p| p.peer_id)
-                    .unwrap_or(0);
-
-                // 创建一个表示本地节点的Route
-                let my_route = proto::cli::Route {
-                    peer_id: my_peer_id,
-                    ipv4_addr: my_node_info.virtual_ipv4.clone(),
-                    next_hop_peer_id: my_peer_id, // 指向自己
-                    cost: 0,                      // 到自己的成本为0
-                    path_latency: 0,              // 到自己的延迟为0
-                    proxy_cidrs: vec![],
-                    hostname: my_node_info.hostname.clone(),
-                    stun_info: my_node_info.stun_info.clone(),
-                    inst_id: "local".to_string(),
-                    version: my_node_info.version.clone(),
-                    feature_flag: None,
-                    next_hop_peer_id_latency_first: None,
-                    cost_latency_first: None,
-                    path_latency_latency_first: None,
-                };
-
-                // 创建一个表示本地节点的PeerInfo，包含网络统计信息
-                let my_peer_info = info.peers.iter().find(|p| p.peer_id == my_peer_id).cloned();
-
-                // 创建一个表示本地节点的PeerRoutePair
-                let my_pair = proto::cli::PeerRoutePair {
-                    route: Some(my_route),
-                    peer: my_peer_info, // 使用找到的PeerInfo或None
-                };
-
-                // 添加到结果中
-                pairs.push(my_pair);
+                    }
+                }
+                Err(err) => {
+                    eprintln!("接收事件错误: {:?}", err);
+                    // 根据错误类型决定是否中断循环
+                    match err {
+                        tokio::sync::broadcast::error::RecvError::Closed => {
+                            println!("事件通道已关闭，停止事件处理。");
+                            break; // Exit the loop if the channel is closed
+                        }
+                        tokio::sync::broadcast::error::RecvError::Lagged(n) => {
+                            eprintln!("事件处理滞后，丢失了 {} 个事件。", n);
+                            // Decide if lagging is critical enough to break or just log
+                        }
+                    }
+                    
+                }
             }
-
-            return Ok(pairs);
         }
-        return Err("无法获取运行信息".to_string());
-    }
-    Err("没有运行中的网络实例".to_string())
+    })
 }
 
-// 获取节点信息
-pub fn get_node_info() -> Result<MyNodeInfo, String> {
-    if let Some(instance) = INSTANCE_MAP.iter().next() {
-        // 获取运行信息
-        if let Some(info) = instance.get_running_info() {
-            if let Some(node_info) = info.my_node_info {
-                return Ok(node_info);
-            }
-            return Err("无法获取节点信息".to_string());
-        }
-        return Err("无法获取运行信息".to_string());
-    }
-    Err("没有运行中的网络实例".to_string())
-}
 
 async fn create_and_store_network_instance(cfg: TomlConfigLoader) -> Result<(), String> {
     println!("Starting easytier with config:");
@@ -145,13 +180,22 @@ async fn create_and_store_network_instance(cfg: TomlConfigLoader) -> Result<(), 
     // 在移动 cfg 之前先获取 ID
     let name = cfg.get_id().to_string();
     // 创建网络实例
-    let mut instance = NetworkInstance::new(cfg).set_fetch_node_info(true);
+    let mut network = NetworkInstance::new(cfg).set_fetch_node_info(true);
     // 启动网络实例，并处理可能的错误
-    instance.start().unwrap();
-    println!("instance {} started", name);
-    // 将实例存储到 INSTANCE_MAP 中
-    INSTANCE_MAP.insert(name, instance);
+    handle_event(network.start().unwrap());
 
+    println!("instance {} started", name);
+    // 将实例存储到 INSTANCE 中
+    let mut instance_guard = INSTANCE.lock().map_err(|e| format!("获取互斥锁失败: {}", e))?;
+    
+    if instance_guard.is_none() {
+        *instance_guard = Some(network);
+       println!("实例已成功储存");
+    } else {
+        println!("网络实例已存在");
+    }
+    print!("成功储存");
+    
     Ok(())
 }
 
@@ -162,11 +206,8 @@ pub fn easytier_version() -> Result<String, String> {
 
 // 是否在运行
 pub fn is_easytier_running() -> bool {
-    if let Some(instance) = INSTANCE_MAP.iter().next() {
-        instance.is_easytier_running()
-    } else {
-        false
-    }
+    let instance = INSTANCE.lock().unwrap();
+    instance.is_some()
 }
 // 定义节点跳跃统计信息结构体
 pub struct NodeHopStats {
@@ -204,12 +245,16 @@ pub struct KVNetworkStatus {
 }
 
 // 获取网络中所有节点的IP地址列表
-pub fn get_all_ips() -> Vec<String> {
+pub fn get_ips() -> Vec<String> {
     let mut result = Vec::new();
-    if let Some(instance) = INSTANCE_MAP.iter().next() {
+    
+    // Lock the mutex and access the instance if it exists
+    let instance = INSTANCE.lock().unwrap();
+    
+    if let Some(instance) = instance.as_ref() {
         if let Some(info) = instance.get_running_info() {
             
-            // 添加所有远程节点IP
+            // Add all remote node IPs
             for route in &info.routes {
                 if let Some(ipv4_addr) = &route.ipv4_addr {
                     if let Some(addr) = &ipv4_addr.address {
@@ -221,7 +266,7 @@ pub fn get_all_ips() -> Vec<String> {
                             addr.addr & 0xFF,
                             ipv4_addr.network_length
                         );
-                        // 避免重复添加
+                        // Avoid duplicates
                         if !result.contains(&ip) {
                             result.push(ip);
                         }
@@ -230,25 +275,26 @@ pub fn get_all_ips() -> Vec<String> {
             }
         }
     }
-    
     result
 }
 
 // 设置TUN设备的文件描述符
 pub fn set_tun_fd(fd: i32) -> Result<(), String> {
-    // 遍历所有实例并设置TUN文件描述符
-    for mut instance in INSTANCE_MAP.iter_mut() {
+    let mut instance = INSTANCE.lock().unwrap();
+    if let Some(instance) = instance.as_mut() {
         instance.set_tun_fd(fd);
+        Ok(())
+    } else {
+        Err("No instance available".to_string())
     }
-    Ok(())
 }
 
 
-
 pub fn get_running_info() -> String {
-    INSTANCE_MAP
-        .iter()
-        .next()
+    INSTANCE
+        .lock()
+        .unwrap()
+        .as_ref()
         .and_then(|instance| instance.get_running_info())
         .and_then(|info| {
             // 获取并打印节点路由对信息
@@ -424,7 +470,6 @@ pub struct FlagsC {
     pub disable_p2p: bool,
     pub relay_all_peer_rpc: bool,
     pub disable_udp_hole_punching: bool,
-    /// string ipv6_listener = 14; \[deprecated = true\]; use -l udp://\[::\]:12345 instead
     pub multi_thread: bool,
     pub data_compress_algo: i32,
     pub bind_device: bool,
@@ -443,19 +488,28 @@ pub fn create_server(
     room_password: String,
     severurl: Vec<String>,
     onurl: Vec<String>,
-    flag:FlagsC,
-) {
+    flag: FlagsC,
+) -> JoinHandle<Result<(), String>> {
+    print!("{}", format!("创建服务器: {}，启用DHCP: {}, 指定IP: {}, 房间名称: {}, 房间密码: {}, 服务器URL: {:?}, 监听器URL: {:?}", username, enable_dhcp, specified_ip, room_name, room_password, severurl, onurl));
     RT.spawn(async move {
-        // 创建一个示例配置
-        let cfg = create_config();
-        // 使用传入的onurl参数设置监听地址
+        // Create config with better error handling
+        let mut cfg = TomlConfigLoader::default();
+        
+        // Set listeners with proper error handling
         let mut listeners = Vec::new();
         for url in onurl {
-            listeners.push(url.parse().unwrap());
+            match url.parse() {
+                Ok(parsed) => listeners.push(parsed),
+                Err(e) => return Err(format!("Invalid listener URL: {}, error: {}", url, e))
+            }
         }
         cfg.set_listeners(listeners);
-        cfg.set_hostname(Option::from(username));
+        
+        // Set hostname and other settings
+        cfg.set_hostname(Some(username));
         cfg.set_dhcp(enable_dhcp);
+        
+        // Set flags more efficiently by directly mapping from input
         let mut flags = cfg.get_flags();
         flags.default_protocol = flag.default_protocol;
         flags.dev_name = flag.dev_name;
@@ -477,57 +531,54 @@ pub fn create_server(
         flags.disable_kcp_input = flag.disable_kcp_input;
         flags.disable_relay_kcp = flag.disable_relay_kcp;
         flags.proxy_forward_by_system = flag.proxy_forward_by_system;
-        // flags.dev_name = "astral".to_string();
         cfg.set_flags(flags);
-        // 创建TCP和UDP连接配置列表
+        
+        // Configure peer connections with proper error handling
         let mut peer_configs = Vec::new();
-        // 为每个服务器URL创建TCP和UDP配置
         for url in severurl {
-            peer_configs.push(PeerConfig {
-                uri: format!("{}", url).parse().unwrap(),
-            });
+            match url.parse() {
+                Ok(uri) => peer_configs.push(PeerConfig { uri }),
+                Err(e) => return Err(format!("Invalid server URL: {}, error: {}", url, e))
+            }
+        }
+        cfg.set_peers(peer_configs);
+        
+        // Set IP if DHCP is disabled
+        if !enable_dhcp && !specified_ip.is_empty() {
+            let ip_str = format!("{}/24", specified_ip);
+            match ip_str.parse() {
+                Ok(ip) => cfg.set_ipv4(Some(ip)),
+                Err(e) => return Err(format!("Invalid IP address: {}, error: {}", specified_ip, e))
+            }
         }
         
-        cfg.set_peers(peer_configs);
-        if enable_dhcp == false {
-            // 使用完整路径引用 cidr 模块的 Ipv4Inet
-            // 解析IP地址和子网掩码
-            let ip = format!("{}/24", specified_ip).parse().unwrap();
-            cfg.set_ipv4(Some(ip));
-        }
-        cfg.set_network_identity(NetworkIdentity::new(
-            room_name.to_string(),
-            room_password.to_string(),
-        ));
+        // Set network identity
+        cfg.set_network_identity(NetworkIdentity::new(room_name, room_password));
 
-        // 并行启动网络实例
-        let handle1 = tokio::spawn(async move {
-            if let Err(e) = create_and_store_network_instance(cfg).await {
-                eprintln!("创建网络实例失败: {}", e);
-            }
-        });
-
-        // 等待所有任务完成
-        let _ = tokio::join!(handle1);
-    });
+        // Start network instance directly without nesting spawns
+        create_and_store_network_instance(cfg).await
+    })
 }
 
-// 获取INSTANCE_MAP所有的服务器然后关闭
-pub fn close_all_server() {
+// 关闭服务器实例
+pub fn close_server() {
     RT.spawn(async {
-        println!("关闭前实例数: {}", INSTANCE_MAP.len()); // 添加关闭前日志
-        let keys: Vec<_> = INSTANCE_MAP.iter().map(|e| e.key().clone()).collect();
-        println!("待关闭实例键: {:?}", keys); // 增加键列表输出
-
-        for key in keys {
-            if let Some((_, mut instance)) = INSTANCE_MAP.remove(&key) {
-                //丢弃 instance
-                drop(instance);
-            } else {
-                println!("未找到实例: {}", key); // 增加错误处理
-            }
+        // 获取mutex锁
+        let mut locked_instance = INSTANCE.lock().unwrap();
+        
+        println!("关闭前实例状态: {}", if locked_instance.is_some() { "存在" } else { "不存在" }); // 添加关闭前日志
+        
+        // 如果实例存在，则丢弃它
+        if let Some(instance) = locked_instance.take() {
+            println!("正在关闭实例");
+            // 丢弃实例
+            drop(instance);
+            println!("实例已成功关闭");
+        } else {
+            println!("没有找到需要关闭的实例");
         }
-        println!("关闭后剩余实例数: {}", INSTANCE_MAP.len()); // 添加关闭后日志
+        
+        println!("关闭后实例状态: {}", if locked_instance.is_some() { "存在" } else { "不存在" }); // 添加关闭后日志
     });
 }
 
@@ -623,10 +674,9 @@ pub fn get_network_interface_hops() -> NetworkInterfaceHops {
     NetworkInterfaceHops { hops }
 }
 
-
-//给INSTANCE_MAP所有的网卡设置跃点
+//给INSTANCE网卡设置跃点
 pub fn set_network_interface_hops(hop: i32) -> bool {
-    // 遍历所有实例
+    // 获取实例
     #[cfg(target_os = "windows")]
     {
         use std::process::Command;
@@ -636,8 +686,10 @@ pub fn set_network_interface_hops(hop: i32) -> bool {
         
         let mut success = true;
         
-        // 从INSTANCE_MAP获取所有实例
-        for instance in INSTANCE_MAP.iter() {
+        // 从INSTANCE获取实例
+        let instance = INSTANCE.lock().unwrap();
+        
+        if let Some(instance) = instance.as_ref() {
             // 获取实例的运行信息
             if let Some(info) = instance.get_running_info() {
                 // 获取设备名称
@@ -681,11 +733,8 @@ pub fn set_network_interface_hops(hop: i32) -> bool {
                 println!("无法获取实例的运行信息");
                 success = false;
             }
-        }
-        
-        // 如果INSTANCE_MAP为空，则返回失败
-        if INSTANCE_MAP.is_empty() {
-            println!("没有找到任何EasyTier网络实例");
+        } else {
+            println!("没有找到EasyTier网络实例");
             success = false;
         }
         

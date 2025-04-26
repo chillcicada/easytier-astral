@@ -136,7 +136,7 @@ class Aps {
   final Signal<bool> relayAllPeerRpc = signal(false); // 中继所有对等RPC设置
   final Signal<bool> disableUdpHolePunching = signal(false); // UDP打洞禁用设置
   final Signal<bool> multiThread = signal(true); // 多线程设置
-  final Signal<int> dataCompressAlgo = signal(0);
+  final Signal<int> dataCompressAlgo = signal(1);
 
   /// 数据压缩算法(0:不压缩)
   final Signal<bool> bindDevice = signal(false);
