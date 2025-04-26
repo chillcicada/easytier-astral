@@ -2,7 +2,7 @@
 
 [![GitHub](https://img.shields.io/badge/GitHub-AstralET-blue)](https://github.com/ldoubil/astral)
 
-
+## 目前在2.0.0分支制作新功能如需贡献切换到2.0.0
 
 ## 预览
 ![manage-step1](/assets/AstralET1.png)
