@@ -122,11 +122,16 @@ class _ConnectButtonState extends State<ConnectButton>
 
           var a = await getRunningInfo();
           var data = jsonDecode(a);
+          print(data);
           Aps().updateIpv4(
-            intToIp(data['my_node_info']['ips']['interface_ipv4s'][0]['addr']),
+            intToIp(
+              data['my_node_info']?['virtual_ipv4']?.isEmpty ?? true
+                  ? 0
+                  : data['my_node_info']?['virtual_ipv4']['address']['addr'] ??
+                      0,
+            ),
           );
-          var b = await getNetworkStatus();
-          print(b);
+          Aps().netStatus.value = await getNetworkStatus();
         } else {
           timer.cancel(); // 如果组件已卸载，取消计时器
         }

@@ -1,5 +1,6 @@
 import 'package:astral/fun/random_name.dart';
 import 'package:astral/k/models/room.dart';
+import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:astral/k/database/app_data.dart';
@@ -53,9 +54,10 @@ class Aps {
     PlayerName.value = await AppDatabase().AllSettings.getPlayerName();
   }
 
+  final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
+
   /// PLAYERname
   final Signal<String> PlayerName = signal(''); // 玩家名称
-
   /// 更新玩家名称
   Future<void> updatePlayerName(String name) async {
     PlayerName.value = name;
@@ -109,8 +111,6 @@ class Aps {
 
   // 构建导航项
   final Signal<int> selectedIndex = Signal(0);
-
-  /// **********************************************************************************************************
 
   /// 网络配置
   final Signal<String> netns = signal(''); // 网络命名空间
