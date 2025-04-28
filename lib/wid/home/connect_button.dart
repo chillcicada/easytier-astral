@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/src/rust/api/simple.dart';
-import 'package:astral/wid/left_nav.dart';
 import 'package:flutter/material.dart';
 
 enum ConnectionState { idle, connecting, connected }
