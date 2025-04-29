@@ -505,7 +505,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 defaultProtocol:
                     ref.read(advancedConfigProvider)['defaultProtocol'] ??
                         "tcp",
-                devName: ref.read(advancedConfigProvider)['devName'] ?? "astral",
+                devName: "astral",
                 enableEncryption: true,
                 enableIpv6:
                     ref.read(advancedConfigProvider)['enableIpv6'] ?? true,
