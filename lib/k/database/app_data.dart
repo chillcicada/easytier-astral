@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:astral/k/models/all_settings.dart';
+import 'package:astral/k/models/kl.dart';
 import 'package:astral/k/models/net_config.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/k/models_mod/all_settings_cz.dart';
+import 'package:astral/k/models_mod/kl_cz.dart';
 import 'package:astral/k/models_mod/net_config_cz.dart';
 import 'package:astral/k/models_mod/room_cz.dart';
 import 'package:isar/isar.dart';
@@ -20,6 +22,7 @@ class AppDatabase {
   late final NetConfigRepository netConfigSetting;
   late final RoomCz RoomSetting;
   late final AllSettingsCz AllSettings;
+  late final KlCz KlSetting;
 
   /// 初始化数据库
   Future<void> init([String? customDbDir]) async {
@@ -46,10 +49,13 @@ class AppDatabase {
       NetConfigSchema,
       RoomSchema,
       AllSettingsSchema,
+      RuleSchema,
+      KlSchema,
     ], directory: dbDir);
     themeSettings = ThemeSettingsRepository(isar);
     netConfigSetting = NetConfigRepository(isar);
     RoomSetting = RoomCz(isar);
     AllSettings = AllSettingsCz(isar);
+    KlSetting = KlCz(isar);
   }
 }

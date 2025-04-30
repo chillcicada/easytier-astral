@@ -364,7 +364,7 @@ class _UserPageState extends State<UserPage> {
             children: [
               _buildStatItem(
                 Icons.upload_rounded,
-                '上传速度',
+                '累计上传',
                 _formatSpeed(uploadSpeedKB),
                 colorScheme.primary,
                 colorScheme,
@@ -372,7 +372,7 @@ class _UserPageState extends State<UserPage> {
               const SizedBox(height: 10),
               _buildStatItem(
                 Icons.arrow_upward_rounded,
-                '发送包',
+                '累计发送包',
                 '$sentPackets',
                 colorScheme.primary,
                 colorScheme,
@@ -387,7 +387,7 @@ class _UserPageState extends State<UserPage> {
             children: [
               _buildStatItem(
                 Icons.download_rounded,
-                '下载速度',
+                '累计下载',
                 _formatSpeed(downloadSpeedKB),
                 colorScheme.secondary,
                 colorScheme,
@@ -395,7 +395,7 @@ class _UserPageState extends State<UserPage> {
               const SizedBox(height: 10),
               _buildStatItem(
                 Icons.arrow_downward_rounded,
-                '接收包',
+                '累计接收包',
                 '$receivedPackets',
                 colorScheme.secondary,
                 colorScheme,

@@ -1,4 +1,5 @@
 import 'package:astral/fun/random_name.dart';
+import 'package:astral/k/models/kl.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class Aps {
     _initThemeSettings();
     updateNetConfig();
     initMisc();
+    initKl();
   }
 
   // 初始化主题设置
@@ -426,5 +428,102 @@ class Aps {
   Future<void> setRoom(Room room) async {
     await AppDatabase().AllSettings.updateRoom(room);
     selectroom.value = await AppDatabase().AllSettings.getRoom();
+  }
+
+  final Signal<List<Kl>> kls = signal([]);
+  // 初始化Kl配置
+  Future<void> initKl() async {
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+  }
+
+  // 添加Kl配置
+  Future<int> addKl(Kl kl) async {
+    final id = await AppDatabase().KlSetting.addKl(kl);
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+    return id;
+  }
+
+  // 更新Kl配置
+  Future<int> updateKl(Kl kl) async {
+    final id = await AppDatabase().KlSetting.updateKl(kl);
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+    return id;
+  }
+
+  // 删除Kl配置
+  Future<bool> deleteKl(int id) async {
+    final result = await AppDatabase().KlSetting.deleteKl(id);
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+    return result;
+  }
+
+  // 启用或禁用Kl配置
+  Future<int> toggleKlEnabled(Kl kl, bool enabled) async {
+    kl.enabled = enabled;
+    final id = await updateKl(kl);
+    return id;
+  }
+
+  // 根据ID获取Kl配置
+  Future<Kl?> getKlById(int id) async {
+    return await AppDatabase().KlSetting.getKlById(id);
+  }
+
+  // 获取所有Kl配置
+  Future<List<Kl>> getAllKls() async {
+    final klList = await AppDatabase().KlSetting.getAllKls();
+    kls.value = klList;
+    return klList;
+  }
+
+  // 根据名称查询Kl配置
+  Future<List<Kl>> getKlsByName(String name) async {
+    return await AppDatabase().KlSetting.getKlsByName(name);
+  }
+
+  // 根据启用状态查询Kl配置
+  Future<List<Kl>> getKlsByEnabled(bool enabled) async {
+    return await AppDatabase().KlSetting.getKlsByEnabled(enabled);
+  }
+
+  /// **********************************************************************************************************
+  /// 规则相关
+
+  // 添加规则
+  Future<int> addRule(Rule rule, int klId) async {
+    final id = await AppDatabase().KlSetting.addRule(rule, klId);
+    if (id != -1) {
+      kls.value = await AppDatabase().KlSetting.getAllKls();
+    }
+    return id;
+  }
+
+  // 获取规则
+  Future<Rule?> getRuleById(int id) async {
+    return await AppDatabase().KlSetting.getRuleById(id);
+  }
+
+  // 获取Kl下的所有规则
+  Future<List<Rule>> getRulesByKlId(int klId) async {
+    return await AppDatabase().KlSetting.getRulesByKlId(klId);
+  }
+
+  // 更新规则
+  Future<int> updateRule(Rule rule) async {
+    final id = await AppDatabase().KlSetting.updateRule(rule);
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+    return id;
+  }
+
+  // 删除规则
+  Future<bool> deleteRule(int id) async {
+    final result = await AppDatabase().KlSetting.deleteRule(id);
+    kls.value = await AppDatabase().KlSetting.getAllKls();
+    return result;
+  }
+
+  // 根据操作类型查询规则
+  Future<List<Rule>> getRulesByOperationType(OperationType opType) async {
+    return await AppDatabase().KlSetting.getRulesByOperationType(opType);
   }
 }

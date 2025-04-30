@@ -1,0 +1,175 @@
+# kl.toml - 网络重定向配置文件
+# 此配置文件用于定义网络重定向规则，根据窗口标题匹配不同的应用程序
+
+# ===================== 规则组配置 =====================
+# 每个规则组包含:
+# - name: 规则组名称（便于识别）
+# - regex: 匹配窗口标题的正则表达式
+# - rules: 具体的重定向规则列表
+
+# 浏览器规则组 - 适用于Chrome、Edge等浏览器
+[[rule_groups]]
+name = "浏览器规则"
+# 正则表达式匹配包含"Chrome"或"Edge"的窗口标题
+regex = ".*(Chrome|Edge|Firefox).*"
+rules = [
+  # 将Google DNS重定向到CloudFlare DNS
+  { 
+    op = "connect",           # 操作类型：连接操作
+    match_ip = "8.8.8.8",     # 匹配的IP地址
+    replace_ip = "1.1.1.1"    # 替换为的IP地址
+  },
+  # 将Google备用DNS重定向到CloudFlare备用DNS
+  { 
+    op = "connect", 
+    match_ip = "8.8.4.4", 
+    replace_ip = "1.0.0.1" 
+  },
+  # 修改特定端口的连接
+  { 
+    op = "connect",           # 连接操作
+    match_port = 443,         # 匹配HTTPS端口
+    replace_port = 8443       # 替换为自定义端口
+  },
+  # 同时修改IP和端口
+  { 
+    op = "connect", 
+    match_ip = "192.168.1.1", 
+    match_port = 80, 
+    replace_ip = "192.168.1.100", 
+    replace_port = 8080 
+  }
+]
+
+# 游戏规则组 - 适用于特定游戏
+[[rule_groups]]
+name = "游戏规则"
+# 匹配包含"游戏"、"Game"或特定游戏名称的窗口标题
+regex = ".*(游戏|Game|王者荣耀|英雄联盟|Minecraft).*"
+rules = [
+  # 修改所有网络操作的特定端口
+  { 
+    op = "all",               # 所有操作类型（connect/bind/sendto/recvfrom）
+    match_port = 3724,        # 匹配的端口
+    replace_port = 3725       # 替换为的端口
+  },
+  # 修改UDP发送目标
+  { 
+    op = "sendto",            # UDP发送操作
+    match_ip = "203.107.1.1", # 匹配的IP地址
+    replace_ip = "127.0.0.1"  # 替换为本地回环地址
+  },
+  # 修改UDP接收来源
+  { 
+    op = "recvfrom",          # UDP接收操作
+    match_port = 7000,        # 匹配的端口
+    replace_port = 7001       # 替换为的端口
+  }
+]
+
+# 办公软件规则组
+[[rule_groups]]
+name = "办公软件规则"
+regex = ".*(Word|Excel|PowerPoint|Office|WPS).*"
+rules = [
+  # 修改绑定地址
+  { 
+    op = "bind",              # 绑定操作
+    match_ip = "0.0.0.0",     # 匹配所有地址
+    replace_ip = "127.0.0.1"  # 仅绑定到本地
+  }
+]
+
+# 聊天软件规则组
+[[rule_groups]]
+name = "聊天软件规则"
+regex = ".*(微信|QQ|WeChat|TIM|钉钉|Teams).*"
+rules = [
+  # 修改文件传输端口
+  { 
+    op = "connect", 
+    match_port = 443, 
+    replace_port = 4430 
+  },
+  # 修改语音通话IP
+  { 
+    op = "sendto", 
+    match_ip = "183.3.235.64", 
+    replace_ip = "183.3.235.100" 
+  }
+]
+
+# 流媒体应用规则组
+[[rule_groups]]
+name = "流媒体应用规则"
+regex = ".*(哔哩哔哩|Bilibili|爱奇艺|优酷|腾讯视频|YouTube).*"
+rules = [
+  # 修改视频流端口
+  { 
+    op = "connect", 
+    match_port = 443, 
+    replace_port = 4433 
+  },
+  # 修改UDP视频流
+  { 
+    op = "sendto", 
+    match_port = 53, 
+    replace_port = 5353 
+  }
+]
+
+# 开发工具规则组
+[[rule_groups]]
+name = "开发工具规则"
+regex = ".*(Visual Studio|VS Code|IntelliJ|Eclipse|Android Studio).*"
+rules = [
+  # 修改包管理器连接
+  { 
+    op = "connect", 
+    match_ip = "151.101.1.69",   # npm registry
+    replace_ip = "192.168.1.100" # 本地镜像
+  },
+  # 修改调试端口
+  { 
+    op = "bind", 
+    match_port = 9229,           # Node.js调试端口
+    replace_port = 19229         # 自定义调试端口
+  }
+]
+
+# 通用规则组 - 适用于所有应用
+[[rule_groups]]
+name = "通用规则"
+# 匹配任何窗口标题
+regex = ".*"
+rules = [
+  # 阻止特定IP的连接（重定向到本地）
+  { 
+    op = "connect", 
+    match_ip = "123.45.67.89",   # 可能是广告服务器
+    replace_ip = "127.0.0.1"     # 重定向到本地
+  },
+  # 修改DNS查询（将默认DNS改为自定义DNS）
+  { 
+    op = "sendto", 
+    match_port = 53,             # DNS端口
+    match_ip = "192.168.1.1",    # 路由器DNS
+    replace_ip = "114.114.114.114" # 公共DNS
+  }
+]
+
+# 特定应用规则 - 精确匹配某个应用
+[[rule_groups]]
+name = "特定应用规则"
+# 精确匹配窗口标题
+regex = "^特定应用名称 - 版本.*$"
+rules = [
+  # 完全自定义的规则
+  { 
+    op = "connect", 
+    match_ip = "192.168.1.5", 
+    match_port = 1234, 
+    replace_ip = "192.168.1.10", 
+    replace_port = 5678 
+  }
+]
