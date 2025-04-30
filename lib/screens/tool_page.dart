@@ -114,8 +114,8 @@ class _ToolPageState extends State<ToolPage> {
                 TextField(
                   controller: descriptionController,
                   decoration: const InputDecoration(
-                    labelText: '描述',
-                    hintText: '输入配置描述',
+                    labelText: '配置正则',
+                    hintText: '输入目标窗口匹配正则',
                   ),
                   maxLines: 3,
                 ),
