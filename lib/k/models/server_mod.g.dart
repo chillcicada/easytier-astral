@@ -94,7 +94,7 @@ const ServerModSchema = CollectionSchema(
   getId: _serverModGetId,
   getLinks: _serverModGetLinks,
   attach: _serverModAttach,
-  version: '3.1.0+1',
+  version: '3.1.8',
 );
 
 int _serverModEstimateSize(

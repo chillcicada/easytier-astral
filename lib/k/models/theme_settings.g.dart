@@ -40,7 +40,7 @@ const ThemeSettingsSchema = CollectionSchema(
   getId: _themeSettingsGetId,
   getLinks: _themeSettingsGetLinks,
   attach: _themeSettingsAttach,
-  version: '3.1.0+1',
+  version: '3.1.8',
 );
 
 int _themeSettingsEstimateSize(
