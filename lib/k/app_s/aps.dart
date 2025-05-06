@@ -35,8 +35,6 @@ class Aps {
 
   // 杂项初始化
   Future<void> initMisc() async {
-    rooms.value = await AppDatabase().RoomSetting.getAllRooms();
-    // 如果没有任何一个房间 就随机创建一个加密的
     if (rooms.value.isEmpty) {
       final s = Room(
         name: RandomName(),
@@ -51,6 +49,8 @@ class Aps {
         await AppDatabase().AllSettings.updateRoom(s);
       }
     }
+    rooms.value = await AppDatabase().RoomSetting.getAllRooms();
+    // 如果没有任何一个房间 就随机创建一个加密的
     selectroom.value = await AppDatabase().AllSettings.getRoom();
     // 更新玩家名称
     PlayerName.value = await AppDatabase().AllSettings.getPlayerName();
