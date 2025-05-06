@@ -1,4 +1,5 @@
 // 导入所需的包
+import 'package:astral/fun/up.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
@@ -30,6 +31,18 @@ class _MainScreenState extends State<MainScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenWidth = MediaQuery.of(context).size.width;
       Aps().updateScreenSplitWidth(screenWidth);
+    });
+
+    // 在初始化时进行更新检查
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final updateChecker = UpdateChecker(owner: 'ldoubil', repo: 'astral');
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (mounted) {
+            updateChecker.scheckForUpdates(context);
+          }
+        });
+      }
     });
   }
 

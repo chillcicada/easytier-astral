@@ -16,14 +16,6 @@ class _KevinAppState extends State<KevinApp> {
   @override
   void initState() {
     super.initState();
-
-    // 添加异步更新检查（推荐方式）
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final updateChecker = UpdateChecker(owner: 'ldoubil', repo: 'astral');
-      if (mounted) {
-        updateChecker.scheckForUpdates(context);
-      }
-    });
   }
 
   @override

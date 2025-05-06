@@ -172,8 +172,15 @@ class UpdateChecker {
     // 比较主版本号、次版本号和修订号
     for (int i = 0; i < 3; i++) {
       final currentPart =
-          i < currentParts.length ? int.parse(currentParts[i]) : 0;
-      final latestPart = i < latestParts.length ? int.parse(latestParts[i]) : 0;
+          i < currentParts.length
+              ? int.tryParse(currentParts[i]) ??
+                  0 // 安全解析非数字版本部分
+              : 0;
+      final latestPart =
+          i < latestParts.length
+              ? int.tryParse(latestParts[i]) ??
+                  0 // 安全解析非数字版本部分
+              : 0;
 
       if (latestPart > currentPart) {
         return true;
