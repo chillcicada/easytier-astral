@@ -512,8 +512,13 @@ class Aps {
   }
 
   /// 设置是否启用
-  Future<int> setServerEnable(ServerMod server, bool enable) async {
+  Future<Future<List<ServerMod>>> setServerEnable(
+    ServerMod server,
+    bool enable,
+  ) async {
     server.enable = enable;
-    return await AppDatabase().ServerSetting.updateServer(server);
+    await AppDatabase().ServerSetting.updateServer(server);
+    servers.value = await AppDatabase().ServerSetting.getAllServers();
+    return AppDatabase().ServerSetting.getAllServers();
   }
 }
