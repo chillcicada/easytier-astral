@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest-xlarge  # 更改为支持 M1 的运行器
+    runs-on: self-hosted  # 更改为支持 M1 的运行器
     permissions:
       contents: write
       packages: write
@@ -32,10 +32,14 @@ jobs:
           brew update
           brew install cmake ninja
           brew install protobuf
+          brew install ruby
+          brew install cocoapods
+          export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
+          export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 
       - name: 🐦 安装 Flutter
         run: |
-          git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
+          [ ! -d "$HOME/flutter" ] && git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
           export PATH="$HOME/flutter/bin:$PATH"
           chmod +x $HOME/flutter/bin/flutter
@@ -52,7 +56,7 @@ jobs:
 
       - name: 🛠️ 构建 macOS 应用
         run: |
-          flutter build macos --release --target-platform=darwin-arm64  # 指定 ARM64 平台
+          flutter build macos --release --dart-define=FLUTTER_APP_ARCH=arm64  # 指定 ARM64 平台
 
       - name: 📦 打包应用
         run: |
