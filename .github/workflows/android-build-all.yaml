@@ -83,7 +83,11 @@ jobs:
 
       - name: 🛠️ 构建全架构 APK (ALL)
         run: |
-          flutter build apk --release
+          flutter build apk --release \
+            --split-per-abi \
+            --obfuscate \
+            --split-debug-info=build/symbols \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
       - name: 📤 上传全架构 APK 到 Artifacts
         uses: actions/upload-artifact@v4

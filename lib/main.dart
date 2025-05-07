@@ -20,7 +20,7 @@ Future<void> main() async {
   // runApp(const KevinApp()); // 运行应用程序
 
   await SentryFlutter.init(
-    (options) => options.dsn = Platform.environment['SENTRY_DSN'],
+    (options) => options.dsn = const String.fromEnvironment('SENTRY_DSN'),
     appRunner: () => runApp(const KevinApp()),
   );
 }
