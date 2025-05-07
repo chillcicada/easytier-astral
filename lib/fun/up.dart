@@ -35,9 +35,10 @@ class UpdateChecker {
         );
         return;
       }
-
       // 获取当前应用版本
       final currentVersion = await _getCurrentVersion();
+      debugPrint('当前版本: $currentVersion');
+      debugPrint('服务器版本: ${releaseInfo['tag_name']}');
 
       // 比较版本号，如果有新版本则显示更新弹窗
       if (_shouldUpdate(currentVersion, releaseInfo['tag_name'])) {
@@ -74,7 +75,8 @@ class UpdateChecker {
 
       // 获取当前应用版本
       final currentVersion = await _getCurrentVersion();
-
+      debugPrint('当前版本: $currentVersion');
+      debugPrint('服务器版本: ${releaseInfo['tag_name']}');
       // 比较版本号，如果有新版本则显示更新弹窗
       if (_shouldUpdate(currentVersion, releaseInfo['tag_name'])) {
         _showUpdateDialog(
@@ -143,95 +145,57 @@ class UpdateChecker {
 
   /// 比较版本号，判断是否需要更新
   bool _shouldUpdate(String currentVersion, String latestVersion) {
-    // 确保版本号格式正确（添加v前缀如果没有）
-    final current =
-        currentVersion.startsWith('v')
-            ? currentVersion.substring(1)
-            : currentVersion;
-    final latest =
-        latestVersion.startsWith('v')
-            ? latestVersion.substring(1)
-            : latestVersion;
+    // 统一去除v前缀
+    final current = currentVersion.replaceAll(RegExp(r'^v'), '');
+    final latest = latestVersion.replaceAll(RegExp(r'^v'), '');
 
-    // 处理预发布版本标签（如 -alpha, -beta 等）
-    String currentClean = current;
-    String latestClean = latest;
+    // 分离主版本和预发布标签
+    final currentParts = current.split('-');
+    final latestParts = latest.split('-');
 
-    if (current.contains('-')) {
-      currentClean = current.split('-')[0];
-    }
+    // 比较主版本部分
+    final currentMain = _parseVersionParts(currentParts[0]);
+    final latestMain = _parseVersionParts(latestParts[0]);
 
-    if (latest.contains('-')) {
-      latestClean = latest.split('-')[0];
-    }
-
-    // 分割版本号为数组
-    final currentParts = currentClean.split('.');
-    final latestParts = latestClean.split('.');
-
-    // 比较主版本号、次版本号和修订号
     for (int i = 0; i < 3; i++) {
-      final currentPart =
-          i < currentParts.length
-              ? int.tryParse(currentParts[i]) ??
-                  0 // 安全解析非数字版本部分
-              : 0;
-      final latestPart =
-          i < latestParts.length
-              ? int.tryParse(latestParts[i]) ??
-                  0 // 安全解析非数字版本部分
-              : 0;
+      final curr = i < currentMain.length ? currentMain[i] : 0;
+      final lat = i < latestMain.length ? latestMain[i] : 0;
 
-      if (latestPart > currentPart) {
-        return true;
-      } else if (latestPart < currentPart) {
-        return false;
-      }
+      if (lat > curr) return true;
+      if (lat < curr) return false;
     }
 
-    // 版本号相同，检查预发布标签
-    if (current.contains('-') && !latest.contains('-')) {
-      // 当前是预发布版本，而最新是正式版本
-      return true;
-    } else if (!current.contains('-') && latest.contains('-')) {
-      // 当前是正式版本，而最新是预发布版本
-      return false;
-    } else if (current.contains('-') && latest.contains('-')) {
-      // 两者都是预发布版本，比较预发布标签
-      final currentPreRelease = current.split('-')[1];
-      final latestPreRelease = latest.split('-')[1];
+    // 主版本相同，比较预发布标签
+    if (currentParts.length == 1) return latestParts.length > 1; // 当前是正式版
+    if (latestParts.length == 1) return true; // 最新是正式版
 
-      // 简单比较预发布标签（alpha < beta < rc）
-      if (currentPreRelease.startsWith('alpha') &&
-          (latestPreRelease.startsWith('beta') ||
-              latestPreRelease.startsWith('rc'))) {
-        return true;
-      } else if (currentPreRelease.startsWith('beta') &&
-          latestPreRelease.startsWith('rc')) {
-        return true;
-      } else if (currentPreRelease == latestPreRelease) {
-        return false;
+    return _comparePreRelease(currentParts[1], latestParts[1]) < 0;
+  }
+
+  List<int> _parseVersionParts(String version) {
+    return version.split('.').map((s) => int.tryParse(s) ?? 0).toList();
+  }
+
+  int _comparePreRelease(String a, String b) {
+    final aParts = a.split('.');
+    final bParts = b.split('.');
+
+    for (int i = 0; i < max(aParts.length, bParts.length); i++) {
+      final aVal = i < aParts.length ? aParts[i] : '';
+      final bVal = i < bParts.length ? bParts[i] : '';
+
+      // 优先比较数字
+      final aNum = int.tryParse(aVal);
+      final bNum = int.tryParse(bVal);
+
+      if (aNum != null && bNum != null) {
+        if (aNum != bNum) return aNum.compareTo(bNum);
+      } else {
+        final cmp = aVal.compareTo(bVal);
+        if (cmp != 0) return cmp;
       }
-
-      // 如果预发布标签包含数字（如 beta.1, beta.2），则比较数字部分
-      if (currentPreRelease.contains('.') &&
-          latestPreRelease.contains('.') &&
-          currentPreRelease.split('.')[0] == latestPreRelease.split('.')[0]) {
-        try {
-          final currentNum = int.parse(currentPreRelease.split('.')[1]);
-          final latestNum = int.parse(latestPreRelease.split('.')[1]);
-          return latestNum > currentNum;
-        } catch (e) {
-          // 解析失败，返回简单比较结果
-          return latestPreRelease.compareTo(currentPreRelease) > 0;
-        }
-      }
-
-      // 默认比较预发布标签的字符串
-      return latestPreRelease.compareTo(currentPreRelease) > 0;
     }
-
-    return false; // 版本相同，不需要更新
+    return 0;
   }
 
   /// 显示更新弹窗

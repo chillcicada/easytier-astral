@@ -245,7 +245,8 @@ class Aps {
     noTun.value = await database.netConfigSetting.getNoTun(); // TUN设备禁用
     useSmoltcp.value =
         await database.netConfigSetting.getUseSmoltcp(); // smoltcp网络栈
-
+    dataCompressAlgo.value =
+        await database.netConfigSetting.getDataCompressAlgo(); // 数据压缩算法
     // 获取高级网络配置
     relayNetworkWhitelist.value =
         await database.netConfigSetting.getRelayNetworkWhitelist(); // 中继网络白名单

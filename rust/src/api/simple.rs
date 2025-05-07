@@ -602,6 +602,8 @@ pub fn create_server(
         cfg.set_hostname(Some(username));
         cfg.set_dhcp(enable_dhcp);
         
+        // cfg.add_proxy_cidr("10.1.2.0/24".parse().unwrap());
+        
         // Set flags more efficiently by directly mapping from input
         let mut flags = cfg.get_flags();
         flags.default_protocol = flag.default_protocol;

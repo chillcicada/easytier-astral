@@ -89,6 +89,7 @@ class _ServerDialogState extends State<ServerDialog> {
     if (_formKey.currentState!.validate()) {
       final server = ServerMod(
         id: widget.server?.id ?? Isar.autoIncrement,
+        enable: widget.server?.enable ?? false,
         name: _nameController.text,
         url: _urlController.text,
         tcp: _tcp,

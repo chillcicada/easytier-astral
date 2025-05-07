@@ -81,6 +81,16 @@ class ServersHome extends StatelessWidget {
                           _buildProtocolChip('SRV', true, colorScheme),
                         );
                       }
+                      if (server.http == true) {
+                        protocolChips.add(
+                          _buildProtocolChip('http', true, colorScheme),
+                        );
+                      }
+                      if (server.https == true) {
+                        protocolChips.add(
+                          _buildProtocolChip('https', true, colorScheme),
+                        );
+                      }
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Column(
