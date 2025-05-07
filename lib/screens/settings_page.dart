@@ -18,6 +18,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             children: [
               const ListTile(leading: Icon(Icons.info), title: Text('软件设置')),
+
               SwitchListTile(
                 title: const Text('最小化'),
                 subtitle: const Text('是否点击关闭按钮最小化到托盘'),

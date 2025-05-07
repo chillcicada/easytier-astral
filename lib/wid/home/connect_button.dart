@@ -7,8 +7,6 @@ import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
 import 'package:vpn_service_plugin/vpn_service_plugin.dart';
 
-enum ConnectionState { idle, connecting, connected }
-
 class ConnectButton extends StatefulWidget {
   const ConnectButton({super.key});
 
@@ -18,7 +16,6 @@ class ConnectButton extends StatefulWidget {
 
 class _ConnectButtonState extends State<ConnectButton>
     with SingleTickerProviderStateMixin {
-  ConnectionState _state = ConnectionState.idle;
   late AnimationController _animationController;
   double _progress = 0.0;
   // 仅在安卓平台初始化VPN插件
@@ -96,7 +93,7 @@ class _ConnectButtonState extends State<ConnectButton>
   /// 然后模拟一个10秒的网络连接过程，最后切换到已连接(connected)状态
   Future<void> _startConnection() async {
     // 如果当前状态不是空闲状态，则直接返回，防止重复触发连接操作
-    if (_state != ConnectionState.idle) return;
+    if (Aps().Connec_state.value != CoState.idle) return;
 
     final rom = Aps().selectroom.value;
     if (rom == null) return;
@@ -109,7 +106,7 @@ class _ConnectButtonState extends State<ConnectButton>
       await _beginConnectionProcess();
     } catch (e) {
       // 发生错误时重置状态
-      setState(() => _state = ConnectionState.idle);
+      Aps().Connec_state.value = CoState.idle;
       rethrow;
     }
   }
@@ -191,8 +188,8 @@ class _ConnectButtonState extends State<ConnectButton>
   );
 
   Future<void> _beginConnectionProcess() async {
+    Aps().Connec_state.value = CoState.connecting;
     setState(() {
-      _state = ConnectionState.connecting;
       _progress = 0.0;
     });
 
@@ -205,7 +202,7 @@ class _ConnectButtonState extends State<ConnectButton>
 
   void _setupConnectionTimeout() {
     Timer(const Duration(seconds: 10), () {
-      if (_state == ConnectionState.connecting) {
+      if (Aps().Connec_state.watch(context) == CoState.connecting) {
         _disconnect();
       }
     });
@@ -213,7 +210,7 @@ class _ConnectButtonState extends State<ConnectButton>
 
   void _startConnectionStatusCheck() {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (_state != ConnectionState.connecting) {
+      if (Aps().Connec_state.watch(context) != CoState.connecting) {
         timer.cancel();
         return;
       }
@@ -248,9 +245,9 @@ class _ConnectButtonState extends State<ConnectButton>
   Future<void> _handleSuccessfulConnection() async {
     setState(() {
       _progress = 100;
-      _state = ConnectionState.connected;
       _connectionDuration = 0;
     });
+    Aps().Connec_state.value = CoState.connected;
     Aps().isConnecting.value = true;
     // 确保传递给 _startVpn 的 ipv4Addr 是有效的
     // 如果之前是DHCP获取的，Aps().ipv4.value 应该已经被更新
@@ -303,31 +300,30 @@ class _ConnectButtonState extends State<ConnectButton>
     _connectionTimer = null;
 
     closeServer();
-    setState(() {
-      _state = ConnectionState.idle;
-    });
+
+    Aps().Connec_state.value = CoState.idle;
   }
 
   /// 切换连接状态的方法
   /// 根据当前的连接状态来决定是开始连接还是断开连接
   void _toggleConnection() {
-    if (_state == ConnectionState.idle) {
+    if (Aps().Connec_state.value == CoState.idle) {
       // 如果当前是空闲状态，则开始连接
       _startConnection();
-    } else if (_state == ConnectionState.connected) {
+    } else if (Aps().Connec_state.value == CoState.connected) {
       // 如果当前是已连接状态，则断开连接
       _disconnect();
     }
   }
 
-  Widget _getButtonIcon(ConnectionState state) {
+  Widget _getButtonIcon(CoState state) {
     switch (state) {
-      case ConnectionState.idle:
+      case CoState.idle:
         return Icon(
           Icons.power_settings_new_rounded,
           key: const ValueKey('idle_icon'),
         );
-      case ConnectionState.connecting:
+      case CoState.connecting:
         return AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
@@ -340,19 +336,19 @@ class _ConnectButtonState extends State<ConnectButton>
             );
           },
         );
-      case ConnectionState.connected:
+      case CoState.connected:
         return Icon(Icons.link_rounded, key: const ValueKey('connected_icon'));
     }
   }
 
-  Widget _getButtonLabel(ConnectionState state) {
+  Widget _getButtonLabel(CoState state) {
     final String text;
     switch (state) {
-      case ConnectionState.idle:
+      case CoState.idle:
         text = '连接';
-      case ConnectionState.connecting:
+      case CoState.connecting:
         text = '连接中...';
-      case ConnectionState.connected:
+      case CoState.connected:
         text = '已连接';
     }
 
@@ -363,27 +359,24 @@ class _ConnectButtonState extends State<ConnectButton>
     );
   }
 
-  Color _getButtonColor(ConnectionState state, ColorScheme colorScheme) {
+  Color _getButtonColor(CoState state, ColorScheme colorScheme) {
     switch (state) {
-      case ConnectionState.idle:
+      case CoState.idle:
         return colorScheme.primary;
-      case ConnectionState.connecting:
+      case CoState.connecting:
         return colorScheme.surfaceVariant;
-      case ConnectionState.connected:
+      case CoState.connected:
         return colorScheme.tertiary;
     }
   }
 
-  Color _getButtonForegroundColor(
-    ConnectionState state,
-    ColorScheme colorScheme,
-  ) {
+  Color _getButtonForegroundColor(CoState state, ColorScheme colorScheme) {
     switch (state) {
-      case ConnectionState.idle:
+      case CoState.idle:
         return colorScheme.onPrimary;
-      case ConnectionState.connecting:
+      case CoState.connecting:
         return colorScheme.onSurfaceVariant;
-      case ConnectionState.connected:
+      case CoState.connected:
         return colorScheme.onTertiary;
     }
   }
@@ -404,12 +397,15 @@ class _ConnectButtonState extends State<ConnectButton>
             child: AnimatedSlide(
               duration: const Duration(milliseconds: 300),
               offset:
-                  _state == ConnectionState.connecting
+                  Aps().Connec_state.watch(context) == CoState.connecting
                       ? Offset.zero
                       : const Offset(0, 1.0),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
-                opacity: _state == ConnectionState.connecting ? 1.0 : 0.0,
+                opacity:
+                    Aps().Connec_state.watch(context) == CoState.connecting
+                        ? 1.0
+                        : 0.0,
                 child: Container(
                   width: 180,
                   height: 6,
@@ -420,7 +416,7 @@ class _ConnectButtonState extends State<ConnectButton>
                   ),
                   child: TweenAnimationBuilder<double>(
                     key: ValueKey(
-                      'progress_${_state == ConnectionState.connecting}',
+                      'progress_${Aps().Connec_state.watch(context) == CoState.connecting}',
                     ),
                     tween: Tween<double>(begin: 0.0, end: 1.0),
                     duration: const Duration(seconds: 10), // 10秒完成动画
@@ -456,16 +452,17 @@ class _ConnectButtonState extends State<ConnectButton>
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
-              width: _state != ConnectionState.idle ? 180 : 100,
+              width:
+                  Aps().Connec_state.watch(context) != CoState.idle ? 180 : 100,
               height: 60,
               child: FloatingActionButton.extended(
                 onPressed:
-                    _state == ConnectionState.connecting
+                    Aps().Connec_state.watch(context) == CoState.connecting
                         ? null
                         : _toggleConnection,
                 extendedPadding: const EdgeInsets.symmetric(horizontal: 2),
                 splashColor:
-                    _state != ConnectionState.idle
+                    Aps().Connec_state.watch(context) != CoState.idle
                         ? colorScheme.onTertiary.withAlpha(51)
                         : colorScheme.onPrimary.withAlpha(51),
                 highlightElevation: 6,
@@ -483,16 +480,22 @@ class _ConnectButtonState extends State<ConnectButton>
                       child: ScaleTransition(scale: animation, child: child),
                     );
                   },
-                  child: _getButtonIcon(_state),
+                  child: _getButtonIcon(Aps().Connec_state.watch(context)),
                 ),
                 label: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   switchInCurve: Curves.easeOutQuad,
                   switchOutCurve: Curves.easeInQuad,
-                  child: _getButtonLabel(_state),
+                  child: _getButtonLabel(Aps().Connec_state.watch(context)),
                 ),
-                backgroundColor: _getButtonColor(_state, colorScheme),
-                foregroundColor: _getButtonForegroundColor(_state, colorScheme),
+                backgroundColor: _getButtonColor(
+                  Aps().Connec_state.watch(context),
+                  colorScheme,
+                ),
+                foregroundColor: _getButtonForegroundColor(
+                  Aps().Connec_state.watch(context),
+                  colorScheme,
+                ),
               ),
             ),
           ),

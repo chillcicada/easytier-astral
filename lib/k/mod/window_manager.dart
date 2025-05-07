@@ -17,10 +17,9 @@ class WindowManagerUtils {
       });
       // 定义窗口选项配置
       final windowOptions = WindowOptions(
-        // 设置窗口默认大小为 1280x720
-        size: Size(1280, 720),
+        size: Size(960, 540),
         // 设置窗口最小大小为 300x300
-        minimumSize: Size(300, 300),
+        minimumSize: Size(200, 300),
         // 设置窗口居中显示
         center: true,
         // 设置窗口标题

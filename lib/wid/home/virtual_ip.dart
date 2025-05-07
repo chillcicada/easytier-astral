@@ -50,13 +50,13 @@ class VirtualIpBox extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _getStatusColor(
-                    ConnectionState.connected,
+                    Aps().Connec_state.watch(context),
                     colorScheme,
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _getStatusText(ConnectionState.connected),
+                  _getStatusText(Aps().Connec_state.watch(context)),
                   style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontSize: 12,
@@ -87,28 +87,26 @@ class VirtualIpBox extends StatelessWidget {
   }
 }
 
-enum ConnectionState { notStarted, connecting, connected }
-
 // 获取状态颜色
-Color _getStatusColor(ConnectionState state, ColorScheme colorScheme) {
+Color _getStatusColor(CoState state, ColorScheme colorScheme) {
   switch (state) {
-    case ConnectionState.notStarted:
+    case CoState.idle:
       return Colors.grey;
-    case ConnectionState.connecting:
+    case CoState.connecting:
       return Colors.orange;
-    case ConnectionState.connected:
+    case CoState.connected:
       return Colors.green;
   }
 }
 
 // 获取状态文本
-String _getStatusText(ConnectionState state) {
+String _getStatusText(CoState state) {
   switch (state) {
-    case ConnectionState.notStarted:
+    case CoState.idle:
       return '未连接';
-    case ConnectionState.connecting:
+    case CoState.connecting:
       return '连接中';
-    case ConnectionState.connected:
+    case CoState.connected:
       return '已连接';
   }
 }

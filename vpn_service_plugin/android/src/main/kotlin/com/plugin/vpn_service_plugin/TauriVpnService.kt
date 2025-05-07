@@ -99,7 +99,13 @@ class TauriVpnService : VpnService() {
         val networkCidr = "$networkPrefix/$networkMask"
         
         // 使用计算出的网段作为路由
-        var routes = arrayOf(networkCidr)
+        var routes = arrayOf(networkCidr
+        ,
+            "224.0.0.0/4",  // 组播地址范围
+            "255.255.255.255/32"  // 广播地址
+        )
+        // 添加组播和广播地址到路由routes中
+
         var disallowedApplications = args?.getStringArray(DISALLOWED_APPLICATIONS) ?: emptyArray()
 
         println("vpn create vpn interface. mtu: $mtu, ipv4Addr: $ipv4Addr, networkCidr: $networkCidr, dns:" +

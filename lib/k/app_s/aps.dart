@@ -2,11 +2,14 @@ import 'package:astral/fun/random_name.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/src/rust/api/simple.dart';
+import 'package:astral/wid/home/connect_button.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:astral/k/database/app_data.dart';
 import 'package:uuid/uuid.dart';
 export 'package:signals_flutter/signals_flutter.dart';
+
+enum CoState { idle, connecting, connected }
 
 /// 全局状态管理类
 class Aps {
@@ -57,6 +60,7 @@ class Aps {
     userListSimple.value = await AppDatabase().AllSettings.getUserMinimal();
     closeMinimize.value = await AppDatabase().AllSettings.getCloseMinimize();
   }
+  // 开机自启动
 
   final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
 
@@ -533,6 +537,7 @@ class Aps {
 
   /// 是否处于连接中
   final Signal<bool> isConnecting = signal(false);
+  final Signal<CoState> Connec_state = signal(CoState.idle);
 
   /// 是否关闭最小化到托盘
   final Signal<bool> closeMinimize = signal(true);
