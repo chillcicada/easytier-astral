@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_localization
   isar_flutter_libs
   screen_retriever_windows
+  sentry_flutter
   system_tray
   url_launcher_windows
   window_manager

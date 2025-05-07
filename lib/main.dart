@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:astral/src/rust/frb_generated.dart';
 import 'package:astral/app.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 确保 Flutter 绑定已初始化
@@ -16,5 +17,10 @@ Future<void> main() async {
     await WindowManagerUtils.initializeWindow(); // 初始化窗口管理器
   }
   await RustLib.init(); // 初始化 Rust 库
-  runApp(const KevinApp()); // 运行应用程序
+  // runApp(const KevinApp()); // 运行应用程序
+
+  await SentryFlutter.init(
+    (options) => options.dsn = Platform.environment['SENTRY_DSN'],
+    appRunner: () => runApp(const KevinApp()),
+  );
 }
