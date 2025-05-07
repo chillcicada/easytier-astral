@@ -22,143 +22,148 @@ const NetConfigSchema = CollectionSchema(
       name: r'bind_device',
       type: IsarType.bool,
     ),
-    r'data_compress_algo': PropertySchema(
+    r'cidrproxy': PropertySchema(
       id: 1,
+      name: r'cidrproxy',
+      type: IsarType.stringList,
+    ),
+    r'data_compress_algo': PropertySchema(
+      id: 2,
       name: r'data_compress_algo',
       type: IsarType.long,
     ),
     r'default_protocol': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'default_protocol',
       type: IsarType.string,
     ),
     r'dev_name': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'dev_name',
       type: IsarType.string,
     ),
     r'dhcp': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'dhcp',
       type: IsarType.bool,
     ),
     r'disable_kcp_input': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'disable_kcp_input',
       type: IsarType.bool,
     ),
     r'disable_p2p': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'disable_p2p',
       type: IsarType.bool,
     ),
     r'disable_relay_kcp': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'disable_relay_kcp',
       type: IsarType.bool,
     ),
     r'disable_udp_hole_punching': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'disable_udp_hole_punching',
       type: IsarType.bool,
     ),
     r'enable_encryption': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'enable_encryption',
       type: IsarType.bool,
     ),
     r'enable_exit_node': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'enable_exit_node',
       type: IsarType.bool,
     ),
     r'enable_ipv6': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'enable_ipv6',
       type: IsarType.bool,
     ),
     r'enable_kcp_proxy': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'enable_kcp_proxy',
       type: IsarType.bool,
     ),
     r'hostname': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'hostname',
       type: IsarType.string,
     ),
     r'instance_name': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'instance_name',
       type: IsarType.string,
     ),
     r'ipv4': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'ipv4',
       type: IsarType.string,
     ),
     r'latency_first': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'latency_first',
       type: IsarType.bool,
     ),
     r'listeners': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'listeners',
       type: IsarType.stringList,
     ),
     r'mtu': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'mtu',
       type: IsarType.long,
     ),
     r'multi_thread': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'multi_thread',
       type: IsarType.bool,
     ),
     r'netns': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'netns',
       type: IsarType.string,
     ),
     r'network_name': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'network_name',
       type: IsarType.string,
     ),
     r'network_secret': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'network_secret',
       type: IsarType.string,
     ),
     r'no_tun': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'no_tun',
       type: IsarType.bool,
     ),
     r'peer': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'peer',
       type: IsarType.stringList,
     ),
     r'proxy_forward_by_system': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'proxy_forward_by_system',
       type: IsarType.bool,
     ),
     r'relay_all_peer_rpc': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'relay_all_peer_rpc',
       type: IsarType.bool,
     ),
     r'relay_network_whitelist': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'relay_network_whitelist',
       type: IsarType.string,
     ),
     r'use_smoltcp': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'use_smoltcp',
       type: IsarType.bool,
     )
@@ -183,6 +188,13 @@ int _netConfigEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.cidrproxy.length * 3;
+  {
+    for (var i = 0; i < object.cidrproxy.length; i++) {
+      final value = object.cidrproxy[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.default_protocol.length * 3;
   bytesCount += 3 + object.dev_name.length * 3;
   bytesCount += 3 + object.hostname.length * 3;
@@ -216,34 +228,35 @@ void _netConfigSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeBool(offsets[0], object.bind_device);
-  writer.writeLong(offsets[1], object.data_compress_algo);
-  writer.writeString(offsets[2], object.default_protocol);
-  writer.writeString(offsets[3], object.dev_name);
-  writer.writeBool(offsets[4], object.dhcp);
-  writer.writeBool(offsets[5], object.disable_kcp_input);
-  writer.writeBool(offsets[6], object.disable_p2p);
-  writer.writeBool(offsets[7], object.disable_relay_kcp);
-  writer.writeBool(offsets[8], object.disable_udp_hole_punching);
-  writer.writeBool(offsets[9], object.enable_encryption);
-  writer.writeBool(offsets[10], object.enable_exit_node);
-  writer.writeBool(offsets[11], object.enable_ipv6);
-  writer.writeBool(offsets[12], object.enable_kcp_proxy);
-  writer.writeString(offsets[13], object.hostname);
-  writer.writeString(offsets[14], object.instance_name);
-  writer.writeString(offsets[15], object.ipv4);
-  writer.writeBool(offsets[16], object.latency_first);
-  writer.writeStringList(offsets[17], object.listeners);
-  writer.writeLong(offsets[18], object.mtu);
-  writer.writeBool(offsets[19], object.multi_thread);
-  writer.writeString(offsets[20], object.netns);
-  writer.writeString(offsets[21], object.network_name);
-  writer.writeString(offsets[22], object.network_secret);
-  writer.writeBool(offsets[23], object.no_tun);
-  writer.writeStringList(offsets[24], object.peer);
-  writer.writeBool(offsets[25], object.proxy_forward_by_system);
-  writer.writeBool(offsets[26], object.relay_all_peer_rpc);
-  writer.writeString(offsets[27], object.relay_network_whitelist);
-  writer.writeBool(offsets[28], object.use_smoltcp);
+  writer.writeStringList(offsets[1], object.cidrproxy);
+  writer.writeLong(offsets[2], object.data_compress_algo);
+  writer.writeString(offsets[3], object.default_protocol);
+  writer.writeString(offsets[4], object.dev_name);
+  writer.writeBool(offsets[5], object.dhcp);
+  writer.writeBool(offsets[6], object.disable_kcp_input);
+  writer.writeBool(offsets[7], object.disable_p2p);
+  writer.writeBool(offsets[8], object.disable_relay_kcp);
+  writer.writeBool(offsets[9], object.disable_udp_hole_punching);
+  writer.writeBool(offsets[10], object.enable_encryption);
+  writer.writeBool(offsets[11], object.enable_exit_node);
+  writer.writeBool(offsets[12], object.enable_ipv6);
+  writer.writeBool(offsets[13], object.enable_kcp_proxy);
+  writer.writeString(offsets[14], object.hostname);
+  writer.writeString(offsets[15], object.instance_name);
+  writer.writeString(offsets[16], object.ipv4);
+  writer.writeBool(offsets[17], object.latency_first);
+  writer.writeStringList(offsets[18], object.listeners);
+  writer.writeLong(offsets[19], object.mtu);
+  writer.writeBool(offsets[20], object.multi_thread);
+  writer.writeString(offsets[21], object.netns);
+  writer.writeString(offsets[22], object.network_name);
+  writer.writeString(offsets[23], object.network_secret);
+  writer.writeBool(offsets[24], object.no_tun);
+  writer.writeStringList(offsets[25], object.peer);
+  writer.writeBool(offsets[26], object.proxy_forward_by_system);
+  writer.writeBool(offsets[27], object.relay_all_peer_rpc);
+  writer.writeString(offsets[28], object.relay_network_whitelist);
+  writer.writeBool(offsets[29], object.use_smoltcp);
 }
 
 NetConfig _netConfigDeserialize(
@@ -254,35 +267,36 @@ NetConfig _netConfigDeserialize(
 ) {
   final object = NetConfig();
   object.bind_device = reader.readBool(offsets[0]);
-  object.data_compress_algo = reader.readLong(offsets[1]);
-  object.default_protocol = reader.readString(offsets[2]);
-  object.dev_name = reader.readString(offsets[3]);
-  object.dhcp = reader.readBool(offsets[4]);
-  object.disable_kcp_input = reader.readBool(offsets[5]);
-  object.disable_p2p = reader.readBool(offsets[6]);
-  object.disable_relay_kcp = reader.readBool(offsets[7]);
-  object.disable_udp_hole_punching = reader.readBool(offsets[8]);
-  object.enable_encryption = reader.readBool(offsets[9]);
-  object.enable_exit_node = reader.readBool(offsets[10]);
-  object.enable_ipv6 = reader.readBool(offsets[11]);
-  object.enable_kcp_proxy = reader.readBool(offsets[12]);
-  object.hostname = reader.readString(offsets[13]);
+  object.cidrproxy = reader.readStringList(offsets[1]) ?? [];
+  object.data_compress_algo = reader.readLong(offsets[2]);
+  object.default_protocol = reader.readString(offsets[3]);
+  object.dev_name = reader.readString(offsets[4]);
+  object.dhcp = reader.readBool(offsets[5]);
+  object.disable_kcp_input = reader.readBool(offsets[6]);
+  object.disable_p2p = reader.readBool(offsets[7]);
+  object.disable_relay_kcp = reader.readBool(offsets[8]);
+  object.disable_udp_hole_punching = reader.readBool(offsets[9]);
+  object.enable_encryption = reader.readBool(offsets[10]);
+  object.enable_exit_node = reader.readBool(offsets[11]);
+  object.enable_ipv6 = reader.readBool(offsets[12]);
+  object.enable_kcp_proxy = reader.readBool(offsets[13]);
+  object.hostname = reader.readString(offsets[14]);
   object.id = id;
-  object.instance_name = reader.readString(offsets[14]);
-  object.ipv4 = reader.readString(offsets[15]);
-  object.latency_first = reader.readBool(offsets[16]);
-  object.listeners = reader.readStringList(offsets[17]) ?? [];
-  object.mtu = reader.readLong(offsets[18]);
-  object.multi_thread = reader.readBool(offsets[19]);
-  object.netns = reader.readString(offsets[20]);
-  object.network_name = reader.readString(offsets[21]);
-  object.network_secret = reader.readString(offsets[22]);
-  object.no_tun = reader.readBool(offsets[23]);
-  object.peer = reader.readStringList(offsets[24]) ?? [];
-  object.proxy_forward_by_system = reader.readBool(offsets[25]);
-  object.relay_all_peer_rpc = reader.readBool(offsets[26]);
-  object.relay_network_whitelist = reader.readString(offsets[27]);
-  object.use_smoltcp = reader.readBool(offsets[28]);
+  object.instance_name = reader.readString(offsets[15]);
+  object.ipv4 = reader.readString(offsets[16]);
+  object.latency_first = reader.readBool(offsets[17]);
+  object.listeners = reader.readStringList(offsets[18]) ?? [];
+  object.mtu = reader.readLong(offsets[19]);
+  object.multi_thread = reader.readBool(offsets[20]);
+  object.netns = reader.readString(offsets[21]);
+  object.network_name = reader.readString(offsets[22]);
+  object.network_secret = reader.readString(offsets[23]);
+  object.no_tun = reader.readBool(offsets[24]);
+  object.peer = reader.readStringList(offsets[25]) ?? [];
+  object.proxy_forward_by_system = reader.readBool(offsets[26]);
+  object.relay_all_peer_rpc = reader.readBool(offsets[27]);
+  object.relay_network_whitelist = reader.readString(offsets[28]);
+  object.use_smoltcp = reader.readBool(offsets[29]);
   return object;
 }
 
@@ -296,13 +310,13 @@ P _netConfigDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
@@ -320,36 +334,38 @@ P _netConfigDeserializeProp<P>(
     case 12:
       return (reader.readBool(offset)) as P;
     case 13:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 14:
       return (reader.readString(offset)) as P;
     case 15:
       return (reader.readString(offset)) as P;
     case 16:
-      return (reader.readBool(offset)) as P;
-    case 17:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 18:
-      return (reader.readLong(offset)) as P;
-    case 19:
-      return (reader.readBool(offset)) as P;
-    case 20:
       return (reader.readString(offset)) as P;
+    case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 19:
+      return (reader.readLong(offset)) as P;
+    case 20:
+      return (reader.readBool(offset)) as P;
     case 21:
       return (reader.readString(offset)) as P;
     case 22:
       return (reader.readString(offset)) as P;
     case 23:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 24:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 25:
       return (reader.readBool(offset)) as P;
+    case 25:
+      return (reader.readStringList(offset) ?? []) as P;
     case 26:
       return (reader.readBool(offset)) as P;
     case 27:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 28:
+      return (reader.readString(offset)) as P;
+    case 29:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -454,6 +470,230 @@ extension NetConfigQueryFilter
         property: r'bind_device',
         value: value,
       ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cidrproxy',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'cidrproxy',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'cidrproxy',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cidrproxy',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'cidrproxy',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition> cidrproxyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<NetConfig, NetConfig, QAfterFilterCondition>
+      cidrproxyLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'cidrproxy',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -3123,6 +3363,12 @@ extension NetConfigQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NetConfig, NetConfig, QDistinct> distinctByCidrproxy() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cidrproxy');
+    });
+  }
+
   QueryBuilder<NetConfig, NetConfig, QDistinct> distinctByData_compress_algo() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'data_compress_algo');
@@ -3318,6 +3564,12 @@ extension NetConfigQueryProperty
   QueryBuilder<NetConfig, bool, QQueryOperations> bind_deviceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'bind_device');
+    });
+  }
+
+  QueryBuilder<NetConfig, List<String>, QQueryOperations> cidrproxyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cidrproxy');
     });
   }
 

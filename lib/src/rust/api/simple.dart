@@ -41,6 +41,7 @@ Future<JoinHandleResultString> createServer({
   required String roomPassword,
   required List<String> severurl,
   required List<String> onurl,
+  required List<String> cidrs,
   required FlagsC flag,
 }) => RustLib.instance.api.crateApiSimpleCreateServer(
   username: username,
@@ -50,6 +51,7 @@ Future<JoinHandleResultString> createServer({
   roomPassword: roomPassword,
   severurl: severurl,
   onurl: onurl,
+  cidrs: cidrs,
   flag: flag,
 );
 

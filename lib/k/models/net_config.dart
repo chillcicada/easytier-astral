@@ -24,6 +24,8 @@ class NetConfig {
 
   List<String> peer = []; // 服务器节点地址
 
+  // 子网代理
+  List<String> cidrproxy = []; // 代理地址
   /// 默认协议
   String default_protocol = 'tcp'; //x
 

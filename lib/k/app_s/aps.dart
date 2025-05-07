@@ -193,6 +193,7 @@ class Aps {
   final Signal<bool> disableUdpHolePunching = signal(false); // UDP打洞禁用设置
   final Signal<bool> multiThread = signal(true); // 多线程设置
   final Signal<int> dataCompressAlgo = signal(1);
+  final Signal<List<String>> cidrproxy = signal([]);
 
   /// 数据压缩算法(0:不压缩)
   final Signal<bool> bindDevice = signal(false);
@@ -247,6 +248,8 @@ class Aps {
         await database.netConfigSetting.getUseSmoltcp(); // smoltcp网络栈
     dataCompressAlgo.value =
         await database.netConfigSetting.getDataCompressAlgo(); // 数据压缩算法
+
+    cidrproxy.value = await database.netConfigSetting.getCidrproxy();
     // 获取高级网络配置
     relayNetworkWhitelist.value =
         await database.netConfigSetting.getRelayNetworkWhitelist(); // 中继网络白名单
@@ -257,6 +260,15 @@ class Aps {
         await database.netConfigSetting.getDisableUdpHolePunching(); // UDP打洞禁用
     multiThread.value =
         await database.netConfigSetting.getMultiThread(); // 多线程设置
+    enableKcpProxy.value =
+        await database.netConfigSetting.getEnableKcpProxy(); // 启用KCP代理
+    disableKcpInput.value =
+        await database.netConfigSetting.getDisableKcpInput(); // 禁用KCP输入
+
+    disableRelayKcp.value =
+        await database.netConfigSetting.getDisableRelayKcp(); // 禁用中继KCP
+    proxyForwardBySystem.value =
+        await database.netConfigSetting.getProxyForwardBySystem(); // 代理转发系统
   }
 
   // 更新网络命名空间
@@ -367,6 +379,28 @@ class Aps {
   Future<void> updateNoTun(bool value) async {
     noTun.value = value;
     await AppDatabase().netConfigSetting.updateNoTun(value);
+  }
+
+  /// 添加CIDR代理
+  Future<void> addCidrproxy(String cidr) async {
+    final list = List<String>.from(cidrproxy.value);
+    list.add(cidr);
+    cidrproxy.value = list;
+    await AppDatabase().netConfigSetting.setCidrproxy(list);
+  }
+
+  /// 删除CIDR代理
+  Future<void> deleteCidrproxy(int index) async {
+    final list = List<String>.from(cidrproxy.value);
+    list.removeAt(index);
+    cidrproxy.value = list;
+    await AppDatabase().netConfigSetting.setCidrproxy(list);
+  }
+
+  /// 更新CIDR代理
+  Future<void> updateCidrproxy(int index, String cidr) async {
+    await AppDatabase().netConfigSetting.updateCidrproxy(index, cidr);
+    cidrproxy.value = await AppDatabase().netConfigSetting.getCidrproxy();
   }
 
   // 更新smoltcp网络栈设置

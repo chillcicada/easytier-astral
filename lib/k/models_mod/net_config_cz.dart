@@ -96,6 +96,34 @@ class NetConfigRepository {
     }
   }
 
+  // 获取cidrproxy
+  Future<List<String>> getCidrproxy() async {
+    NetConfig? config = await _isar.netConfigs.get(1);
+    return config?.cidrproxy ?? [];
+  }
+
+  // 更新cidrproxy
+  Future<void> updateCidrproxy(int index, String cidr) async {
+    NetConfig? config = await _isar.netConfigs.get(1);
+    if (config != null) {
+      config.cidrproxy[index] = cidr;
+      await _isar.writeTxn(() async {
+        await _isar.netConfigs.put(config);
+      });
+    }
+  }
+
+  // setCidrproxy
+  Future<void> setCidrproxy(List<String> cidrproxy) async {
+    NetConfig? config = await _isar.netConfigs.get(1);
+    if (config != null) {
+      config.cidrproxy = cidrproxy;
+      await _isar.writeTxn(() async {
+        await _isar.netConfigs.put(config);
+      });
+    }
+  }
+
   // 获取DHCP设置
   Future<bool> getDhcp() async {
     NetConfig? config = await _isar.netConfigs.get(1);

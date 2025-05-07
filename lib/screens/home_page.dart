@@ -1,3 +1,4 @@
+import 'package:astral/wid/home/about_home.dart';
 import 'package:astral/wid/home/servers_home.dart';
 import 'package:astral/wid/home/user_ip.dart';
 import 'package:astral/wid/home/virtual_ip.dart';
@@ -39,7 +40,12 @@ class _HomePageState extends State<HomePage> {
                 crossAxisCount: columnCount,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
-                children: [VirtualIpBox(), UserIpBox(), ServersHome()],
+                children: [
+                  VirtualIpBox(),
+                  UserIpBox(),
+                  ServersHome(),
+                  AboutHome(),
+                ],
               ),
             ),
           ),

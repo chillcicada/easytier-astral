@@ -581,6 +581,7 @@ pub fn create_server(
     room_password: String,
     severurl: Vec<String>,
     onurl: Vec<String>,
+    cidrs: Vec<String>,
     flag: FlagsC,
 ) -> JoinHandle<Result<(), String>> {
     print!("{}", format!("创建服务器: {}，启用DHCP: {}, 指定IP: {}, 房间名称: {}, 房间密码: {}, 服务器URL: {:?}, 监听器URL: {:?}", username, enable_dhcp, specified_ip, room_name, room_password, severurl, onurl));
@@ -601,9 +602,9 @@ pub fn create_server(
         // Set hostname and other settings
         cfg.set_hostname(Some(username));
         cfg.set_dhcp(enable_dhcp);
-        
-        // cfg.add_proxy_cidr("10.1.2.0/24".parse().unwrap());
-        
+        for c in cidrs   {
+            cfg.add_proxy_cidr(c.parse().unwrap());
+        }
         // Set flags more efficiently by directly mapping from input
         let mut flags = cfg.get_flags();
         flags.default_protocol = flag.default_protocol;

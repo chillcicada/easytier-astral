@@ -136,6 +136,7 @@ class _ConnectButtonState extends State<ConnectButton>
       specifiedIp: forceDhcp ? "" : ipForServer, // 如果强制DHCP，则指定IP为空
       roomName: rom.roomName,
       roomPassword: rom.password,
+      cidrs: aps.cidrproxy.value,
       severurl:
           aps.servers.value.where((server) => server.enable).expand((server) {
             final urls = <String>[];
