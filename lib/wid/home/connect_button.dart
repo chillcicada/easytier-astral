@@ -169,7 +169,7 @@ class _ConnectButtonState extends State<ConnectButton>
     enableIpv6: aps.enableIpv6.value,
     mtu: aps.mtu.value,
     multiThread: aps.multiThread.value,
-    latencyFirst: aps.latencyFirst.value,
+    latencyFirst: !aps.latencyFirst.value,
     enableExitNode: aps.enableExitNode.value,
     noTun: aps.noTun.value,
     useSmoltcp: aps.useSmoltcp.value,
@@ -200,7 +200,7 @@ class _ConnectButtonState extends State<ConnectButton>
 
   void _setupConnectionTimeout() {
     Timer(const Duration(seconds: 10), () {
-      if (Aps().Connec_state.watch(context) == CoState.connecting) {
+      if (Aps().Connec_state.value == CoState.connecting) {
         _disconnect();
       }
     });
@@ -208,7 +208,7 @@ class _ConnectButtonState extends State<ConnectButton>
 
   void _startConnectionStatusCheck() {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (Aps().Connec_state.watch(context) != CoState.connecting) {
+      if (Aps().Connec_state.value != CoState.connecting) {
         timer.cancel();
         return;
       }
