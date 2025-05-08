@@ -157,12 +157,7 @@ class _ConnectButtonState extends State<ConnectButton>
             return urls;
           }).toList(),
       onurl:
-          Aps().listenList.value.isEmpty
-              ? [
-                "tcp://0.0.0.0:11010",
-                "udp://0.0.0.0:11010",
-              ].where((url) => !url.contains('[::]')).toList()
-              : Aps().listenList.value,
+          Aps().listenList.value.where((url) => !url.contains('[::]')).toList(),
       flag: _buildFlags(aps),
     );
   }

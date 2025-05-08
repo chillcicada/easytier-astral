@@ -36,7 +36,7 @@ class AllSettingsCz {
         settings.playerName = await _getDeviceName();
         needsSave = true;
       }
-      if (settings.listenList == null || settings.listenList!.isEmpty) {
+      if (settings.listenList == null) {
         settings.listenList = ["tcp://0.0.0.0:11010", "udp://0.0.0.0:11010"];
         needsSave = true;
       }
