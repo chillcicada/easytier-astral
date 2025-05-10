@@ -35,6 +35,8 @@ class _AllUserCardState extends State<AllUserCard> {
             ? player.hostname.substring('PublicServer_'.length)
             : player.hostname;
 
+    // 使用提取后的方法
+    latencyColor = _getLatencyColor(player.latencyMs);
     // Pre-calculate connection type string and color
     final connectionType = _mapConnectionType(
       player.cost,
@@ -64,14 +66,22 @@ class _AllUserCardState extends State<AllUserCard> {
                   Expanded(
                     child: Tooltip(
                       message: displayName, // Show full name on hover
-                      child: Text(
-                        displayName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: null, // 金色高亮
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          // 移除 Chip 标签
+                        ],
                       ),
                     ),
                   ),

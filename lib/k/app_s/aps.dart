@@ -10,6 +10,25 @@ export 'package:signals_flutter/signals_flutter.dart';
 
 enum CoState { idle, connecting, connected }
 
+class NetAstral {
+  // peer_id
+  final String peerId;
+  // 网络名称
+  final String netName;
+  // net6
+  final String net6;
+  // 发送时间戳
+  final String sendTimeStamp;
+
+  // 初始化
+  NetAstral({
+    this.peerId = "",
+    this.netName = '',
+    this.net6 = '',
+    this.sendTimeStamp = '',
+  });
+}
+
 /// 全局状态管理类
 class Aps {
   // 静态单例实例
@@ -61,6 +80,7 @@ class Aps {
     closeMinimize.value = await AppDatabase().AllSettings.getCloseMinimize();
     customVpn.value = await AppDatabase().AllSettings.getCustomVpn();
   }
+
   // 开机自启动
 
   final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
@@ -174,6 +194,7 @@ class Aps {
   final Signal<String> hostname = signal(''); // 主机名
   final Signal<String> instanceName = signal('default'); // 实例名称
   final Signal<String> ipv4 = signal(''); // IPv4地址
+  final Signal<String> ipv6 = signal(''); // IPv4地址
   final Signal<bool> dhcp = signal(false); // DHCP设置
   final Signal<String> networkName = signal(''); // 网络名称
   final Signal<String> networkSecret = signal(''); // 网络密钥

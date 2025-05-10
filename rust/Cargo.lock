@@ -3330,6 +3330,7 @@ dependencies = [
  "humansize 1.1.1",
  "lazy_static",
  "once_cell",
+ "rand 0.9.1",
  "serde",
  "serde_json",
  "surge-ping",

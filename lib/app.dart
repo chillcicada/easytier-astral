@@ -1,3 +1,4 @@
+import 'package:astral/fun/net_astral_udp.dart';
 import 'package:astral/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:astral/k/app_s/aps.dart';
@@ -16,6 +17,7 @@ class _KevinAppState extends State<KevinApp> {
   @override
   void initState() {
     super.initState();
+    getIpv4AndIpV6Addresses();
   }
 
   @override

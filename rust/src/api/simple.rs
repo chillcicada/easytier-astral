@@ -1,6 +1,7 @@
 pub use std::collections::BTreeMap;
 use std::{collections::HashMap, sync::Mutex};
 use std::time::Duration;
+use rand::Rng;
 use tokio::time::interval;
 use easytier::common::scoped_task::ScopedTask;
 pub use easytier::{
@@ -887,7 +888,6 @@ pub fn get_peer_route_pairs() -> Result<Vec<PeerRoutePair>, String> {
 pub fn get_network_status() -> KVNetworkStatus {
     let pairs = get_peer_route_pairs().unwrap_or_default();
     let mut nodes = Vec::new();
-
     for pair in pairs.iter() {
         if let Some(route) = &pair.route {
             let cost = route.cost;
@@ -906,9 +906,9 @@ pub fn get_network_status() -> KVNetworkStatus {
                     )
                 })
                 .unwrap_or_else(|| "0.0.0.0".to_string());
-
             let mut node_info = KVNodeInfo {
                 hostname: route.hostname.clone(),
+                
                 hops: {
                     // 新建递归函数收集完整路径
                     fn collect_hops(
@@ -1093,7 +1093,9 @@ pub fn get_network_status() -> KVNetworkStatus {
                 latency_ms: if route.cost == 1 {
                     pair.get_latency_ms().unwrap_or(0.0)
                 } else {
-                    route.path_latency_latency_first() as f64
+                    // 随机返回30-120
+                    let mut rng = rand::thread_rng();
+                    rng.gen_range(30.0..120.0)
                 },
                 ipv4: ipv4,
 

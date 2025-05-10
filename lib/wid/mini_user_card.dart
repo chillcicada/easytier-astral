@@ -1,6 +1,7 @@
 import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:astral/k/app_s/aps.dart';
 
 // 将列表项卡片抽取为独立的StatefulWidget
 class MiniUserCard extends StatefulWidget {
@@ -85,9 +86,10 @@ class _MiniUserCardState extends State<MiniUserCard> {
                         message: displayName,
                         child: Text(
                           displayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
+                            color: null, // Plus用户高亮
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -141,9 +143,6 @@ class _MiniUserCardState extends State<MiniUserCard> {
                 // 第二行：IP地址 ET版本 NAT类型
                 Row(
                   children: [
-                    // --- Other Details Section ---
-                    // ... existing code ...
-                    // --- Other Details Section ---
                     if (player.ipv4 != '' && player.ipv4 != "0.0.0.0")
                       Icon(
                         Icons.lan_outlined,
@@ -151,7 +150,6 @@ class _MiniUserCardState extends State<MiniUserCard> {
                         color: colorScheme.primary,
                       ),
                     const SizedBox(width: 4),
-
                     Expanded(
                       child: Tooltip(
                         message: player.ipv4,
@@ -168,7 +166,6 @@ class _MiniUserCardState extends State<MiniUserCard> {
                       ),
                     ),
                     const SizedBox(width: 10),
-
                     Icon(
                       Icons.memory_outlined,
                       size: 16,

@@ -20,6 +20,7 @@ anyhow = "1.0.95"
 surge-ping = "0.8"
 easytier = { path = "./easytier" }
 winapi = { version = "0.3", features = ["iphlpapi", "iptypes", "netioapi", "winerror", "ws2def"] }
+rand = "0.9.1"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

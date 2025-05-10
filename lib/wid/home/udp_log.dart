@@ -84,6 +84,9 @@ class _UdpLogState extends State<UdpLog> {
 
   @override
   Widget build(BuildContext context) {
+    // 检测当前主题模式
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return HomeBox(
       widthSpan: 2,
       child: Column(
@@ -108,19 +111,23 @@ class _UdpLogState extends State<UdpLog> {
             height: 200, // Set a fixed height for the log output area
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black87,
+                color: isDarkMode ? Colors.black87 : Colors.white, // 根据主题切换背景色
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(8),
               child: Scrollbar(
+                controller: _scrollController,
                 child: ListView.builder(
                   controller: _scrollController,
                   itemCount: _logs.length,
                   itemBuilder: (context, index) {
                     return SelectableText(
                       _logs[index],
-                      style: const TextStyle(
-                        color: Colors.greenAccent,
+                      style: TextStyle(
+                        color:
+                            isDarkMode
+                                ? Colors.greenAccent
+                                : Colors.black, // 根据主题切换字体颜色
                         fontFamily: 'monospace',
                       ),
                     );
