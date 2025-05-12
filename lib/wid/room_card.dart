@@ -43,6 +43,13 @@ class _RoomCardState extends State<RoomCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: Card(
         elevation: 4,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? HSLColor.fromColor(Theme.of(context).colorScheme.primary)
+                .withLightness(0.10) // 深色模式亮度10%
+                .toColor()
+            : HSLColor.fromColor(Theme.of(context).colorScheme.primary)
+                .withLightness(0.75) // 浅色模式亮度75%
+                .toColor(),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           // 添加选中或悬浮状态边框
