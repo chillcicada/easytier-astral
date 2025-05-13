@@ -606,15 +606,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
 
-              SwitchListTile(
-                title: const Text('出口节点'),
-                subtitle: const Text('是否启用出口节点'),
-                value: Aps().enableExitNode.watch(context),
-                onChanged: (value) {
-                  Aps().updateEnableExitNode(value);
-                },
-              ),
-
+              // SwitchListTile(
+              //   title: const Text('出口节点'),
+              //   subtitle: const Text('是否启用出口节点'),
+              //   value: Aps().enableExitNode.watch(context),
+              //   onChanged: (value) {
+              //     Aps().updateEnableExitNode(value);
+              //   },
+              // ),
               SwitchListTile(
                 title: const Text('TUN设备'),
                 subtitle: const Text('是否禁用TUN设备'),
