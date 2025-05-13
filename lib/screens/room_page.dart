@@ -180,7 +180,7 @@ class _RoomPageState extends State<RoomPage> {
             ),
           Expanded(
             child:
-                isConnected == CoState.connected
+                isConnected != CoState.idle
                     // 已连接：显示用户列表
                     ? const UserPage()
                     // 未连接：显示房间列表
@@ -193,7 +193,7 @@ class _RoomPageState extends State<RoomPage> {
         ],
       ),
       floatingActionButton:
-          isConnected == CoState.connected
+          isConnected != CoState.idle
               ? null // 已连接时不显示按钮
               : Row(
                 mainAxisAlignment: MainAxisAlignment.end,

@@ -23,6 +23,7 @@ class _ConnectButtonState extends State<ConnectButton>
   final vpnPlugin = Platform.isAndroid ? VpnServicePlugin() : null;
   // 在类中添加这些变量
   Timer? _connectionTimer;
+  Timer? _timeoutTimer; // 新增：超时定时器
   int _connectionDuration = 0; // 连接持续时间（秒）
 
   // 辅助方法：验证IPv4地址格式
@@ -97,6 +98,7 @@ class _ConnectButtonState extends State<ConnectButton>
   @override
   void dispose() {
     _animationController.dispose();
+    _timeoutTimer?.cancel(); // 组件销毁时也要取消
     super.dispose();
   }
 
@@ -177,7 +179,7 @@ class _ConnectButtonState extends State<ConnectButton>
     enableIpv6: aps.enableIpv6.value,
     mtu: aps.mtu.value,
     multiThread: aps.multiThread.value,
-    latencyFirst: !aps.latencyFirst.value,
+    latencyFirst: aps.latencyFirst.value,
     enableExitNode: aps.enableExitNode.value,
     noTun: aps.noTun.value,
     useSmoltcp: aps.useSmoltcp.value,
@@ -207,8 +209,9 @@ class _ConnectButtonState extends State<ConnectButton>
   }
 
   void _setupConnectionTimeout() {
-    Timer(const Duration(seconds: 10), () {
+    _timeoutTimer = Timer(const Duration(seconds: 10), () {
       if (Aps().Connec_state.value == CoState.connecting) {
+        print("连接超时");
         _disconnect();
       }
     });
@@ -250,18 +253,15 @@ class _ConnectButtonState extends State<ConnectButton>
   }
 
   Future<void> _handleSuccessfulConnection() async {
+    // 连接成功时取消超时定时器
+    _timeoutTimer?.cancel();
+    _timeoutTimer = null;
     setState(() {
       _progress = 100;
       _connectionDuration = 0;
     });
     Aps().Connec_state.value = CoState.connected;
     Aps().isConnecting.value = true;
-    // 确保传递给 _startVpn 的 ipv4Addr 是有效的
-    // 如果之前是DHCP获取的，Aps().ipv4.value 应该已经被更新
-    // 如果是静态IP，Aps().ipv4.value 就是那个静态IP
-    // 如果因为无效IP而强制DHCP，此时 Aps().ipv4.value 可能是 "0.0.0.0" 或旧的无效值
-    // 需要确保在 _startVpn 之前 Aps().ipv4.value 已经被正确更新为DHCP分配的IP
-    // 这一步通常在 _checkAndUpdateConnectionStatus 中完成
     _startVpn(ipv4Addr: Aps().ipv4.value, mtu: Aps().mtu.value);
     _startNetworkMonitoring();
   }
@@ -318,6 +318,7 @@ class _ConnectButtonState extends State<ConnectButton>
       _startConnection();
     } else if (Aps().Connec_state.value == CoState.connected) {
       // 如果当前是已连接状态，则断开连接
+      print("断开连接");
       _disconnect();
     }
   }

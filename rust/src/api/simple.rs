@@ -663,7 +663,7 @@ pub fn create_server(
         // Set flags more efficiently by directly mapping from input
         let mut flags = cfg.get_flags();
         flags.default_protocol = flag.default_protocol;
-        // flags.dev_name = "astral".to_string();
+        flags.dev_name = "astral".to_string();
         flags.enable_encryption = flag.enable_encryption;
         flags.enable_ipv6 = flag.enable_ipv6;
         flags.mtu = flag.mtu;
