@@ -47,7 +47,7 @@ class _ServerPageState extends State<ServerPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(18.0),
                 sliver: SliverMasonryGrid.count(
                   crossAxisCount: columnCount,
                   mainAxisSpacing: 12,

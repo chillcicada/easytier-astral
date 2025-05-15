@@ -70,38 +70,37 @@ class LeftNav extends StatelessWidget {
 
     return Container(
       width: 80,
-      // 设置容器装饰
       decoration: BoxDecoration(
-        // 设置背景色为主题的surface颜色
         color: colorScheme.surface,
-        // 添加边框
         border: Border(right: BorderSide(color: colorScheme.outline, width: 1)),
       ),
-      child: Stack(
-        children: [
-          // 添加滑动指示器
-          TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            tween: Tween<double>(
-              begin: 4.0 + (Aps().selectedIndex.watch(context) * 72.0),
-              end: 4.0 + (Aps().selectedIndex.watch(context) * 72.0),
-            ),
-            builder: (context, value, child) {
-              return Positioned(
-                top: value,
-                left: 8,
-                right: 8,
-                height: 64,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 14), // 新增顶部8像素间距
+        child: Stack(
+          children: [
+            // 添加滑动指示器
+            TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              tween: Tween<double>(
+                begin: 4.0 + (Aps().selectedIndex.watch(context) * 72.0),
+                end: 4.0 + (Aps().selectedIndex.watch(context) * 72.0),
+              ),
+              builder: (context, value, child) {
+                return Positioned(
+                  top: value,
+                  left: 8,
+                  right: 8,
+                  height: 64,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ), //
           // 鼠标悬停指示器
           if (Aps().hoveredIndex.watch(context) != null &&
               Aps().hoveredIndex.watch(context) !=
@@ -140,7 +139,8 @@ class LeftNav extends StatelessWidget {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
