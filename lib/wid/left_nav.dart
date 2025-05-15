@@ -75,7 +75,7 @@ class LeftNav extends StatelessWidget {
         border: Border(right: BorderSide(color: colorScheme.outline, width: 1)),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(top: 14), // 新增顶部8像素间距
+        padding: const EdgeInsets.only(top: 14), // 新增顶部14像素间距
         child: Stack(
           children: [
             // 添加滑动指示器
