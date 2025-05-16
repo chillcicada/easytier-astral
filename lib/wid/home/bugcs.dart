@@ -195,4 +195,6 @@ FlagsC _buildFlags(Aps aps) => FlagsC(
   disableKcpInput: aps.disableKcpInput.value,
   disableRelayKcp: aps.disableRelayKcp.value,
   proxyForwardBySystem: aps.proxyForwardBySystem.value,
+    acceptDns: aps.accept_dns.value,
+  
 );

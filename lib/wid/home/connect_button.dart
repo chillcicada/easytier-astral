@@ -194,6 +194,7 @@ class _ConnectButtonState extends State<ConnectButton>
     disableKcpInput: aps.disableKcpInput.value,
     disableRelayKcp: aps.disableRelayKcp.value,
     proxyForwardBySystem: aps.proxyForwardBySystem.value,
+    acceptDns: aps.accept_dns.value,
   );
 
   Future<void> _beginConnectionProcess() async {

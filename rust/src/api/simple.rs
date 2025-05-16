@@ -599,6 +599,7 @@ pub struct FlagsC {
     pub disable_kcp_input: bool,
     pub disable_relay_kcp: bool,
     pub proxy_forward_by_system: bool,
+    pub accept_dns: bool,
 }
 
 // 创建服务器
@@ -656,6 +657,7 @@ pub fn create_server(
         flags.disable_kcp_input = flag.disable_kcp_input;
         flags.disable_relay_kcp = flag.disable_relay_kcp;
         flags.proxy_forward_by_system = flag.proxy_forward_by_system;
+        flags.accept_dns = flag.accept_dns;
         cfg.set_flags(flags);
         // Configure peer connections with proper error handling
         let mut peer_configs = Vec::new();
@@ -839,7 +841,6 @@ pub fn get_peer_route_pairs() -> Result<Vec<PeerRoutePair>, String> {
         // 获取运行信息
         if let Some(info) = instance.get_running_info() {
             let mut pairs = info.peer_route_pairs;
-            let mut route = info.routes;
           
             
             // 如果存在本地节点信息，添加到结果中

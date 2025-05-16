@@ -233,6 +233,8 @@ class Aps {
   /// 是否禁用中继KCP
   final Signal<bool> proxyForwardBySystem = signal(false);
 
+  final Signal<bool> accept_dns = signal(false);
+
   // 更新网络配置
   /// 从数据库加载并更新所有网络配置
   Future<void> updateNetConfig() async {
@@ -291,6 +293,7 @@ class Aps {
         await database.netConfigSetting.getDisableRelayKcp(); // 禁用中继KCP
     proxyForwardBySystem.value =
         await database.netConfigSetting.getProxyForwardBySystem(); // 代理转发系统
+    accept_dns.value = await database.netConfigSetting.getAcceptDns();      
   }
 
   // 更新网络命名空间
@@ -495,6 +498,12 @@ class Aps {
   Future<void> updateProxyForwardBySystem(bool value) async {
     proxyForwardBySystem.value = value;
     await AppDatabase().netConfigSetting.updateProxyForwardBySystem(value);
+  }
+
+  //accept_dns
+  Future<void> updateAcceptDns(bool value) async {
+    accept_dns.value = value;
+    await AppDatabase().netConfigSetting.updateAcceptDns(value);
   }
 
   /// 房间列表

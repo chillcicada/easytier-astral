@@ -107,6 +107,7 @@ class FlagsC {
   final bool disableKcpInput;
   final bool disableRelayKcp;
   final bool proxyForwardBySystem;
+  final bool acceptDns;
 
   const FlagsC({
     required this.defaultProtocol,
@@ -129,6 +130,7 @@ class FlagsC {
     required this.disableKcpInput,
     required this.disableRelayKcp,
     required this.proxyForwardBySystem,
+    required this.acceptDns,
   });
 
   @override
@@ -152,7 +154,8 @@ class FlagsC {
       enableKcpProxy.hashCode ^
       disableKcpInput.hashCode ^
       disableRelayKcp.hashCode ^
-      proxyForwardBySystem.hashCode;
+      proxyForwardBySystem.hashCode ^
+      acceptDns.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -178,7 +181,8 @@ class FlagsC {
           enableKcpProxy == other.enableKcpProxy &&
           disableKcpInput == other.disableKcpInput &&
           disableRelayKcp == other.disableRelayKcp &&
-          proxyForwardBySystem == other.proxyForwardBySystem;
+          proxyForwardBySystem == other.proxyForwardBySystem &&
+          acceptDns == other.acceptDns;
 }
 
 class KVNetworkStatus {

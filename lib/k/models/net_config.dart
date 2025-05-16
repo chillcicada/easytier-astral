@@ -85,4 +85,7 @@ class NetConfig {
 
   /// 是否使用系统代理转发
   bool proxy_forward_by_system = false; //x
+
+  /// accept_dns 魔术DNS
+  bool accept_dns = false; //x
 }

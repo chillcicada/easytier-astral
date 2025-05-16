@@ -537,4 +537,20 @@ class NetConfigRepository {
     NetConfig? config = await _isar.netConfigs.get(1);
     return config?.proxy_forward_by_system ?? false;
   }
+
+  /// accept_dns
+  Future<void> updateAcceptDns(bool acceptDns) async {
+    NetConfig? config = await _isar.netConfigs.get(1);
+    if (config!= null) {
+      config.accept_dns = acceptDns;
+      await _isar.writeTxn(() async {
+        await _isar.netConfigs.put(config);
+      });
+    }
+  }
+
+  Future<bool> getAcceptDns() async {
+    NetConfig? config = await _isar.netConfigs.get(1);
+    return config?.accept_dns?? false;
+  }
 }
