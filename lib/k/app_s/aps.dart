@@ -196,7 +196,7 @@ class Aps {
   final Signal<String> instanceName = signal('default'); // 实例名称
   final Signal<String> ipv4 = signal(''); // IPv4地址
   final Signal<String> ipv6 = signal(''); // IPv4地址
-  final Signal<bool> dhcp = signal(false); // DHCP设置
+  final Signal<bool> dhcp = signal(true); // DHCP设置
   final Signal<String> networkName = signal(''); // 网络名称
   final Signal<String> networkSecret = signal(''); // 网络密钥
   final Signal<List<String>> listeners = signal([]); // 监听端口列表

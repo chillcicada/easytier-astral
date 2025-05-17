@@ -841,8 +841,6 @@ pub fn get_peer_route_pairs() -> Result<Vec<PeerRoutePair>, String> {
         // 获取运行信息
         if let Some(info) = instance.get_running_info() {
             let mut pairs = info.peer_route_pairs;
-          
-            
             // 如果存在本地节点信息，添加到结果中
             if let Some(my_node_info) = &info.my_node_info {
                 // 获取本地节点ID
