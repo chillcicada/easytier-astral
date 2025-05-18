@@ -196,7 +196,7 @@ class Aps {
   final Signal<String> instanceName = signal('default'); // 实例名称
   final Signal<String> ipv4 = signal(''); // IPv4地址
   final Signal<String> ipv6 = signal(''); // IPv4地址
-  final Signal<bool> dhcp = signal(false); // DHCP设置
+  final Signal<bool> dhcp = signal(true); // DHCP设置
   final Signal<String> networkName = signal(''); // 网络名称
   final Signal<String> networkSecret = signal(''); // 网络密钥
   final Signal<List<String>> listeners = signal([]); // 监听端口列表
@@ -232,6 +232,8 @@ class Aps {
 
   /// 是否禁用中继KCP
   final Signal<bool> proxyForwardBySystem = signal(false);
+
+  final Signal<bool> accept_dns = signal(false);
 
   // 更新网络配置
   /// 从数据库加载并更新所有网络配置
@@ -291,6 +293,7 @@ class Aps {
         await database.netConfigSetting.getDisableRelayKcp(); // 禁用中继KCP
     proxyForwardBySystem.value =
         await database.netConfigSetting.getProxyForwardBySystem(); // 代理转发系统
+    accept_dns.value = await database.netConfigSetting.getAcceptDns();      
   }
 
   // 更新网络命名空间
@@ -495,6 +498,12 @@ class Aps {
   Future<void> updateProxyForwardBySystem(bool value) async {
     proxyForwardBySystem.value = value;
     await AppDatabase().netConfigSetting.updateProxyForwardBySystem(value);
+  }
+
+  //accept_dns
+  Future<void> updateAcceptDns(bool value) async {
+    accept_dns.value = value;
+    await AppDatabase().netConfigSetting.updateAcceptDns(value);
   }
 
   /// 房间列表

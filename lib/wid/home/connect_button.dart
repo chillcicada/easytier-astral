@@ -183,7 +183,8 @@ class _ConnectButtonState extends State<ConnectButton>
     enableExitNode: aps.enableExitNode.value,
     noTun: aps.noTun.value,
     useSmoltcp: aps.useSmoltcp.value,
-    relayNetworkWhitelist: aps.relayNetworkWhitelist.value,
+    // relayNetworkWhitelist: aps.relayNetworkWhitelist.value,
+    relayNetworkWhitelist: '*',
     disableP2P: aps.disableP2p.value,
     relayAllPeerRpc: aps.relayAllPeerRpc.value,
     disableUdpHolePunching: aps.disableUdpHolePunching.value,
@@ -193,6 +194,7 @@ class _ConnectButtonState extends State<ConnectButton>
     disableKcpInput: aps.disableKcpInput.value,
     disableRelayKcp: aps.disableRelayKcp.value,
     proxyForwardBySystem: aps.proxyForwardBySystem.value,
+    acceptDns: aps.accept_dns.value,
   );
 
   Future<void> _beginConnectionProcess() async {

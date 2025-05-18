@@ -1,6 +1,7 @@
 use std::{
     collections::BTreeSet,
     fmt::Debug,
+    hash::RandomState,
     net::Ipv4Addr,
     sync::{
         atomic::{AtomicBool, AtomicU32, Ordering},
@@ -667,7 +668,7 @@ impl RouteTable {
             if *cost == 0 {
                 continue;
             }
-            let mut all_paths = all_simple_paths::<Vec<_>, _>(
+            let mut all_paths = all_simple_paths::<Vec<_>, _, RandomState>(
                 graph,
                 *idx_map.get(&my_peer_id).unwrap(),
                 *node_idx,
@@ -766,31 +767,24 @@ impl RouteTable {
         policy: NextHopPolicy,
         mut cost_calc: T,
     ) {
-        println!("开始从同步信息构建路由表, my_peer_id={}, policy={:?}", my_peer_id, policy);
 
         // build  peer_infos
         self.peer_infos.clear();
-        println!("清空现有peer_infos");
-
         for item in synced_info.peer_infos.iter() {
             let peer_id = item.key();
             let info = item.value();
 
             if info.version == 0 {
-                println!("跳过version=0的peer信息: peer_id={}", peer_id);
                 continue;
             }
 
-            println!("添加peer信息: peer_id={}, version={}", peer_id, info.version);
             self.peer_infos.insert(*peer_id, info.clone());
         }
 
         if self.peer_infos.is_empty() {
-            println!("没有有效的peer信息,退出构建");
             return;
         }
 
-        println!("开始构建next hop map");
         // build next hop map
         self.next_hop_map.clear();
         self.next_hop_map.insert(
@@ -801,38 +795,28 @@ impl RouteTable {
                 path_len: 1,
             },
         );
-        println!("添加自身next hop信息: my_peer_id={}", my_peer_id);
 
         let (graph, idx_map) = Self::build_peer_graph_from_synced_info(
             self.peer_infos.iter().map(|x| *x.key()).collect(),
             &synced_info,
             &mut cost_calc,
         );
-        println!("构建peer图完成, 节点数={}, 边数={}", graph.node_count(), graph.edge_count());
 
         let next_hop_map = if matches!(policy, NextHopPolicy::LeastHop) {
-            println!("使用最少跳数策略生成next hop map");
             Self::gen_next_hop_map_with_least_hop(my_peer_id, &graph, &idx_map, &mut cost_calc)
         } else {
-            println!("使用最小开销策略生成next hop map"); 
             Self::gen_next_hop_map_with_least_cost(my_peer_id, &graph, &idx_map)
         };
-
         for item in next_hop_map.iter() {
-            println!("添加next hop: dst_peer={}, next_hop={}, latency={}, path_len={}", 
-                item.key(), item.value().next_hop_peer_id, item.value().path_latency, item.value().path_len);
             self.next_hop_map.insert(*item.key(), *item.value());
         }
 
-        println!("开始构建IP地址映射");
         // build ipv4_peer_id_map, cidr_peer_id_map
         self.ipv4_peer_id_map.clear();
         self.cidr_peer_id_map.clear();
-        
         for item in self.peer_infos.iter() {
             // only set ipv4 map for peers we can reach.
             if !self.next_hop_map.contains_key(item.key()) {
-                println!("跳过不可达peer的IP映射: peer_id={}", item.key());
                 continue;
             }
 
@@ -840,24 +824,15 @@ impl RouteTable {
             let info = item.value();
 
             if let Some(ipv4_addr) = info.ipv4_addr {
-                println!("添加IPv4映射: {:?}-> peer_id={}", ipv4_addr, peer_id);
                 self.ipv4_peer_id_map.insert(ipv4_addr.into(), *peer_id);
             }
 
             for cidr in info.proxy_cidrs.iter() {
-                println!("添加CIDR映射: {} -> peer_id={}", cidr, peer_id);
                 self.cidr_peer_id_map
                     .insert(cidr.parse().unwrap(), *peer_id);
             }
         }
-        println!("路由表构建完成");
-
-        // 打印构建的路由表
-        println!("路由表:");
-        println!("{:?}", self.peer_infos );
-
     }
-
     fn get_peer_id_for_proxy(&self, ipv4: &Ipv4Addr) -> Option<PeerId> {
         let ipv4 = std::net::IpAddr::V4(*ipv4);
         for item in self.cidr_peer_id_map.iter() {
@@ -1056,6 +1031,8 @@ struct PeerRouteServiceImpl {
     cached_local_conn_map: std::sync::Mutex<RouteConnBitmap>,
 
     last_update_my_foreign_network: AtomicCell<Option<std::time::Instant>>,
+
+    peer_info_last_update: AtomicCell<std::time::Instant>,
 }
 
 impl Debug for PeerRouteServiceImpl {
@@ -1102,6 +1079,8 @@ impl PeerRouteServiceImpl {
             cached_local_conn_map: std::sync::Mutex::new(RouteConnBitmap::new()),
 
             last_update_my_foreign_network: AtomicCell::new(None),
+
+            peer_info_last_update: AtomicCell::new(std::time::Instant::now()),
         }
     }
 
@@ -1251,6 +1230,8 @@ impl PeerRouteServiceImpl {
     }
 
     fn update_route_table_and_cached_local_conn_bitmap(&self) {
+        self.update_peer_info_last_update();
+
         // update route table first because we want to filter out unreachable peers.
         self.update_route_table();
 
@@ -1372,6 +1353,9 @@ impl PeerRouteServiceImpl {
         let my_foreign_network_updated = self.update_my_foreign_network().await;
         if my_conn_info_updated || my_peer_info_updated {
             self.update_foreign_network_owner_map();
+        }
+        if my_peer_info_updated {
+            self.update_peer_info_last_update();
         }
         my_peer_info_updated || my_conn_info_updated || my_foreign_network_updated
     }
@@ -1572,6 +1556,15 @@ impl PeerRouteServiceImpl {
             }
         }
         return false;
+    }
+
+    fn update_peer_info_last_update(&self) {
+        tracing::debug!(?self, "update_peer_info_last_update");
+        self.peer_info_last_update.store(std::time::Instant::now());
+    }
+
+    fn get_peer_info_last_update(&self) -> std::time::Instant {
+        self.peer_info_last_update.load()
     }
 }
 
@@ -2129,41 +2122,19 @@ impl Route for PeerRoute {
             .get_next_hop(dst_peer_id)
             .map(|x| x.next_hop_peer_id)
     }
+
     async fn list_routes(&self) -> Vec<crate::proto::cli::Route> {
         let route_table = &self.service_impl.route_table;
         let route_table_with_cost = &self.service_impl.route_table_with_cost;
         let mut routes = Vec::new();
-
-        tracing::debug!("开始列出路由表, 我的peer_id={}", self.my_peer_id);
-
         for item in route_table.peer_infos.iter() {
             if *item.key() == self.my_peer_id {
-                tracing::trace!("跳过自己的peer_id={}", self.my_peer_id);
                 continue;
             }
-
             let Some(next_hop_peer) = route_table.get_next_hop(*item.key()) else {
-                tracing::debug!("目标peer_id={} 无下一跳信息", item.key());
                 continue;
             };
-
-            tracing::debug!(
-                "处理peer_id={}, 下一跳={}, 路径长度={}, 延迟={}",
-                item.key(),
-                next_hop_peer.next_hop_peer_id,
-                next_hop_peer.path_len,
-                next_hop_peer.path_latency
-            );
-
             let next_hop_peer_latency_first = route_table_with_cost.get_next_hop(*item.key());
-            if let Some(latency_first) = &next_hop_peer_latency_first {
-                tracing::debug!(
-                    "延迟优先路径: 下一跳={}, 延迟={}",
-                    latency_first.next_hop_peer_id,
-                    latency_first.path_latency
-                );
-            }
-
             let mut route: crate::proto::cli::Route = item.value().clone().into();
             route.next_hop_peer_id = next_hop_peer.next_hop_peer_id;
             route.cost = (next_hop_peer.path_len - 1) as i32;
@@ -2176,11 +2147,8 @@ impl Route for PeerRoute {
 
             route.feature_flag = item.feature_flag.clone();
 
-            tracing::debug!("添加路由: {:?}", route);
             routes.push(route);
         }
-
-        tracing::debug!("路由表列举完成, 共{}条路由", routes.len());
         routes
     }
 
@@ -2245,6 +2213,10 @@ impl Route for PeerRoute {
             .peer_infos
             .get(&peer_id)
             .and_then(|x| x.feature_flag.clone())
+    }
+
+    async fn get_peer_info_last_update_time(&self) -> Instant {
+        self.service_impl.get_peer_info_last_update()
     }
 }
 

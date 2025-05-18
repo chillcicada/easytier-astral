@@ -30,6 +30,9 @@ message FlagsInConfig {
   // allow relay kcp packets (for public server, this can reduce the throughput)
   bool disable_relay_kcp = 20;
   bool proxy_forward_by_system = 21;
+
+  // enable magic dns or not
+  bool accept_dns = 22;
 }
 
 message RpcDescriptor {
@@ -154,4 +157,15 @@ message PeerFeatureFlag {
   bool avoid_relay_data = 2;
   bool kcp_input = 3;
   bool no_relay_kcp  = 4;
+}
+
+enum SocketType {
+  TCP = 0;
+  UDP = 1;
+}
+
+message PortForwardConfigPb {
+    SocketAddr bind_addr = 1;
+    SocketAddr dst_addr = 2;
+    SocketType socket_type = 3;
 }

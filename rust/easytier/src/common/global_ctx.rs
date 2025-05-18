@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::proto::cli::PeerConnInfo;
-use crate::proto::common::PeerFeatureFlag;
+use crate::proto::common::{PeerFeatureFlag, PortForwardConfigPb};
 use crossbeam::atomic::AtomicCell;
 
 use super::{
@@ -42,6 +42,8 @@ pub enum GlobalCtxEvent {
 
     DhcpIpv4Changed(Option<cidr::Ipv4Inet>, Option<cidr::Ipv4Inet>), // (old, new)
     DhcpIpv4Conflicted(Option<cidr::Ipv4Inet>),
+
+    PortForwardAdded(PortForwardConfigPb),
 }
 
 pub type EventBus = tokio::sync::broadcast::Sender<GlobalCtxEvent>;
@@ -61,7 +63,7 @@ pub struct GlobalCtx {
 
     ip_collector: Arc<IPCollector>,
 
-    hostname: String,
+    hostname: Mutex<String>,
 
     stun_info_collection: Box<dyn StunInfoCollectorTrait>,
 
@@ -95,7 +97,7 @@ impl GlobalCtx {
         let net_ns = NetNS::new(config_fs.get_netns());
         let hostname = config_fs.get_hostname();
 
-        let (event_bus, _) = tokio::sync::broadcast::channel(1024);
+        let (event_bus, _) = tokio::sync::broadcast::channel(8);
 
         let stun_info_collection = Arc::new(StunInfoCollector::new_with_default_servers());
 
@@ -120,7 +122,7 @@ impl GlobalCtx {
 
             ip_collector: Arc::new(IPCollector::new(net_ns, stun_info_collection.clone())),
 
-            hostname,
+            hostname: Mutex::new(hostname),
 
             stun_info_collection: Box::new(stun_info_collection),
 
@@ -139,10 +141,13 @@ impl GlobalCtx {
     }
 
     pub fn issue_event(&self, event: GlobalCtxEvent) {
-        if self.event_bus.receiver_count() != 0 {
-            self.event_bus.send(event).unwrap();
-        } else {
-            tracing::warn!("No subscriber for event: {:?}", event);
+        if let Err(e) = self.event_bus.send(event.clone()) {
+            tracing::warn!(
+                "Failed to send event: {:?}, error: {:?}, receiver count: {}",
+                event,
+                e,
+                self.event_bus.receiver_count()
+            );
         }
     }
 
@@ -214,7 +219,11 @@ impl GlobalCtx {
     }
 
     pub fn get_hostname(&self) -> String {
-        return self.hostname.clone();
+        return self.hostname.lock().unwrap().clone();
+    }
+
+    pub fn set_hostname(&self, hostname: String) {
+        *self.hostname.lock().unwrap() = hostname;
     }
 
     pub fn get_stun_info_collector(&self) -> impl StunInfoCollectorTrait + '_ {
@@ -295,7 +304,10 @@ impl GlobalCtx {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::common::{config::TomlConfigLoader, new_peer_id};
+    use crate::{
+        common::{config::TomlConfigLoader, new_peer_id, stun::MockStunInfoCollector},
+        proto::common::NatType,
+    };
 
     use super::*;
 
@@ -335,7 +347,12 @@ pub mod tests {
         let config_fs = TomlConfigLoader::default();
         config_fs.set_inst_name(format!("test_{}", config_fs.get_id()));
         config_fs.set_network_identity(network_identy.unwrap_or(NetworkIdentity::default()));
-        std::sync::Arc::new(GlobalCtx::new(config_fs))
+
+        let ctx = Arc::new(GlobalCtx::new(config_fs));
+        ctx.replace_stun_info_collector(Box::new(MockStunInfoCollector {
+            udp_nat_type: NatType::Unknown,
+        }));
+        ctx
     }
 
     pub fn get_mock_global_ctx() -> ArcGlobalCtx {

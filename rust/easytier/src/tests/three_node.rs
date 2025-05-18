@@ -4,13 +4,14 @@ use std::{
     time::Duration,
 };
 
+use rand::Rng;
 use tokio::{net::UdpSocket, task::JoinSet};
 
 use super::*;
 
 use crate::{
     common::{
-        config::{ConfigLoader, NetworkIdentity, TomlConfigLoader},
+        config::{ConfigLoader, NetworkIdentity, PortForwardConfig, TomlConfigLoader},
         netns::{NetNS, ROOT_NETNS_NAME},
     },
     instance::instance::Instance,
@@ -174,6 +175,16 @@ pub async fn init_three_node_ex<F: Fn(TomlConfigLoader) -> TomlConfigLoader>(
     )
     .await;
 
+    wait_for_condition(
+        || async {
+            let routes = inst3.get_peer_manager().list_routes().await;
+            println!("routes: {:?}", routes);
+            routes.len() == 2
+        },
+        Duration::from_secs(5),
+    )
+    .await;
+
     vec![inst1, inst2, inst3]
 }
 
@@ -232,7 +243,7 @@ async fn subnet_proxy_test_udp() {
     let udp_connector = UdpTunnelConnector::new("udp://10.1.2.4:22233".parse().unwrap());
 
     // NOTE: this should not excced udp tunnel max buffer size
-    let mut buf = vec![0; 20 * 1024];
+    let mut buf = vec![0; 7 * 1024];
     rand::thread_rng().fill(&mut buf[..]);
 
     _tunnel_pingpong_netns(
@@ -265,7 +276,7 @@ async fn subnet_proxy_test_udp() {
     let udp_listener = UdpTunnelListener::new("udp://0.0.0.0:22234".parse().unwrap());
     let udp_connector = UdpTunnelConnector::new("udp://10.144.144.3:22234".parse().unwrap());
     // NOTE: this should not excced udp tunnel max buffer size
-    let mut buf = vec![0; 20 * 1024];
+    let mut buf = vec![0; 7 * 1024];
     rand::thread_rng().fill(&mut buf[..]);
 
     _tunnel_pingpong_netns(
@@ -887,6 +898,125 @@ pub async fn manual_reconnector(#[values(true, false)] is_foreign: bool) {
     wait_for_condition(
         || async { ping_test("net_b", "10.144.145.2", None).await },
         Duration::from_secs(5),
+    )
+    .await;
+}
+
+#[rstest::rstest]
+#[tokio::test]
+#[serial_test::serial]
+pub async fn port_forward_test(
+    #[values(true, false)] no_tun: bool,
+    #[values(64, 1900)] buf_size: u64,
+    #[values(true, false)] enable_kcp: bool,
+) {
+    prepare_linux_namespaces();
+
+    let _insts = init_three_node_ex(
+        "udp",
+        |cfg| {
+            if cfg.get_inst_name() == "inst1" {
+                cfg.set_port_forwards(vec![
+                    // test port forward to other virtual node
+                    PortForwardConfig {
+                        bind_addr: "0.0.0.0:23456".parse().unwrap(),
+                        dst_addr: "10.144.144.3:23456".parse().unwrap(),
+                        proto: "tcp".to_string(),
+                    },
+                    // test port forward to subnet proxy
+                    PortForwardConfig {
+                        bind_addr: "0.0.0.0:23457".parse().unwrap(),
+                        dst_addr: "10.1.2.4:23457".parse().unwrap(),
+                        proto: "tcp".to_string(),
+                    },
+                    // test udp port forward to other virtual node
+                    PortForwardConfig {
+                        bind_addr: "0.0.0.0:23458".parse().unwrap(),
+                        dst_addr: "10.144.144.3:23458".parse().unwrap(),
+                        proto: "udp".to_string(),
+                    },
+                    // test udp port forward to subnet proxy
+                    PortForwardConfig {
+                        bind_addr: "0.0.0.0:23459".parse().unwrap(),
+                        dst_addr: "10.1.2.4:23459".parse().unwrap(),
+                        proto: "udp".to_string(),
+                    },
+                ]);
+            } else if cfg.get_inst_name() == "inst3" {
+                cfg.add_proxy_cidr("10.1.2.0/24".parse().unwrap());
+            }
+            let mut flags = cfg.get_flags();
+            flags.no_tun = no_tun;
+            flags.enable_kcp_proxy = enable_kcp;
+            cfg.set_flags(flags);
+            cfg
+        },
+        false,
+    )
+    .await;
+
+    use crate::tunnel::{
+        common::tests::_tunnel_pingpong_netns, tcp::TcpTunnelListener, udp::UdpTunnelConnector,
+        udp::UdpTunnelListener,
+    };
+
+    let tcp_listener = TcpTunnelListener::new("tcp://0.0.0.0:23456".parse().unwrap());
+    let tcp_connector = TcpTunnelConnector::new("tcp://127.0.0.1:23456".parse().unwrap());
+
+    let mut buf = vec![0; buf_size as usize];
+    rand::thread_rng().fill(&mut buf[..]);
+
+    _tunnel_pingpong_netns(
+        tcp_listener,
+        tcp_connector,
+        NetNS::new(Some("net_c".into())),
+        NetNS::new(Some("net_a".into())),
+        buf,
+    )
+    .await;
+
+    let tcp_listener = TcpTunnelListener::new("tcp://0.0.0.0:23457".parse().unwrap());
+    let tcp_connector = TcpTunnelConnector::new("tcp://127.0.0.1:23457".parse().unwrap());
+
+    let mut buf = vec![0; buf_size as usize];
+    rand::thread_rng().fill(&mut buf[..]);
+
+    _tunnel_pingpong_netns(
+        tcp_listener,
+        tcp_connector,
+        NetNS::new(Some("net_d".into())),
+        NetNS::new(Some("net_a".into())),
+        buf,
+    )
+    .await;
+
+    let udp_listener = UdpTunnelListener::new("udp://0.0.0.0:23458".parse().unwrap());
+    let udp_connector = UdpTunnelConnector::new("udp://127.0.0.1:23458".parse().unwrap());
+
+    let mut buf = vec![0; buf_size as usize];
+    rand::thread_rng().fill(&mut buf[..]);
+
+    _tunnel_pingpong_netns(
+        udp_listener,
+        udp_connector,
+        NetNS::new(Some("net_c".into())),
+        NetNS::new(Some("net_a".into())),
+        buf,
+    )
+    .await;
+
+    let udp_listener = UdpTunnelListener::new("udp://0.0.0.0:23459".parse().unwrap());
+    let udp_connector = UdpTunnelConnector::new("udp://127.0.0.1:23459".parse().unwrap());
+
+    let mut buf = vec![0; buf_size as usize];
+    rand::thread_rng().fill(&mut buf[..]);
+
+    _tunnel_pingpong_netns(
+        udp_listener,
+        udp_connector,
+        NetNS::new(Some("net_d".into())),
+        NetNS::new(Some("net_a".into())),
+        buf,
     )
     .await;
 }

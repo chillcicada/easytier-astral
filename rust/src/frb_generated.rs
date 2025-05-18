@@ -713,6 +713,7 @@ impl SseDecode for crate::api::simple::FlagsC {
         let mut var_disableKcpInput = <bool>::sse_decode(deserializer);
         let mut var_disableRelayKcp = <bool>::sse_decode(deserializer);
         let mut var_proxyForwardBySystem = <bool>::sse_decode(deserializer);
+        let mut var_acceptDns = <bool>::sse_decode(deserializer);
         return crate::api::simple::FlagsC {
             default_protocol: var_defaultProtocol,
             dev_name: var_devName,
@@ -734,6 +735,7 @@ impl SseDecode for crate::api::simple::FlagsC {
             disable_kcp_input: var_disableKcpInput,
             disable_relay_kcp: var_disableRelayKcp,
             proxy_forward_by_system: var_proxyForwardBySystem,
+            accept_dns: var_acceptDns,
         };
     }
 }
@@ -1113,6 +1115,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::simple::FlagsC {
             self.disable_kcp_input.into_into_dart().into_dart(),
             self.disable_relay_kcp.into_into_dart().into_dart(),
             self.proxy_forward_by_system.into_into_dart().into_dart(),
+            self.accept_dns.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1392,6 +1395,7 @@ impl SseEncode for crate::api::simple::FlagsC {
         <bool>::sse_encode(self.disable_kcp_input, serializer);
         <bool>::sse_encode(self.disable_relay_kcp, serializer);
         <bool>::sse_encode(self.proxy_forward_by_system, serializer);
+        <bool>::sse_encode(self.accept_dns, serializer);
     }
 }
 

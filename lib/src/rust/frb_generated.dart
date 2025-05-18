@@ -779,8 +779,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FlagsC dco_decode_flags_c(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 20)
-      throw Exception('unexpected arr length: expect 20 but see ${arr.length}');
+    if (arr.length != 21)
+      throw Exception('unexpected arr length: expect 21 but see ${arr.length}');
     return FlagsC(
       defaultProtocol: dco_decode_String(arr[0]),
       devName: dco_decode_String(arr[1]),
@@ -802,6 +802,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       disableKcpInput: dco_decode_bool(arr[17]),
       disableRelayKcp: dco_decode_bool(arr[18]),
       proxyForwardBySystem: dco_decode_bool(arr[19]),
+      acceptDns: dco_decode_bool(arr[20]),
     );
   }
 
@@ -1133,6 +1134,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_disableKcpInput = sse_decode_bool(deserializer);
     var var_disableRelayKcp = sse_decode_bool(deserializer);
     var var_proxyForwardBySystem = sse_decode_bool(deserializer);
+    var var_acceptDns = sse_decode_bool(deserializer);
     return FlagsC(
       defaultProtocol: var_defaultProtocol,
       devName: var_devName,
@@ -1154,6 +1156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       disableKcpInput: var_disableKcpInput,
       disableRelayKcp: var_disableRelayKcp,
       proxyForwardBySystem: var_proxyForwardBySystem,
+      acceptDns: var_acceptDns,
     );
   }
 
@@ -1540,6 +1543,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.disableKcpInput, serializer);
     sse_encode_bool(self.disableRelayKcp, serializer);
     sse_encode_bool(self.proxyForwardBySystem, serializer);
+    sse_encode_bool(self.acceptDns, serializer);
   }
 
   @protected

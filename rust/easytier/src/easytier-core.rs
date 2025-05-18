@@ -6,18 +6,18 @@ extern crate rust_i18n;
 use std::{
     net::{Ipv4Addr, SocketAddr},
     path::PathBuf,
+    process::ExitCode,
     sync::Arc,
 };
 
 use anyhow::Context;
 use clap::Parser;
-use tokio::net::TcpSocket;
 
 use easytier::{
     common::{
         config::{
             ConfigLoader, ConsoleLoggerConfig, FileLoggerConfig, NetworkIdentity, PeerConfig,
-            TomlConfigLoader, VpnPortalConfig,
+            PortForwardConfig, TomlConfigLoader, VpnPortalConfig,
         },
         constants::EASYTIER_VERSION,
         global_ctx::{EventBusSubscriber, GlobalCtx, GlobalCtxEvent},
@@ -38,12 +38,57 @@ use easytier::{
 #[cfg(target_os = "windows")]
 windows_service::define_windows_service!(ffi_service_main, win_service_main);
 
-#[cfg(feature = "mimalloc")]
+#[cfg(all(feature = "mimalloc", not(feature = "jemalloc")))]
 use mimalloc_rust::GlobalMiMalloc;
 
-#[cfg(feature = "mimalloc")]
+#[cfg(all(feature = "mimalloc", not(feature = "jemalloc")))]
 #[global_allocator]
 static GLOBAL_MIMALLOC: GlobalMiMalloc = GlobalMiMalloc;
+
+#[cfg(feature = "jemalloc")]
+use jemalloc_ctl::{epoch, stats, Access as _, AsName as _};
+
+#[cfg(feature = "jemalloc")]
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+fn set_prof_active(_active: bool) {
+    #[cfg(feature = "jemalloc")]
+    {
+        const PROF_ACTIVE: &'static [u8] = b"prof.active\0";
+        let name = PROF_ACTIVE.name();
+        name.write(_active).expect("Should succeed to set prof");
+    }
+}
+
+fn dump_profile(_cur_allocated: usize) {
+    #[cfg(feature = "jemalloc")]
+    {
+        const PROF_DUMP: &'static [u8] = b"prof.dump\0";
+        static mut PROF_DUMP_FILE_NAME: [u8; 128] = [0; 128];
+        let file_name_str = format!(
+            "profile-{}-{}.out",
+            _cur_allocated,
+            chrono::Local::now().format("%Y-%m-%d-%H-%M-%S")
+        );
+        // copy file name to PROF_DUMP
+        let file_name = file_name_str.as_bytes();
+        let len = file_name.len();
+        if len > 127 {
+            panic!("file name too long");
+        }
+        unsafe {
+            PROF_DUMP_FILE_NAME[..len].copy_from_slice(file_name);
+            // set the last byte to 0
+            PROF_DUMP_FILE_NAME[len] = 0;
+
+            let name = PROF_DUMP.name();
+            name.write(&PROF_DUMP_FILE_NAME[..len + 1])
+                .expect("Should succeed to dump profile");
+            println!("dump profile to: {}", file_name_str);
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(name = "easytier-core", author, version = EASYTIER_VERSION , about, long_about = None)]
@@ -51,6 +96,7 @@ struct Cli {
     #[arg(
         short = 'w',
         long,
+        env = "ET_CONFIG_SERVER",
         help = t!("core_clap.config_server").to_string()
     )]
     config_server: Option<String>,
@@ -58,27 +104,29 @@ struct Cli {
     #[arg(
         short,
         long,
+        env = "ET_CONFIG_FILE",
         help = t!("core_clap.config_file").to_string()
     )]
     config_file: Option<PathBuf>,
 
     #[arg(
         long,
+        env = "ET_NETWORK_NAME",
         help = t!("core_clap.network_name").to_string(),
-        default_value = "default"
     )]
-    network_name: String,
+    network_name: Option<String>,
 
     #[arg(
         long,
+        env = "ET_NETWORK_SECRET",
         help = t!("core_clap.network_secret").to_string(),
-        default_value = ""
     )]
-    network_secret: String,
+    network_secret: Option<String>,
 
     #[arg(
         short,
         long,
+        env = "ET_IPV4",
         help = t!("core_clap.ipv4").to_string()
     )]
     ipv4: Option<String>,
@@ -86,13 +134,18 @@ struct Cli {
     #[arg(
         short,
         long,
-        help = t!("core_clap.dhcp").to_string()
+        env = "ET_DHCP",
+        help = t!("core_clap.dhcp").to_string(),
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    dhcp: bool,
+    dhcp: Option<bool>,
 
     #[arg(
         short,
         long,
+        env = "ET_PEERS",
+        value_delimiter = ',',
         help = t!("core_clap.peers").to_string(),
         num_args = 0..
     )]
@@ -101,6 +154,7 @@ struct Cli {
     #[arg(
         short,
         long,
+        env = "ET_EXTERNAL_NODE",
         help = t!("core_clap.external_node").to_string()
     )]
     external_node: Option<String>,
@@ -108,6 +162,8 @@ struct Cli {
     #[arg(
         short = 'n',
         long,
+        env = "ET_PROXY_NETWORKS",
+        value_delimiter = ',',
         help = t!("core_clap.proxy_networks").to_string()
     )]
     proxy_networks: Vec<String>,
@@ -115,22 +171,25 @@ struct Cli {
     #[arg(
         short,
         long,
+        env = "ET_RPC_PORTAL",
         help = t!("core_clap.rpc_portal").to_string(),
-        default_value = "0"
     )]
-    rpc_portal: String,
+    rpc_portal: Option<String>,
 
     #[arg(
         short,
         long,
+        env = "ET_LISTENERS",
+        value_delimiter = ',',
         help = t!("core_clap.listeners").to_string(),
-        default_values_t = ["11010".to_string()],
         num_args = 0..
     )]
     listeners: Vec<String>,
 
     #[arg(
         long,
+        env = "ET_MAPPED_LISTENERS",
+        value_delimiter = ',',
         help = t!("core_clap.mapped_listeners").to_string(),
         num_args = 0..
     )]
@@ -138,31 +197,36 @@ struct Cli {
 
     #[arg(
         long,
+        env = "ET_NO_LISTENER",
         help = t!("core_clap.no_listener").to_string(),
-        default_value = "false"
+        default_value = "false",
     )]
     no_listener: bool,
 
     #[arg(
         long,
+        env = "ET_CONSOLE_LOG_LEVEL",
         help = t!("core_clap.console_log_level").to_string()
     )]
     console_log_level: Option<String>,
 
     #[arg(
         long,
+        env = "ET_FILE_LOG_LEVEL",
         help = t!("core_clap.file_log_level").to_string()
     )]
     file_log_level: Option<String>,
 
     #[arg(
         long,
+        env = "ET_FILE_LOG_DIR",
         help = t!("core_clap.file_log_dir").to_string()
     )]
     file_log_dir: Option<String>,
 
     #[arg(
         long,
+        env = "ET_HOSTNAME",
         help = t!("core_clap.hostname").to_string()
     )]
     hostname: Option<String>,
@@ -170,19 +234,21 @@ struct Cli {
     #[arg(
         short = 'm',
         long,
+        env = "ET_INSTANCE_NAME",
         help = t!("core_clap.instance_name").to_string(),
-        default_value = "default"
     )]
-    instance_name: String,
+    instance_name: Option<String>,
 
     #[arg(
         long,
+        env = "ET_VPN_PORTAL",
         help = t!("core_clap.vpn_portal").to_string()
     )]
     vpn_portal: Option<String>,
 
     #[arg(
         long,
+        env = "ET_DEFAULT_PROTOCOL",
         help = t!("core_clap.default_protocol").to_string()
     )]
     default_protocol: Option<String>,
@@ -190,46 +256,58 @@ struct Cli {
     #[arg(
         short = 'u',
         long,
+        env = "ET_DISABLE_ENCRYPTION",
         help = t!("core_clap.disable_encryption").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    disable_encryption: bool,
+    disable_encryption: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_MULTI_THREAD",
         help = t!("core_clap.multi_thread").to_string(),
-        default_value = "true"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    multi_thread: bool,
+    multi_thread: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_DISABLE_IPV6",
         help = t!("core_clap.disable_ipv6").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    disable_ipv6: bool,
+    disable_ipv6: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_DEV_NAME",
         help = t!("core_clap.dev_name").to_string()
     )]
     dev_name: Option<String>,
 
     #[arg(
         long,
+        env = "ET_MTU",
         help = t!("core_clap.mtu").to_string()
     )]
     mtu: Option<u16>,
 
     #[arg(
         long,
+        env = "ET_LATENCY_FIRST",
         help = t!("core_clap.latency_first").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    latency_first: bool,
+    latency_first: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_EXIT_NODES",
+        value_delimiter = ',',
         help = t!("core_clap.exit_nodes").to_string(),
         num_args = 0..
     )]
@@ -237,34 +315,44 @@ struct Cli {
 
     #[arg(
         long,
+        env = "ET_ENABLE_EXIT_NODE",
         help = t!("core_clap.enable_exit_node").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    enable_exit_node: bool,
+    enable_exit_node: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_PROXY_FORWARD_BY_SYSTEM",
         help = t!("core_clap.proxy_forward_by_system").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    proxy_forward_by_system: bool,
+    proxy_forward_by_system: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_NO_TUN",
         help = t!("core_clap.no_tun").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    no_tun: bool,
+    no_tun: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_USE_SMOLTCP",
         help = t!("core_clap.use_smoltcp").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    use_smoltcp: bool,
+    use_smoltcp: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_MANUAL_ROUTES",
+        value_delimiter = ',',
         help = t!("core_clap.manual_routes").to_string(),
         num_args = 0..
     )]
@@ -275,6 +363,8 @@ struct Cli {
     // for local virtual network, will refuse relaying tun packet
     #[arg(
         long,
+        env = "ET_RELAY_NETWORK_WHITELIST",
+        value_delimiter = ',',
         help = t!("core_clap.relay_network_whitelist").to_string(),
         num_args = 0..
     )]
@@ -282,58 +372,86 @@ struct Cli {
 
     #[arg(
         long,
+        env = "ET_DISABLE_P2P",
         help = t!("core_clap.disable_p2p").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    disable_p2p: bool,
+    disable_p2p: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_DISABLE_UDP_HOLE_PUNCHING",
         help = t!("core_clap.disable_udp_hole_punching").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    disable_udp_hole_punching: bool,
+    disable_udp_hole_punching: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_RELAY_ALL_PEER_RPC",
         help = t!("core_clap.relay_all_peer_rpc").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    relay_all_peer_rpc: bool,
+    relay_all_peer_rpc: Option<bool>,
 
     #[cfg(feature = "socks5")]
     #[arg(
         long,
+        env = "ET_SOCKS5",
         help = t!("core_clap.socks5").to_string()
     )]
     socks5: Option<u16>,
 
     #[arg(
         long,
+        env = "ET_COMPRESSION",
         help = t!("core_clap.compression").to_string(),
-        default_value = "none",
     )]
-    compression: String,
+    compression: Option<String>,
 
     #[arg(
         long,
+        env = "ET_BIND_DEVICE",
         help = t!("core_clap.bind_device").to_string()
     )]
     bind_device: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_ENABLE_KCP_PROXY",
         help = t!("core_clap.enable_kcp_proxy").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    enable_kcp_proxy: bool,
+    enable_kcp_proxy: Option<bool>,
 
     #[arg(
         long,
+        env = "ET_DISABLE_KCP_INPUT",
         help = t!("core_clap.disable_kcp_input").to_string(),
-        default_value = "false"
+        num_args = 0..=1,
+        default_missing_value = "true"
     )]
-    disable_kcp_input: bool,
+    disable_kcp_input: Option<bool>,
+
+    #[arg(
+        long,
+        env = "ET_PORT_FORWARD",
+        value_delimiter = ',',
+        help = t!("core_clap.port_forward").to_string(),
+        num_args = 1..
+    )]
+    port_forward: Vec<url::Url>,
+
+    #[arg(
+        long,
+        env = "ET_ACCEPT_DNS",
+        help = t!("core_clap.accept_dns").to_string(),
+    )]
+    accept_dns: Option<bool>,
 }
 
 rust_i18n::i18n!("locales", fallback = "en");
@@ -384,22 +502,8 @@ impl Cli {
         Ok(listeners)
     }
 
-    fn check_tcp_available(port: u16) -> Option<SocketAddr> {
-        let s = format!("0.0.0.0:{}", port).parse::<SocketAddr>().unwrap();
-        TcpSocket::new_v4().unwrap().bind(s).map(|_| s).ok()
-    }
-
     fn parse_rpc_portal(rpc_portal: String) -> anyhow::Result<SocketAddr> {
         if let Ok(port) = rpc_portal.parse::<u16>() {
-            if port == 0 {
-                // check tcp 15888 first
-                for i in 15888..15900 {
-                    if let Some(s) = Cli::check_tcp_available(i) {
-                        return Ok(s);
-                    }
-                }
-                return Ok("0.0.0.0:0".parse().unwrap());
-            }
             return Ok(format!("0.0.0.0:{}", port).parse().unwrap());
         }
 
@@ -411,25 +515,28 @@ impl TryFrom<&Cli> for TomlConfigLoader {
     type Error = anyhow::Error;
 
     fn try_from(cli: &Cli) -> Result<Self, Self::Error> {
-        if let Some(config_file) = &cli.config_file {
-            println!(
-                "NOTICE: loading config file: {:?}, will ignore all command line flags\n",
-                config_file
-            );
-            return Ok(TomlConfigLoader::new(config_file)
-                .with_context(|| format!("failed to load config file: {:?}", cli.config_file))?);
+        let cfg = if let Some(config_file) = &cli.config_file {
+            TomlConfigLoader::new(config_file)
+                .with_context(|| format!("failed to load config file: {:?}", cli.config_file))?
+        } else {
+            TomlConfigLoader::default()
+        };
+
+        if cli.hostname.is_some() {
+            cfg.set_hostname(cli.hostname.clone());
         }
 
-        let cfg = TomlConfigLoader::default();
+        let old_ns = cfg.get_network_identity();
+        let network_name = cli.network_name.clone().unwrap_or(old_ns.network_name);
+        let network_secret = cli
+            .network_secret
+            .clone()
+            .unwrap_or(old_ns.network_secret.unwrap_or_default());
+        cfg.set_network_identity(NetworkIdentity::new(network_name, network_secret));
 
-        cfg.set_hostname(cli.hostname.clone());
-
-        cfg.set_network_identity(NetworkIdentity::new(
-            cli.network_name.clone(),
-            cli.network_secret.clone(),
-        ));
-
-        cfg.set_dhcp(cli.dhcp);
+        if let Some(dhcp) = cli.dhcp {
+            cfg.set_dhcp(dhcp);
+        }
 
         if let Some(ipv4) = &cli.ipv4 {
             cfg.set_ipv4(Some(ipv4.parse().with_context(|| {
@@ -437,39 +544,53 @@ impl TryFrom<&Cli> for TomlConfigLoader {
             })?))
         }
 
-        let mut peers = Vec::<PeerConfig>::with_capacity(cli.peers.len());
-        for p in &cli.peers {
-            peers.push(PeerConfig {
-                uri: p
-                    .parse()
-                    .with_context(|| format!("failed to parse peer uri: {}", p))?,
-            });
+        if !cli.peers.is_empty() {
+            let mut peers = cfg.get_peers();
+            peers.reserve(peers.len() + cli.peers.len());
+            for p in &cli.peers {
+                peers.push(PeerConfig {
+                    uri: p
+                        .parse()
+                        .with_context(|| format!("failed to parse peer uri: {}", p))?,
+                });
+            }
+            cfg.set_peers(peers);
         }
-        cfg.set_peers(peers);
 
-        cfg.set_listeners(
-            Cli::parse_listeners(cli.no_listener, cli.listeners.clone())?
-                .into_iter()
-                .map(|s| s.parse().unwrap())
-                .collect(),
-        );
+        if cli.no_listener || !cli.listeners.is_empty() {
+            cfg.set_listeners(
+                Cli::parse_listeners(cli.no_listener, cli.listeners.clone())?
+                    .into_iter()
+                    .map(|s| s.parse().unwrap())
+                    .collect(),
+            );
+        } else if cfg.get_listeners() == None {
+            cfg.set_listeners(
+                Cli::parse_listeners(false, vec!["11010".to_string()])?
+                    .into_iter()
+                    .map(|s| s.parse().unwrap())
+                    .collect(),
+            );
+        }
 
-        cfg.set_mapped_listeners(Some(
-            cli.mapped_listeners
-                .iter()
-                .map(|s| {
-                    s.parse()
-                        .with_context(|| format!("mapped listener is not a valid url: {}", s))
-                        .unwrap()
-                })
-                .map(|s: url::Url| {
-                    if s.port().is_none() {
-                        panic!("mapped listener port is missing: {}", s);
-                    }
-                    s
-                })
-                .collect(),
-        ));
+        if !cli.mapped_listeners.is_empty() {
+            cfg.set_mapped_listeners(Some(
+                cli.mapped_listeners
+                    .iter()
+                    .map(|s| {
+                        s.parse()
+                            .with_context(|| format!("mapped listener is not a valid url: {}", s))
+                            .unwrap()
+                    })
+                    .map(|s: url::Url| {
+                        if s.port().is_none() {
+                            panic!("mapped listener port is missing: {}", s);
+                        }
+                        s
+                    })
+                    .collect(),
+            ));
+        }
 
         for n in cli.proxy_networks.iter() {
             cfg.add_proxy_cidr(
@@ -478,10 +599,15 @@ impl TryFrom<&Cli> for TomlConfigLoader {
             );
         }
 
-        cfg.set_rpc_portal(
-            Cli::parse_rpc_portal(cli.rpc_portal.clone())
-                .with_context(|| format!("failed to parse rpc portal: {}", cli.rpc_portal))?,
-        );
+        let rpc_portal = if let Some(r) = &cli.rpc_portal {
+            Cli::parse_rpc_portal(r.clone())
+                .with_context(|| format!("failed to parse rpc portal: {}", r))?
+        } else if let Some(r) = cfg.get_rpc_portal() {
+            r
+        } else {
+            Cli::parse_rpc_portal("0".into())?
+        };
+        cfg.set_rpc_portal(rpc_portal);
 
         if let Some(external_nodes) = cli.external_node.as_ref() {
             let mut old_peers = cfg.get_peers();
@@ -499,15 +625,29 @@ impl TryFrom<&Cli> for TomlConfigLoader {
             });
         }
 
-        if cli.file_log_dir.is_some() || cli.file_log_level.is_some() {
-            cfg.set_file_logger_config(FileLoggerConfig {
-                level: cli.file_log_level.clone(),
-                dir: cli.file_log_dir.clone(),
-                file: Some(format!("easytier-{}", cli.instance_name)),
-            });
+        if let Some(inst_name) = &cli.instance_name {
+            cfg.set_inst_name(inst_name.clone());
         }
 
-        cfg.set_inst_name(cli.instance_name.clone());
+        if cli.file_log_dir.is_some() || cli.file_log_level.is_some() {
+            let inst_name = cfg.get_inst_name();
+            let old_fl = cfg.get_file_logger_config();
+            let file_log_dir = if cli.file_log_dir.is_some() {
+                &cli.file_log_dir
+            } else {
+                &old_fl.dir
+            };
+            let file_log_level = if cli.file_log_level.is_some() {
+                &cli.file_log_level
+            } else {
+                &old_fl.level
+            };
+            cfg.set_file_logger_config(FileLoggerConfig {
+                level: file_log_level.clone(),
+                dir: file_log_dir.clone(),
+                file: Some(format!("easytier-{}", inst_name)),
+            });
+        }
 
         if let Some(vpn_portal) = cli.vpn_portal.as_ref() {
             let url: url::Url = vpn_portal
@@ -549,45 +689,92 @@ impl TryFrom<&Cli> for TomlConfigLoader {
             ));
         }
 
-        let mut f = cfg.get_flags();
-        if cli.default_protocol.is_some() {
-            f.default_protocol = cli.default_protocol.as_ref().unwrap().clone();
+        #[cfg(feature = "socks5")]
+        for port_forward in cli.port_forward.iter() {
+            let example_str = ", example: udp://0.0.0.0:12345/10.126.126.1:12345";
+
+            let bind_addr = format!(
+                "{}:{}",
+                port_forward.host_str().expect("local bind host is missing"),
+                port_forward.port().expect("local bind port is missing")
+            )
+            .parse()
+            .expect(format!("failed to parse local bind addr {}", example_str).as_str());
+
+            let dst_addr = format!(
+                "{}",
+                port_forward
+                    .path_segments()
+                    .expect(format!("remote destination addr is missing {}", example_str).as_str())
+                    .next()
+                    .expect(format!("remote destination addr is missing {}", example_str).as_str())
+            )
+            .parse()
+            .expect(format!("failed to parse remote destination addr {}", example_str).as_str());
+
+            let port_forward_item = PortForwardConfig {
+                bind_addr,
+                dst_addr,
+                proto: port_forward.scheme().to_string(),
+            };
+
+            let mut old = cfg.get_port_forwards();
+            old.push(port_forward_item);
+            cfg.set_port_forwards(old);
         }
-        f.enable_encryption = !cli.disable_encryption;
-        f.enable_ipv6 = !cli.disable_ipv6;
-        f.latency_first = cli.latency_first;
-        f.dev_name = cli.dev_name.clone().unwrap_or_default();
+
+        let mut f = cfg.get_flags();
+        if let Some(default_protocol) = &cli.default_protocol {
+            f.default_protocol = default_protocol.clone()
+        };
+        if let Some(v) = cli.disable_encryption {
+            f.enable_encryption = !v;
+        }
+        if let Some(v) = cli.disable_ipv6 {
+            f.enable_ipv6 = !v;
+        }
+        f.latency_first = cli.latency_first.unwrap_or(f.latency_first);
+        if let Some(dev_name) = &cli.dev_name {
+            f.dev_name = dev_name.clone()
+        }
         if let Some(mtu) = cli.mtu {
             f.mtu = mtu as u32;
         }
-        f.enable_exit_node = cli.enable_exit_node;
-        f.proxy_forward_by_system = cli.proxy_forward_by_system;
-        f.no_tun = cli.no_tun || cfg!(not(feature = "tun"));
-        f.use_smoltcp = cli.use_smoltcp;
+        f.enable_exit_node = cli.enable_exit_node.unwrap_or(f.enable_exit_node);
+        f.proxy_forward_by_system = cli
+            .proxy_forward_by_system
+            .unwrap_or(f.proxy_forward_by_system);
+        f.no_tun = cli.no_tun.unwrap_or(f.no_tun) || cfg!(not(feature = "tun"));
+        f.use_smoltcp = cli.use_smoltcp.unwrap_or(f.use_smoltcp);
         if let Some(wl) = cli.relay_network_whitelist.as_ref() {
             f.relay_network_whitelist = wl.join(" ");
         }
-        f.disable_p2p = cli.disable_p2p;
-        f.disable_udp_hole_punching = cli.disable_udp_hole_punching;
-        f.relay_all_peer_rpc = cli.relay_all_peer_rpc;
-        f.multi_thread = cli.multi_thread;
-        f.data_compress_algo = match cli.compression.as_str() {
-            "none" => CompressionAlgoPb::None,
-            "zstd" => CompressionAlgoPb::Zstd,
-            _ => panic!(
-                "unknown compression algorithm: {}, supported: none, zstd",
-                cli.compression
-            ),
+        f.disable_p2p = cli.disable_p2p.unwrap_or(f.disable_p2p);
+        f.disable_udp_hole_punching = cli
+            .disable_udp_hole_punching
+            .unwrap_or(f.disable_udp_hole_punching);
+        f.relay_all_peer_rpc = cli.relay_all_peer_rpc.unwrap_or(f.relay_all_peer_rpc);
+        f.multi_thread = cli.multi_thread.unwrap_or(f.multi_thread);
+        if let Some(compression) = &cli.compression {
+            f.data_compress_algo = match compression.as_str() {
+                "none" => CompressionAlgoPb::None,
+                "zstd" => CompressionAlgoPb::Zstd,
+                _ => panic!(
+                    "unknown compression algorithm: {}, supported: none, zstd",
+                    compression
+                ),
+            }
+            .into();
         }
-        .into();
-        if let Some(bind_device) = cli.bind_device {
-            f.bind_device = bind_device;
-        }
-        f.enable_kcp_proxy = cli.enable_kcp_proxy;
-        f.disable_kcp_input = cli.disable_kcp_input;
+        f.bind_device = cli.bind_device.unwrap_or(f.bind_device);
+        f.enable_kcp_proxy = cli.enable_kcp_proxy.unwrap_or(f.enable_kcp_proxy);
+        f.disable_kcp_input = cli.disable_kcp_input.unwrap_or(f.disable_kcp_input);
+        f.accept_dns = cli.accept_dns.unwrap_or(f.accept_dns);
         cfg.set_flags(f);
 
-        cfg.set_exit_nodes(cli.exit_nodes.clone());
+        if !cli.exit_nodes.is_empty() {
+            cfg.set_exit_nodes(cli.exit_nodes.clone());
+        }
 
         Ok(cfg)
     }
@@ -611,105 +798,118 @@ fn peer_conn_info_to_string(p: proto::cli::PeerConnInfo) -> String {
 #[tracing::instrument]
 pub fn handle_event(mut events: EventBusSubscriber) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        while let Ok(e) = events.recv().await {
-            match e {
-                GlobalCtxEvent::PeerAdded(p) => {
-                    print_event(format!("new peer added. peer_id: {}", p));
-                }
-
-                GlobalCtxEvent::PeerRemoved(p) => {
-                    print_event(format!("peer removed. peer_id: {}", p));
-                }
-
-                GlobalCtxEvent::PeerConnAdded(p) => {
-                    print_event(format!(
-                        "new peer connection added. conn_info: {}",
-                        peer_conn_info_to_string(p)
-                    ));
-                }
-
-                GlobalCtxEvent::PeerConnRemoved(p) => {
-                    print_event(format!(
-                        "peer connection removed. conn_info: {}",
-                        peer_conn_info_to_string(p)
-                    ));
-                }
-
-                GlobalCtxEvent::ListenerAddFailed(p, msg) => {
-                    print_event(format!(
-                        "listener add failed. listener: {}, msg: {}",
-                        p, msg
-                    ));
-                }
-
-                GlobalCtxEvent::ListenerAcceptFailed(p, msg) => {
-                    print_event(format!(
-                        "listener accept failed. listener: {}, msg: {}",
-                        p, msg
-                    ));
-                }
-
-                GlobalCtxEvent::ListenerAdded(p) => {
-                    if p.scheme() == "ring" {
-                        continue;
+        loop {
+            if let Ok(e) = events.recv().await {
+                match e {
+                    GlobalCtxEvent::PeerAdded(p) => {
+                        print_event(format!("new peer added. peer_id: {}", p));
                     }
-                    print_event(format!("new listener added. listener: {}", p));
-                }
 
-                GlobalCtxEvent::ConnectionAccepted(local, remote) => {
-                    print_event(format!(
-                        "new connection accepted. local: {}, remote: {}",
-                        local, remote
-                    ));
-                }
+                    GlobalCtxEvent::PeerRemoved(p) => {
+                        print_event(format!("peer removed. peer_id: {}", p));
+                    }
 
-                GlobalCtxEvent::ConnectionError(local, remote, err) => {
-                    print_event(format!(
-                        "connection error. local: {}, remote: {}, err: {}",
-                        local, remote, err
-                    ));
-                }
+                    GlobalCtxEvent::PeerConnAdded(p) => {
+                        print_event(format!(
+                            "new peer connection added. conn_info: {}",
+                            peer_conn_info_to_string(p)
+                        ));
+                    }
 
-                GlobalCtxEvent::TunDeviceReady(dev) => {
-                    print_event(format!("tun device ready. dev: {}", dev));
-                }
+                    GlobalCtxEvent::PeerConnRemoved(p) => {
+                        print_event(format!(
+                            "peer connection removed. conn_info: {}",
+                            peer_conn_info_to_string(p)
+                        ));
+                    }
 
-                GlobalCtxEvent::TunDeviceError(err) => {
-                    print_event(format!("tun device error. err: {}", err));
-                }
+                    GlobalCtxEvent::ListenerAddFailed(p, msg) => {
+                        print_event(format!(
+                            "listener add failed. listener: {}, msg: {}",
+                            p, msg
+                        ));
+                    }
 
-                GlobalCtxEvent::Connecting(dst) => {
-                    print_event(format!("connecting to peer. dst: {}", dst));
-                }
+                    GlobalCtxEvent::ListenerAcceptFailed(p, msg) => {
+                        print_event(format!(
+                            "listener accept failed. listener: {}, msg: {}",
+                            p, msg
+                        ));
+                    }
 
-                GlobalCtxEvent::ConnectError(dst, ip_version, err) => {
-                    print_event(format!(
-                        "connect to peer error. dst: {}, ip_version: {}, err: {}",
-                        dst, ip_version, err
-                    ));
-                }
+                    GlobalCtxEvent::ListenerAdded(p) => {
+                        if p.scheme() == "ring" {
+                            continue;
+                        }
+                        print_event(format!("new listener added. listener: {}", p));
+                    }
 
-                GlobalCtxEvent::VpnPortalClientConnected(portal, client_addr) => {
-                    print_event(format!(
-                        "vpn portal client connected. portal: {}, client_addr: {}",
-                        portal, client_addr
-                    ));
-                }
+                    GlobalCtxEvent::ConnectionAccepted(local, remote) => {
+                        print_event(format!(
+                            "new connection accepted. local: {}, remote: {}",
+                            local, remote
+                        ));
+                    }
 
-                GlobalCtxEvent::VpnPortalClientDisconnected(portal, client_addr) => {
-                    print_event(format!(
-                        "vpn portal client disconnected. portal: {}, client_addr: {}",
-                        portal, client_addr
-                    ));
-                }
+                    GlobalCtxEvent::ConnectionError(local, remote, err) => {
+                        print_event(format!(
+                            "connection error. local: {}, remote: {}, err: {}",
+                            local, remote, err
+                        ));
+                    }
 
-                GlobalCtxEvent::DhcpIpv4Changed(old, new) => {
-                    print_event(format!("dhcp ip changed. old: {:?}, new: {:?}", old, new));
-                }
+                    GlobalCtxEvent::TunDeviceReady(dev) => {
+                        print_event(format!("tun device ready. dev: {}", dev));
+                    }
 
-                GlobalCtxEvent::DhcpIpv4Conflicted(ip) => {
-                    print_event(format!("dhcp ip conflict. ip: {:?}", ip));
+                    GlobalCtxEvent::TunDeviceError(err) => {
+                        print_event(format!("tun device error. err: {}", err));
+                    }
+
+                    GlobalCtxEvent::Connecting(dst) => {
+                        print_event(format!("connecting to peer. dst: {}", dst));
+                    }
+
+                    GlobalCtxEvent::ConnectError(dst, ip_version, err) => {
+                        print_event(format!(
+                            "connect to peer error. dst: {}, ip_version: {}, err: {}",
+                            dst, ip_version, err
+                        ));
+                    }
+
+                    GlobalCtxEvent::VpnPortalClientConnected(portal, client_addr) => {
+                        print_event(format!(
+                            "vpn portal client connected. portal: {}, client_addr: {}",
+                            portal, client_addr
+                        ));
+                    }
+
+                    GlobalCtxEvent::VpnPortalClientDisconnected(portal, client_addr) => {
+                        print_event(format!(
+                            "vpn portal client disconnected. portal: {}, client_addr: {}",
+                            portal, client_addr
+                        ));
+                    }
+
+                    GlobalCtxEvent::DhcpIpv4Changed(old, new) => {
+                        print_event(format!("dhcp ip changed. old: {:?}, new: {:?}", old, new));
+                    }
+
+                    GlobalCtxEvent::DhcpIpv4Conflicted(ip) => {
+                        print_event(format!("dhcp ip conflict. ip: {:?}", ip));
+                    }
+
+                    GlobalCtxEvent::PortForwardAdded(cfg) => {
+                        print_event(format!(
+                            "port forward added. local: {}, remote: {}, proto: {}",
+                            cfg.bind_addr.unwrap().to_string(),
+                            cfg.dst_addr.unwrap().to_string(),
+                            cfg.socket_type().as_str_name()
+                        ));
+                    }
                 }
+            } else {
+                events = events.resubscribe();
             }
         }
     })
@@ -869,9 +1069,14 @@ async fn run_main(cli: Cli) -> anyhow::Result<()> {
         let mut flags = global_ctx.get_flags();
         flags.bind_device = false;
         global_ctx.set_flags(flags);
+        let hostname = match cli.hostname {
+            None => gethostname::gethostname().to_string_lossy().to_string(),
+            Some(hostname) => hostname.to_string(),
+        };
         let _wc = web_client::WebClient::new(
             create_connector_by_url(c_url.as_str(), &global_ctx, IpVersion::Both).await?,
             token.to_string(),
+            hostname,
         );
         tokio::signal::ctrl_c().await.unwrap();
         DNSTunnelConnector::new("".parse().unwrap(), global_ctx);
@@ -885,14 +1090,61 @@ async fn run_main(cli: Cli) -> anyhow::Result<()> {
 
     let mut l = launcher::NetworkInstance::new(cfg).set_fetch_node_info(false);
     let _t = ScopedTask::from(handle_event(l.start().unwrap()));
-    if let Some(e) = l.wait().await {
-        anyhow::bail!("launcher error: {}", e);
+    tokio::select! {
+        e = l.wait() => {
+            if let Some(e) = e {
+                eprintln!("launcher error: {}", e);
+            }
+        }
+        _ = tokio::signal::ctrl_c() => {
+            println!("ctrl-c received, exiting...");
+        }
     }
     Ok(())
 }
 
+fn memory_monitor() {
+    #[cfg(feature = "jemalloc")]
+    {
+        let mut last_peak_size = 0;
+        let e = epoch::mib().unwrap();
+        let allocated_stats = stats::allocated::mib().unwrap();
+
+        loop {
+            e.advance().unwrap();
+            let new_heap_size = allocated_stats.read().unwrap();
+
+            println!(
+                "heap size: {} bytes, time: {}",
+                new_heap_size,
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
+            );
+
+            // dump every 75MB
+            if last_peak_size > 0
+                && new_heap_size > last_peak_size
+                && new_heap_size - last_peak_size > 75 * 1024 * 1024
+            {
+                println!(
+                    "heap size increased: {} bytes, time: {}",
+                    new_heap_size - last_peak_size,
+                    chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
+                );
+                dump_profile(new_heap_size);
+                last_peak_size = new_heap_size;
+            }
+
+            if last_peak_size == 0 {
+                last_peak_size = new_heap_size;
+            }
+
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        }
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
+async fn main() -> ExitCode {
     let locale = sys_locale::get_locale().unwrap_or_else(|| String::from("en-US"));
     rust_i18n::set_locale(&locale);
     setup_panic_handler();
@@ -913,10 +1165,21 @@ async fn main() {
         }
     };
 
+    set_prof_active(true);
+    let _monitor = std::thread::spawn(memory_monitor);
+
     let cli = Cli::parse();
+    let mut ret_code = 0;
 
     if let Err(e) = run_main(cli).await {
         eprintln!("error: {:?}", e);
-        std::process::exit(1);
+        ret_code = 1;
     }
+
+    println!("Stopping easytier...");
+
+    dump_profile(0);
+    set_prof_active(false);
+
+    ExitCode::from(ret_code)
 }
