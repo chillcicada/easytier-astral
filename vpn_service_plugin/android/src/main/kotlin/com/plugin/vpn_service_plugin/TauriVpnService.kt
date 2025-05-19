@@ -134,10 +134,7 @@ class TauriVpnService : VpnService() {
         for (app in disallowedApplications) {
             builder.addDisallowedApplication(app)
         }
-val dnsServers = listOf("8.8.8.8", "114.114.114.114")
-for (dns in dnsServers) {
-    builder.addDnsServer(dns)
-}
+
 
         // 在Android Q及以上版本设置非计费网络
         val vpnInterface = builder.also {
