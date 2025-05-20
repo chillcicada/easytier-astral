@@ -124,11 +124,12 @@ class TauriVpnService : VpnService() {
         // builder.addDnsServer(dns)
 
         // 添加公共 DNS 服务器（如 Google DNS 或 114 DNS）
-        builder.addDnsServer("8.8.8.8");  // Google DNS 
         builder.addDnsServer("114.114.114.114");  // 114 DNS 
-        // 配置路由规则，确保所有流量通过 VPN 
-        builder.addRoute("0.0.0.0",  0); // IPv4 默认路由 
-        builder.addRoute("::0", 0); // IPv6 默认路由 
+        builder.addDnsServer("8.8.8.8");  // Google DNS 
+
+        // // 配置路由规则，确保所有流量通过 VPN 
+        // builder.addRoute("0.0.0.0",  0); // IPv4 默认路由 
+        // builder.addRoute("::0", 0); // IPv6 默认路由 
 
         // 添加路由规则
         for (route in routes) {
