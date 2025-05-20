@@ -180,17 +180,22 @@ class _RoomPageState extends State<RoomPage> {
                 constraints: const BoxConstraints(minWidth: double.infinity),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () {
+                  onTap: isConnected == CoState.connected ? () {
                     var shareCode = encryptRoomWithJWT(selectedRoom);
                     Clipboard.setData(ClipboardData(text: shareCode));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('房间信息已复制到剪贴板')),
                     );
-                  },
+                  } : null,
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     title: Text('当前房间: ${selectedRoom.name}'),
-                    subtitle: Text('连接状态: ${_coStateToText(isConnected)}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('连接状态: ${_coStateToText(isConnected)}${isConnected == CoState.connected ?' (点击分享房间)':''}'),
+                      ],
+                    ),
                   ),
                 ),
               ),
