@@ -26,23 +26,11 @@ class _UserIpBoxState extends State<UserIpBox> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _usernameController.text = _aps.PlayerName.value;
-      _virtualIPController.text = _aps.ipv4.value;
-      _roomController.text = _aps.selectroom.value?.name ?? '';
-
+      // 初始化时同步一次状态
       effect(() {
-        final value = _aps.PlayerName.value;
-        final value2 = _aps.ipv4.value;
-        final value3 = _aps.selectroom.value?.name ?? '';
-        if (_usernameController.text != value) {
-          _usernameController.text = value;
-        }
-        if (_virtualIPController.text != value2) {
-          _virtualIPController.text = value2;
-        }
-        if (_roomController.text != value3) {
-          _roomController.text = value3;
-        }
+        _usernameController.text = _aps.PlayerName.value;
+        _virtualIPController.text = _aps.ipv4.value;
+        _roomController.text = _aps.selectroom.value?.name ?? '';
       });
     });
   }
@@ -125,36 +113,46 @@ class _UserIpBoxState extends State<UserIpBox> {
           ),
           const SizedBox(height: 14),
 
-          TextField(
-            controller: _roomController,
-            readOnly: true,
-            enabled: Aps().Connec_state.watch(context) != CoState.connected,
-            decoration: InputDecoration(
-              labelText: '选择房间',
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              border: const OutlineInputBorder(),
-              prefixIcon: Icon(
-                Icons.apartment,
-                color: colorScheme.primary,
-                size: 24,
+          InkWell(
+            onTap: Aps().Connec_state.watch(context) != CoState.connected
+                ? () => CanvasJump.show(
+                      context,
+                      rooms: _aps.rooms.watch(context).cast<Room>(),
+                      onSelect: (Room room) {
+                        _aps.setRoom(room);
+                      },
+                    )
+                : null,
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: '选择房间',
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+                border: const OutlineInputBorder(),
+                prefixIcon: Icon(
+                  Icons.apartment,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                suffixIcon: Icon(
+                  Icons.menu,
+                  color: Aps().Connec_state.watch(context) != CoState.connected 
+                      ? colorScheme.primary
+                      : colorScheme.primary.withOpacity(0.5),
+                  size: 24,
+                ),
+                errorText: _aps.selectroom.watch(context) == null
+                    ? '请选择房间'
+                    : null,
               ),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.menu),
-                color: colorScheme.primary,
-                iconSize: 24,
-                onPressed: () => CanvasJump.show(
-                  context,
-                  rooms: _aps.rooms.watch(context).cast<Room>(),
-                  onSelect: (Room room) {
-                    _aps.setRoom(room);
-                    _roomController.text = room.name;
-                  },
+              child: Text(
+                Aps().selectroom.watch(context)?.name?? '请选择房间',
+                style: TextStyle(
+                  color: Aps().Connec_state.watch(context) != CoState.connected
+                      ? Theme.of(context).textTheme.bodyLarge?.color
+                      : Theme.of(context).disabledColor,
                 ),
               ),
-              errorText: _aps.selectroom.watch(context) == null
-                  ? '请选择房间'
-                  : null,
             ),
           ),
           const SizedBox(height: 9), 

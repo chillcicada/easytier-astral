@@ -179,18 +179,25 @@ class _CanvasDialogState extends State<_CanvasDialog> {
                                   : (Theme.of(context).brightness == Brightness.light)
                                     ? colorScheme.surfaceVariant.withOpacity(0.95) 
                                     : colorScheme.surfaceVariant.withOpacity(0.15),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              widget.onSelect(room);
-                              Navigator.pop(context);
-                            },
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                              title: Text(room.name, style: TextStyle(fontSize: 16, color: colorScheme.onSurface)),
-                              subtitle: Text(room.encrypted ? '加密房间' : '开放房间', style: TextStyle(color: colorScheme.onSurfaceVariant)),
-                              trailing: Icon(Icons.chevron_right, color: colorScheme.primary.withAlpha(150)),
+                              // 添加边框效果
+                              border: Border.all(
+                                color: _currentHoveredRoomName == room.name
+                                    ? colorScheme.primary
+                                    : Colors.transparent,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                widget.onSelect(room);
+                                Navigator.pop(context);
+                              },
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                                title: Text(room.name, style: TextStyle(fontSize: 16, color: colorScheme.onSurface)),
+                                subtitle: Text(room.encrypted ? '加密房间' : '开放房间', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                                trailing: Icon(Icons.chevron_right, color: colorScheme.primary.withAlpha(150)),
                               ),
                             ),
                           ),

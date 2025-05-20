@@ -17,116 +17,137 @@ class _BugcsState extends State<Bugcs> {
   final Aps _aps = Aps();
   double _progress = 0.0;
   bool _isConnecting = false; // 新增独立状态变量
+  bool _isHovered = false; // 添加悬浮状态变量
 
   @override
   Widget build(BuildContext context) {
     var colorScheme = Theme.of(context).colorScheme;
 
-    return HomeBox(
-      widthSpan: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ElevatedButton(
-            onPressed: () async {
-              await _initializeServer({
-                'roomName': 'default',
-                'password': '22222',
-              });
-            },
-            child: const Text('初始化服务器'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final vpnPlugin = Platform.isAndroid ? VpnServicePlugin() : null;
-              vpnPlugin?.prepareVpn();
-            },
-            child: const Text('测试VPN服务创建'),
-          ),
-          // 新增测试动画按钮
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _progress = 0.0;
-                _isConnecting = true;
-              });
-            },
-            child: const Text('测试状态切换'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Future.delayed(Duration(seconds: 5), () {
-                setState(() {
-                  _isConnecting = false;
-                });
-              });
-            },
-            child: const Text('测试定时器'),
-          ),
-          SizedBox(
-            height: 14,
-            width: 180,
-            child: AnimatedSlide(
-              duration: const Duration(milliseconds: 300),
-              offset: _isConnecting ? Offset.zero : const Offset(0, 1.0),
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: _isConnecting ? 1.0 : 0.0,
-                child: Container(
-                  width: 180,
-                  height: 6,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(3),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: HomeBox(
+        widthSpan: 2,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 添加一个容器来显示悬浮效果
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _isHovered ? colorScheme.primary : Colors.transparent,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _initializeServer({
+                        'roomName': 'default',
+                        'password': '22222',
+                      });
+                    },
+                    child: const Text('初始化服务器'),
                   ),
-                  child: TweenAnimationBuilder<double>(
-                    key: ValueKey('progress_$_isConnecting'),
-                    tween: Tween<double>(begin: 0.0, end: 1.0),
-                    duration: const Duration(seconds: 10),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, _) {
-                      _progress = value * 100;
-                      return FractionallySizedBox(
-                        widthFactor: value,
+                  ElevatedButton(
+                    onPressed: () {
+                      final vpnPlugin = Platform.isAndroid ? VpnServicePlugin() : null;
+                      vpnPlugin?.prepareVpn();
+                    },
+                    child: const Text('测试VPN服务创建'),
+                  ),
+                  // 新增测试动画按钮
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _progress = 0.0;
+                        _isConnecting = true;
+                      });
+                    },
+                    child: const Text('测试状态切换'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Future.delayed(Duration(seconds: 5), () {
+                        setState(() {
+                          _isConnecting = false;
+                        });
+                      });
+                    },
+                    child: const Text('测试定时器'),
+                  ),
+                  SizedBox(
+                    height: 14,
+                    width: 180,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 300),
+                      offset: _isConnecting ? Offset.zero : const Offset(0, 1.0),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _isConnecting ? 1.0 : 0.0,
                         child: Container(
+                          width: 180,
+                          height: 6,
+                          margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.tertiary,
-                                colorScheme.primary,
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
+                            color: colorScheme.surfaceVariant,
                             borderRadius: BorderRadius.circular(3),
                           ),
+                          child: TweenAnimationBuilder<double>(
+                            key: ValueKey('progress_$_isConnecting'),
+                            tween: Tween<double>(begin: 0.0, end: 1.0),
+                            duration: const Duration(seconds: 10),
+                            curve: Curves.easeInOut,
+                            builder: (context, value, _) {
+                              _progress = value * 100;
+                              return FractionallySizedBox(
+                                widthFactor: value,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        colorScheme.tertiary,
+                                        colorScheme.primary,
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                ),
+                  // 新增方块移动逻辑
+                  SizedBox(
+                    height: 50,
+                    width: 180,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 300),
+                      offset: _isConnecting ? Offset.zero : const Offset(0, 1.0),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          // 新增方块移动逻辑
-          SizedBox(
-            height: 50,
-            width: 180,
-            child: AnimatedSlide(
-              duration: const Duration(milliseconds: 300),
-              offset: _isConnecting ? Offset.zero : const Offset(0, 1.0),
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
