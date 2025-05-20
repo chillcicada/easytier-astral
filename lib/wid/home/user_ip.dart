@@ -104,7 +104,7 @@ class _UserIpBoxState extends State<UserIpBox> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           TextField(
             controller: _usernameController,
@@ -120,71 +120,15 @@ class _UserIpBoxState extends State<UserIpBox> {
               border: const OutlineInputBorder(),
               prefixIcon: Icon(Icons.person, color: colorScheme.primary),
               floatingLabelBehavior: FloatingLabelBehavior.always,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12), 
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _virtualIPController,
-                  focusNode: _virtualIPFocusNode,
-                  enabled: !_aps.dhcp.watch(context) &&
-                      (Aps().Connec_state.watch(context) != CoState.connected),
-                  onChanged: (value) {
-                    if (!_aps.dhcp.watch(context)) {
-                      setState(() {
-                        isValidIP = _aps.dhcp.watch(context) || _isValidIPv4(value);
-                      });
-                      _aps.updateIpv4(value);
-                    }
-                  },
-                  decoration: InputDecoration(
-                    labelText: '虚拟网IP',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    errorText: !isValidIP && !_aps.dhcp.watch(context)
-                        ? '请输入有效的IPv4地址'
-                        : null,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                children: [
-                  Switch(
-                    value: _aps.dhcp.watch(context),
-                    onChanged: (value) {
-                      if (Aps().Connec_state.watch(context) == CoState.idle) {
-                        _aps.updateDhcp(value);
-                      }
-                    },
-                  ),
-                  Text(
-                    _aps.dhcp.watch(context) ? "自动" : "手动",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (_aps.dhcp.watch(context))
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                '系统将自动分配虚拟网IP',
-                style: TextStyle(color: colorScheme.secondary, fontSize: 12),
-              ),
-            ),
-
-          // 弹窗逻辑
-          const SizedBox(height: 12),
           TextField(
             controller: _roomController,
-            readOnly: true, 
-            enabled: Aps().Connec_state.watch(context) != CoState.connected, 
+            readOnly: true,
+            enabled: Aps().Connec_state.watch(context) != CoState.connected,
             decoration: InputDecoration(
               labelText: '选择房间',
               contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -196,7 +140,7 @@ class _UserIpBoxState extends State<UserIpBox> {
                 size: 24,
               ),
               suffixIcon: IconButton(
-                icon: Icon(Icons.menu), 
+                icon: Icon(Icons.menu),
                 color: colorScheme.primary,
                 iconSize: 24,
                 onPressed: () => CanvasJump.show(
@@ -208,11 +152,75 @@ class _UserIpBoxState extends State<UserIpBox> {
                   },
                 ),
               ),
-              errorText: _aps.selectroom.watch(context) == null 
-                ? '请选择房间' 
-                : null,
+              errorText: _aps.selectroom.watch(context) == null
+                  ? '请选择房间'
+                  : null,
             ),
           ),
+          const SizedBox(height: 9), 
+
+          SizedBox(
+            height: 60,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _virtualIPController,
+                    focusNode: _virtualIPFocusNode,
+                    enabled: !_aps.dhcp.watch(context) &&
+                        (Aps().Connec_state.watch(context) != CoState.connected),
+                    onChanged: (value) {
+                      if (!_aps.dhcp.watch(context)) {
+                        setState(() {
+                          isValidIP = _aps.dhcp.watch(context) || _isValidIPv4(value);
+                        });
+                        _aps.updateIpv4(value);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: '虚拟网IP',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
+                      floatingLabelBehavior: FloatingLabelBehavior.always, 
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12), 
+                      errorText: !isValidIP && !_aps.dhcp.watch(context)
+                          ? '请输入有效的IPv4地址'
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center, 
+                  children: [
+                    Switch(
+                      value: _aps.dhcp.watch(context),
+                      onChanged: (value) {
+                        if (Aps().Connec_state.watch(context) == CoState.idle) {
+                          _aps.updateDhcp(value);
+                        }
+                      },
+                    ),
+                    Text(
+                      _aps.dhcp.watch(context) ? "自动" : "手动",
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          if (_aps.dhcp.watch(context))
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text(
+                '系统将自动分配虚拟网IP',
+                style: TextStyle(fontSize: 12),
+              ),
+            )
+          else
+            const SizedBox(height: 12),
         ],
       ),
     );
