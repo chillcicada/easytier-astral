@@ -1,0 +1,137 @@
+name: 🪟 构建 WindowsSetup 应用
+
+on:
+  workflow_dispatch:
+  push:  # 每次 push 到仓库时触发
+    tags:
+      - 'v*'   # 指定触发分支
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    # 调整 GITHUB_TOKEN 的权限
+    permissions:
+      contents: write  # 允许写入仓库内容（上传文件）
+      packages: write
+      
+    steps:
+      - name: 🛠️ 检出代码仓库
+        uses: actions/checkout@v4
+
+      # 安装 Flutter
+      - name: 🐦 安装 Flutter
+        run: |
+          echo "正在克隆 Flutter 稳定分支..."
+          git clone https://github.com/flutter/flutter.git -b stable
+          echo "正在将 Flutter 添加到 PATH..."
+          echo "$env:GITHUB_WORKSPACE\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "Flutter 安装完成！"
+
+      # 安装 Flutter 依赖
+      - name: 📦 安装 Flutter 依赖
+        run: |
+          echo "正在获取 Flutter 依赖..."
+          flutter pub get
+          echo "Flutter 依赖安装完成！"
+
+      # 编译 Flutter Windows 应用
+      - name: 🛠️ 编译 Flutter Windows 应用
+        run: |
+          echo "正在编译 Flutter Windows Release 版本..."
+          flutter build windows --release
+          echo "Flutter Windows Release 编译完成！"
+
+      # 复制 DLL 文件到输出目录
+      - name: 📂 复制 DLL 文件到 Release 目录
+        run: |
+          echo "正在复制 DLL 文件到 Release 目录..."
+          $dllSourceDir = "$env:GITHUB_WORKSPACE\dlls"
+          $releaseDir = "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release"
+          Copy-Item -Path "$dllSourceDir\*" -Destination $releaseDir -Recurse -Force
+          echo "DLL 文件已复制到 $releaseDir！"
+
+      # 安装 Inno Setup
+      - name: 📥 安装 Inno Setup
+        run: |
+          echo "正在下载 Inno Setup..."
+          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "innosetup.exe"
+          echo "正在安装 Inno Setup..."
+          Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+          echo "Inno Setup 安装完成！"
+          echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # 创建 Inno Setup 脚本
+      - name: 📝 创建 Inno Setup 脚本
+        run: |
+          echo "正在创建 Inno Setup 脚本..."
+          $version = "${{ github.ref_name }}" -replace 'v', ''
+          if (-not $version) { $version = "1.0.0" }
+          
+          $scriptContent = @"
+          ; Inno Setup 脚本文件
+          #define MyAppName "Astral"
+          #define MyAppVersion "$version"
+          #define MyAppPublisher "Astral Team"
+          #define MyAppURL "https://github.com/yourusername/astral"
+          #define MyAppExeName "astral.exe"
+
+          [Setup]
+          AppId={{GUID-FOR-YOUR-APP}}
+          AppName={#MyAppName}
+          AppVersion={#MyAppVersion}
+          AppPublisher={#MyAppPublisher}
+          AppPublisherURL={#MyAppURL}
+          AppSupportURL={#MyAppURL}
+          AppUpdatesURL={#MyAppURL}
+          DefaultDirName={autopf}\{#MyAppName}
+          DefaultGroupName={#MyAppName}
+          OutputDir=$env:GITHUB_WORKSPACE
+          OutputBaseFilename=astral-setup-{#MyAppVersion}
+          Compression=lzma
+          SolidCompression=yes
+          WizardStyle=modern
+
+          [Languages]
+          Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+
+          [Tasks]
+          Name: "desktopicon"; Description: "创建桌面图标"; GroupDescription: "附加图标:"; Flags: unchecked
+
+          [Files]
+          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+          Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+          [Run]
+          Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: nowait postinstall skipifsilent
+          "@
+
+          $scriptContent | Out-File -FilePath "$env:GITHUB_WORKSPACE\setup.iss" -Encoding utf8
+          echo "Inno Setup 脚本已创建！"
+
+      # 编译 Inno Setup 安装程序
+      - name: 🔨 编译 Inno Setup 安装程序
+        run: |
+          echo "正在编译 Inno Setup 安装程序..."
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "$env:GITHUB_WORKSPACE\setup.iss"
+          echo "Inno Setup 安装程序编译完成！"
+
+      # 上传 Inno Setup 安装程序作为 Artifact
+      - name: 📤 上传 Inno Setup 安装程序
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup
+          path: ${{ github.workspace }}/astral-setup-*.exe
+          
+      # 创建 GitHub Release 并上传文件
+      - name: 📢 创建 GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ github.workspace }}/astral-setup-*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
