@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
+    <item android:drawable="?android:colorBackground" /> <!-- 使用系统背景色，自动适应暗色模式 -->
+    <item>
+        <vector
+            android:width="24dp"
+            android:height="24dp"
             android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+            android:viewportWidth="24.0"
+            android:viewportHeight="24.0"
+            android:tint="?android:colorForeground"
+            android:src="@drawable/splash_logo" /> <!-- 保留Logo并添加自适应颜色 -->
+    </item>
 </layer-list>
