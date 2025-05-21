@@ -1,6 +1,6 @@
 import 'package:astral/wid/home_box.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:astral/src/rust/api/firewall.dart';
 
 class WinFirewall extends StatefulWidget {
   const WinFirewall({super.key});
@@ -10,12 +10,20 @@ class WinFirewall extends StatefulWidget {
 }
 
 class _WinFirewallState extends State<WinFirewall> {
-  bool _isLoading = false;
+  bool _isBatchLoading = false;
   Map<String, bool> _firewallStatus = {
     'Domain': false,
     'Private': false,
-    'Public': false
+    'Public': false,
   };
+
+  final Map<String, int> _profileIndex = {
+    'Domain': 1,
+    'Private': 2,
+    'Public': 3,
+  };
+
+  final Set<String> _individualLoading = {};
 
   @override
   void initState() {
@@ -24,65 +32,112 @@ class _WinFirewallState extends State<WinFirewall> {
   }
 
   Future<void> _checkFirewallStatus() async {
-    setState(() => _isLoading = true);
     try {
-      final result = await Process.run('netsh', ['advfirewall', 'show', 'allprofiles', 'state']);
-      final output = result.stdout.toString();
-      final lines = output.split('\n');
-      
+      final domain = await getFirewallStatus(profileIndex: 1);
+      final private = await getFirewallStatus(profileIndex: 2);
+      final public = await getFirewallStatus(profileIndex: 3);
       setState(() {
-        // 域配置文件
-        if (lines.any((line) => line.contains('Domain Profile Settings:'))) {
-          final domainState = lines
-              .skipWhile((line) => !line.contains('Domain Profile Settings:'))
-              .take(3)
-              .any((line) => line.trim() == 'State                                 ON');
-          _firewallStatus['Domain'] = domainState;
-        }
-        
-        // 专用配置文件
-        if (lines.any((line) => line.contains('Private Profile Settings:'))) {
-          final privateState = lines
-              .skipWhile((line) => !line.contains('Private Profile Settings:'))
-              .take(3)
-              .any((line) => line.trim() == 'State                                 ON');
-          _firewallStatus['Private'] = privateState;
-        }
-        
-        // 公用配置文件
-        if (lines.any((line) => line.contains('Public Profile Settings:'))) {
-          final publicState = lines
-              .skipWhile((line) => !line.contains('Public Profile Settings:'))
-              .take(3)
-              .any((line) => line.trim() == 'State                                 ON');
-          _firewallStatus['Public'] = publicState;
-        }
+        _firewallStatus['Domain'] = domain;
+        _firewallStatus['Private'] = private;
+        _firewallStatus['Public'] = public;
       });
     } catch (e) {
       debugPrint('Error checking firewall status: $e');
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _toggleFirewall(String profile, bool enable) async {
-    setState(() => _isLoading = true);
+    setState(() => _individualLoading.add(profile));
     try {
-      final action = enable ? 'on' : 'off';
-      await Process.run(
-        'netsh', 
-        ['advfirewall', 'set', profile.toLowerCase(), 'state', action],
-        runInShell: true
-      );
-      await _checkFirewallStatus();
+      final idx = _profileIndex[profile]!;
+      await setFirewallStatus(profileIndex: idx, enable: enable);
+      setState(() => _firewallStatus[profile] = enable);
     } catch (e) {
       debugPrint('Error toggling firewall: $e');
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _individualLoading.remove(profile));
     }
   }
 
+  Future<void> _toggleAllFirewalls(bool enable) async {
+    setState(() {
+      _isBatchLoading = true;
+      _individualLoading.addAll(_profileIndex.keys);
+    });
+    try {
+      for (final profile in _profileIndex.keys) {
+        final idx = _profileIndex[profile]!;
+        await setFirewallStatus(profileIndex: idx, enable: enable);
+        setState(() => _firewallStatus[profile] = enable);
+      }
+    } catch (e) {
+      debugPrint('Error batch toggling firewall: $e');
+    } finally {
+      setState(() {
+        _isBatchLoading = false;
+        _individualLoading.clear();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return HomeBox(
+      widthSpan: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.shield, color: colorScheme.primary, size: 22),
+              const SizedBox(width: 8),
+              const Text(
+                'Windows 防火墙',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildBatchButtons(colorScheme),
+          const SizedBox(height: 8),
+          Column(
+            children: _firewallStatus.entries.map((entry) =>
+              _buildFirewallStatus(entry.key, entry.value, colorScheme)
+            ).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBatchButtons(ColorScheme colorScheme) {
+    return Row(
+      children: [
+        TextButton(
+          onPressed: (_isBatchLoading)
+              ? null
+              : () => _toggleAllFirewalls(true),
+          child: const Text('全部开启'),
+        ),
+        const SizedBox(width: 8),
+        TextButton(
+          onPressed: (_isBatchLoading)
+              ? null
+              : () => _toggleAllFirewalls(false),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+          ),
+          child: const Text('全部关闭'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFirewallStatus(String profile, bool isEnabled, ColorScheme colorScheme) {
+    final isLoading = _individualLoading.contains(profile);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -114,51 +169,25 @@ class _WinFirewallState extends State<WinFirewall> {
             ),
           ),
           const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: _isLoading ? null : () => _toggleFirewall(profile, !isEnabled),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isEnabled ? Colors.red.shade50 : colorScheme.primaryContainer,
-              foregroundColor: isEnabled ? Colors.red : colorScheme.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: Text(isEnabled ? '关闭' : '开启'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var colorScheme = Theme.of(context).colorScheme;
-    
-    return HomeBox(
-      widthSpan: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.shield, color: colorScheme.primary, size: 22),
-              const SizedBox(width: 8),
-              const Text(
-                'Windows 防火墙',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator())
-          else
-            Column(
-              children: _firewallStatus.entries.map((entry) => 
-                _buildFirewallStatus(entry.key, entry.value, colorScheme)
-              ).toList(),
-            ),
+          isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : ElevatedButton(
+                  onPressed: _isBatchLoading
+                      ? null
+                      : () => _toggleFirewall(profile, !isEnabled),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isEnabled ? Colors.red.shade50 : colorScheme.primaryContainer,
+                    foregroundColor: isEnabled ? Colors.red : colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  child: Text(isEnabled ? '关闭' : '开启'),
+                ),
         ],
       ),
     );
   }
 }
-

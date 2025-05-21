@@ -1,4 +1,4 @@
-use windows::{
+pub use windows::{
     core::{Result, Interface, HRESULT, Error},
     Win32::{
         NetworkManagement::WindowsFirewall::{
@@ -41,7 +41,7 @@ pub fn set_firewall_status(profile_index: u32, enable: bool) -> Result<()> {
             _ => return Err(Error::new(HRESULT(-1), "Invalid profile index".into())),
         };
 
-        policy.SetFirewallEnabled(profile_type, enable)?;
+        policy.put_FirewallEnabled(profile_type, windows::Win32::Foundation::VARIANT_BOOL::from(enable))?;
         Ok(())
     }
 }

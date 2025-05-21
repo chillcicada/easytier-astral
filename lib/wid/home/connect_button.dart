@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:astral/fun/net_astral_udp.dart';
 import 'package:astral/k/app_s/aps.dart';
+import 'package:astral/src/rust/api/firewall.dart';
 import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/material.dart';
 import 'package:vpn_service_plugin/vpn_service_plugin.dart';
@@ -80,7 +81,6 @@ class _ConnectButtonState extends State<ConnectButton>
         setTunFd(fd: data['fd']);
         // 在这里处理VPN启动后的逻辑
       });
-
       // 监听VPN服务停止事件
       vpnPlugin?.onVpnServiceStopped.listen((data) {
         // 在这里处理VPN停止后的逻辑

@@ -19,7 +19,7 @@ tokio = "1.39.2"
 anyhow = "1.0.95"
 surge-ping = "0.8"
 easytier = { path = "./easytier" }
-windows = { version = "0.48", features = ["Win32_NetworkManagement_WindowsFirewall", "Win32_System_Com","implement"] }
+windows = { version = "0.48.0", features = ["Win32_NetworkManagement_WindowsFirewall", "Win32_System_Com", "Win32_Foundation"] }
 winapi = { version = "0.3", features = ["iphlpapi", "iptypes", "netioapi", "winerror", "ws2def"] }
 rand = "0.9.1"
 

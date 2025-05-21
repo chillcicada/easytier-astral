@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1691766409;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 444397050;
 
 // Section: executor
 
@@ -159,6 +159,42 @@ fn wire__crate__api__simple__easytier_version_impl(
                     let output_ok = crate::api::simple::easytier_version()?;
                     Ok(output_ok)
                 })())
+            }
+        },
+    )
+}
+fn wire__crate__api__firewall__get_firewall_status_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_firewall_status",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_profile_index = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::firewall::get_firewall_status(api_profile_index)?;
+                        Ok(output_ok)
+                    })(),
+                )
             }
         },
     )
@@ -493,6 +529,45 @@ fn wire__crate__api__simple__send_udp_to_localhost_impl(
         },
     )
 }
+fn wire__crate__api__firewall__set_firewall_status_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "set_firewall_status",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_profile_index = <u32>::sse_decode(&mut deserializer);
+            let api_enable = <bool>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::firewall::set_firewall_status(
+                            api_profile_index,
+                            api_enable,
+                        )?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__simple__set_network_interface_hops_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -578,6 +653,14 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 );
 
 // Section: dart2rust
+
+impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
+    }
+}
 
 impl SseDecode for EventBusSubscriber {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -981,30 +1064,36 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__api__simple__close_server_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__simple__create_server_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__api__simple__easytier_version_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__simple__get_ips_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__simple__get_network_interface_hops_impl(
+        4 => {
+            wire__crate__api__firewall__get_firewall_status_impl(port, ptr, rust_vec_len, data_len)
+        }
+        5 => wire__crate__api__simple__get_ips_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__simple__get_network_interface_hops_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        6 => wire__crate__api__simple__get_network_status_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__simple__get_peer_route_pairs_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__simple__get_running_info_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__simple__handle_event_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__simple__inject_dll_to_pid_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__simple__is_easytier_running_impl(port, ptr, rust_vec_len, data_len),
-        13 => {
+        7 => wire__crate__api__simple__get_network_status_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__simple__get_peer_route_pairs_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__simple__get_running_info_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__simple__handle_event_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__simple__inject_dll_to_pid_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__simple__is_easytier_running_impl(port, ptr, rust_vec_len, data_len),
+        14 => {
             wire__crate__api__simple__send_udp_to_localhost_impl(port, ptr, rust_vec_len, data_len)
         }
-        14 => wire__crate__api__simple__set_network_interface_hops_impl(
+        15 => {
+            wire__crate__api__firewall__set_firewall_status_impl(port, ptr, rust_vec_len, data_len)
+        }
+        16 => wire__crate__api__simple__set_network_interface_hops_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        15 => wire__crate__api__simple__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__simple__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1262,6 +1351,13 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::simple::NodeHopStats>
 {
     fn into_into_dart(self) -> crate::api::simple::NodeHopStats {
         self
+    }
+}
+
+impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(format!("{:?}", self), serializer);
     }
 }
 
