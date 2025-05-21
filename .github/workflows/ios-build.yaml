@@ -52,6 +52,7 @@ jobs:
 
       - name: 📚 安装 Flutter 依赖
         run: |
+          flutter precache --ios
           flutter pub get
           cd ios && pod install && cd ..
 
