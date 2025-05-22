@@ -21,35 +21,40 @@ class _UserIpBoxState extends State<UserIpBox> {
   final FocusNode _virtualIPFocusNode = FocusNode();
 
   final Aps _aps = Aps();
+  bool _isValidIP = true;
+
+  bool _isValidIPv4(String ip) {
+    final RegExp ipRegex = RegExp(
+      r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+    );
+    return ipRegex.hasMatch(ip);
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 初始化时同步一次状态
-      effect(() {
-        _usernameController.text = _aps.PlayerName.value;
-        _virtualIPController.text = _aps.ipv4.value;
-        _roomController.text = _aps.selectroom.value?.name ?? '';
+      _usernameController.text = _aps.PlayerName.value;
+      _virtualIPController.text = _aps.ipv4.value;
+      _roomController.text = _aps.selectroom.value?.name ?? '';
+      
+      // 初始化验证状态
+      setState(() {
+        _isValidIP = _isValidIPv4(_virtualIPController.text);
       });
     });
   }
 
   @override
   void dispose() {
+    // 清理监听器
     _usernameController.dispose();
     _virtualIPController.dispose();
     _usernameControllerFocusNode.dispose();
     _virtualIPFocusNode.dispose();
     _roomController.dispose();
     super.dispose();
-  }
-
-  bool _isValidIPv4(String ip) {
-    final RegExp ipRegex = RegExp(
-      r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
-    );
-    return ipRegex.hasMatch(ip);
   }
 
   @override
@@ -101,7 +106,9 @@ class _UserIpBoxState extends State<UserIpBox> {
                 ? false
                 : true,
             onChanged: (value) {
-              _aps.updatePlayerName(value);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _aps.updatePlayerName(value);
+              });
             },
             decoration: InputDecoration(
               labelText: '用户名',
@@ -128,29 +135,41 @@ class _UserIpBoxState extends State<UserIpBox> {
                 labelText: '选择房间',
                 contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                 floatingLabelBehavior: FloatingLabelBehavior.always,
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Aps().Connec_state.watch(context) != CoState.connected
+                        ? colorScheme.outline
+                        : Theme.of(context).disabledColor, 
+                  ),
+                ),
                 prefixIcon: Icon(
                   Icons.apartment,
-                  color: colorScheme.primary,
+                  color: colorScheme.primary, 
                   size: 24,
                 ),
                 suffixIcon: Icon(
                   Icons.menu,
-                  color: Aps().Connec_state.watch(context) != CoState.connected 
-                      ? colorScheme.primary
-                      : colorScheme.primary.withOpacity(0.5),
+                  color: colorScheme.primary, 
                   size: 24,
                 ),
                 errorText: _aps.selectroom.watch(context) == null
                     ? '请选择房间'
                     : null,
-              ),
-              child: Text(
-                Aps().selectroom.watch(context)?.name?? '请选择房间',
-                style: TextStyle(
+                labelStyle: TextStyle(
                   color: Aps().Connec_state.watch(context) != CoState.connected
-                      ? Theme.of(context).textTheme.bodyLarge?.color
-                      : Theme.of(context).disabledColor,
+                      ? colorScheme.onSurface
+                      : Theme.of(context).disabledColor, 
+                ),
+              ),
+              child: IgnorePointer(
+                ignoring: Aps().Connec_state.watch(context) == CoState.connected,
+                child: Text(
+                  Aps().selectroom.watch(context)?.name ?? '请选择房间',
+                  style: TextStyle(
+                    color: Aps().Connec_state.watch(context) != CoState.connected
+                        ? Theme.of(context).textTheme.bodyLarge?.color
+                        : Theme.of(context).disabledColor,
+                  ),
                 ),
               ),
             ),
@@ -169,19 +188,20 @@ class _UserIpBoxState extends State<UserIpBox> {
                         (Aps().Connec_state.watch(context) != CoState.connected),
                     onChanged: (value) {
                       if (!_aps.dhcp.watch(context)) {
-                        setState(() {
-                          isValidIP = _aps.dhcp.watch(context) || _isValidIPv4(value);
-                        });
+                        // 实时更新IPv4值并立即验证
                         _aps.updateIpv4(value);
+                        setState(() {
+                          _isValidIP = _isValidIPv4(value);
+                        });
                       }
                     },
                     decoration: InputDecoration(
                       labelText: '虚拟网IP',
                       border: const OutlineInputBorder(),
                       prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
-                      floatingLabelBehavior: FloatingLabelBehavior.always, 
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12), 
-                      errorText: !isValidIP && !_aps.dhcp.watch(context)
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      errorText: (!_aps.dhcp.watch(context) && !_isValidIP)
                           ? '请输入有效的IPv4地址'
                           : null,
                     ),
