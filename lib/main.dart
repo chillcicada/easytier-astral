@@ -9,7 +9,7 @@ import 'package:astral/src/rust/frb_generated.dart';
 import 'package:astral/app.dart';
 
 void main() async {
-  BindingBase.debugZoneErrorsAreFatal = true;
+  // BindingBase.debugZoneErrorsAreFatal = true;
 
   WidgetsFlutterBinding.ensureInitialized();
   await AppDatabase().init();
