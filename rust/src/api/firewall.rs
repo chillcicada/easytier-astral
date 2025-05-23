@@ -27,7 +27,6 @@ pub fn get_firewall_status(profile_index: u32) -> Result<bool> {
         Ok(enabled.as_bool())
     }
 }
-#[cfg(target_os = "windows")]
 pub fn set_firewall_status(profile_index: u32, enable: bool) -> Result<()> {
     unsafe {
         CoInitializeEx(None, COINIT_APARTMENTTHREADED)?;
