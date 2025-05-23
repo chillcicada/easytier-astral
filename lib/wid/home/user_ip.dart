@@ -76,7 +76,7 @@ class _UserIpBoxState extends State<UserIpBox> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
               ),
               const Spacer(),
-              if (Aps().Connec_state.watch(context) == CoState.connected)
+              if (Aps().Connec_state.watch(context) != CoState.idle)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -102,7 +102,7 @@ class _UserIpBoxState extends State<UserIpBox> {
           TextField(
             controller: _usernameController,
             focusNode: _usernameControllerFocusNode,
-            enabled: (Aps().Connec_state.watch(context) == CoState.connected)
+            enabled: (Aps().Connec_state.watch(context) != CoState.idle)
                 ? false
                 : true,
             onChanged: (value) {
@@ -118,8 +118,8 @@ class _UserIpBoxState extends State<UserIpBox> {
               contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12), 
             ),
           ),
+          
           const SizedBox(height: 14),
-
           InkWell(
             onTap: Aps().Connec_state.watch(context) != CoState.connected
                 ? () => CanvasJump.show(
@@ -135,31 +135,37 @@ class _UserIpBoxState extends State<UserIpBox> {
                 labelText: '选择房间',
                 contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                 floatingLabelBehavior: FloatingLabelBehavior.always,
+                enabled: Aps().Connec_state.watch(context) != CoState.connected,
                 border: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Aps().Connec_state.watch(context) != CoState.connected
-                        ? colorScheme.outline
-                        : Theme.of(context).disabledColor, 
+                    color: Theme.of(context).disabledColor,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: colorScheme.outline,
+                  ),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).disabledColor,
                   ),
                 ),
                 prefixIcon: Icon(
                   Icons.apartment,
-                  color: colorScheme.primary, 
+                  color: Aps().Connec_state.watch(context) != CoState.connected
+                      ? colorScheme.primary
+                      : Theme.of(context).disabledColor,
                   size: 24,
                 ),
                 suffixIcon: Icon(
                   Icons.menu,
-                  color: colorScheme.primary, 
-                  size: 24,
-                ),
-                errorText: _aps.selectroom.watch(context) == null
-                    ? '请选择房间'
-                    : null,
-                labelStyle: TextStyle(
                   color: Aps().Connec_state.watch(context) != CoState.connected
-                      ? colorScheme.onSurface
-                      : Theme.of(context).disabledColor, 
-                ),
+                      ? colorScheme.primary
+                      : Theme.of(context).disabledColor,
+                  size: 24,
+                )
+                
               ),
               child: IgnorePointer(
                 ignoring: Aps().Connec_state.watch(context) == CoState.connected,
@@ -174,6 +180,7 @@ class _UserIpBoxState extends State<UserIpBox> {
               ),
             ),
           ),
+          
           const SizedBox(height: 9), 
 
           SizedBox(
@@ -185,7 +192,7 @@ class _UserIpBoxState extends State<UserIpBox> {
                     controller: _virtualIPController,
                     focusNode: _virtualIPFocusNode,
                     enabled: !_aps.dhcp.watch(context) &&
-                        (Aps().Connec_state.watch(context) != CoState.connected),
+                        (Aps().Connec_state.watch(context) == CoState.idle),
                     onChanged: (value) {
                       if (!_aps.dhcp.watch(context)) {
                         // 实时更新IPv4值并立即验证

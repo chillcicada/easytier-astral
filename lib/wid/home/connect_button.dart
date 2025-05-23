@@ -25,9 +25,12 @@ class _ConnectButtonState extends State<ConnectButton>
   final vpnPlugin = Platform.isAndroid ? VpnServicePlugin() : null;
   // 在类中添加这些变量
   Timer? _connectionTimer;
-  Timer? _timeoutTimer; // 新增：超时定时器
+  Timer? _timeoutTimer;
   int _connectionDuration = 0; // 连接持续时间（秒）
 
+  // 添加超时时间常量
+  static const int connectionTimeoutSeconds = 30;
+  
   // 辅助方法：验证IPv4地址格式
   bool _isValidIpAddress(String ip) {
     if (ip.isEmpty) return false;
@@ -212,7 +215,7 @@ class _ConnectButtonState extends State<ConnectButton>
   }
 
   void _setupConnectionTimeout() {
-    _timeoutTimer = Timer(const Duration(seconds: 10), () {
+    _timeoutTimer = Timer(Duration(seconds: connectionTimeoutSeconds), () {
       if (Aps().Connec_state.value == CoState.connecting) {
         print("连接超时");
         _disconnect();
@@ -232,7 +235,7 @@ class _ConnectButtonState extends State<ConnectButton>
         timer.cancel();
         await _handleSuccessfulConnection();
       } else {
-        setState(() => _progress += 10);
+        setState(() => _progress += 100 / connectionTimeoutSeconds); // 修改进度计算方式
       }
     });
   }
@@ -436,7 +439,7 @@ class _ConnectButtonState extends State<ConnectButton>
                       'progress_${Aps().Connec_state.watch(context) == CoState.connecting}',
                     ),
                     tween: Tween<double>(begin: 0.0, end: 1.0),
-                    duration: const Duration(seconds: 10), // 10秒完成动画
+                    duration: Duration(seconds: connectionTimeoutSeconds), // 使用变量控制动画时间
                     curve: Curves.easeInOut,
                     builder: (context, value, _) {
                       // 更新进度值
