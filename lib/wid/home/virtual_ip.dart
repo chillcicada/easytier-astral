@@ -106,7 +106,7 @@ class VirtualIpBox extends StatelessWidget {
               children: [
                 Icon(Icons.public, size: 20, color: colorScheme.primary),
                 const Text(
-                  '虚拟 IP: ',
+                  '虚拟IP: ',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 Text(
