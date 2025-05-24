@@ -190,8 +190,8 @@ async-compression = { version = "0.4.17", default-features = false, features = [
     "tokio",
 ] }
 
-# kcp-sys = { git = "https://github.com/EasyTier/kcp-sys" }
-kcp-sys = { path = "./kcp-sys-main" }
+kcp-sys = { git = "https://github.com/EasyTier/kcp-sys" }
+#kcp-sys = { path = "./kcp-sys-main" }
 prost-reflect = { version = "0.14.5", default-features = false, features = [
     "derive",
 ] }

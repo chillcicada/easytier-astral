@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 
 fn main() {
     println!("cargo:rustc-link-lib=kcp");
+    println!("CFLAGS: {:?}", env::var("CFLAGS"));
+    println!("LDFLAGS: {:?}", env::var("LDFLAGS"));
     let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let fulldir = Path::new(&dir).join("kcp");
 
