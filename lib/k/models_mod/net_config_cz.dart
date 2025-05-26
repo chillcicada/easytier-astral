@@ -553,4 +553,6 @@ class NetConfigRepository {
     NetConfig? config = await _isar.netConfigs.get(1);
     return config?.accept_dns?? false;
   }
+
+  //实现
 }

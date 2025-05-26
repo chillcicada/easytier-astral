@@ -1,32 +1,24 @@
 import 'dart:io';
-import 'package:json_annotation/json_annotation.dart';
 import 'package:isar/isar.dart';
 part 'net_config.g.dart';
 
+@embedded
 class ConnectionInfo {
-  final String bindAddr;
-  final String dstAddr;
-  final String proto;
-
-  ConnectionInfo({
-    required this.bindAddr,
-    required this.dstAddr,
-    required this.proto,
-  });
+  late String bindAddr;
+  late String dstAddr;
+  late String proto;
 }
 
-@JsonSerializable()
+@Collection()
 class ConnectionManager {
-  final List<ConnectionInfo> connections;
+  Id id = Isar.autoIncrement;
+  List<ConnectionInfo> connections;
   final bool enabled;
 
   ConnectionManager({
     required this.connections,
     required this.enabled,
   });
-  
-  @JsonKey(ignore: true)
-  List<ConnectionManager> connection_managers = [];
 }
 
 @collection
@@ -54,7 +46,7 @@ class NetConfig {
   List<String> cidrproxy = []; // 代理地址
 
   // 转发配置
-  List<ConnectionManager> connection_managers = [];
+  final connectionManagers = IsarLinks<ConnectionManager>();
   /// 默认协议
   String default_protocol = 'tcp'; //x
 
