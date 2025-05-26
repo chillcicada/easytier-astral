@@ -3,8 +3,6 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/firewall.dart';
-import 'api/hops.dart';
 import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -34,9 +32,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PeerRoutePairPtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePairPtr;
-
-  @protected
-  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   EventBusSubscriber
@@ -140,13 +135,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<(String, int)> dco_decode_list_record_string_u_32(dynamic raw);
-
-  @protected
   NodeHopStats dco_decode_node_hop_stats(dynamic raw);
-
-  @protected
-  (String, int) dco_decode_record_string_u_32(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -162,9 +151,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
-
-  @protected
-  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
   EventBusSubscriber
@@ -272,15 +258,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<(String, int)> sse_decode_list_record_string_u_32(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   NodeHopStats sse_decode_node_hop_stats(SseDeserializer deserializer);
-
-  @protected
-  (String, int) sse_decode_record_string_u_32(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -296,12 +274,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  );
 
   @protected
   void
@@ -430,19 +402,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_record_string_u_32(
-    List<(String, int)> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_node_hop_stats(NodeHopStats self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_record_string_u_32(
-    (String, int) self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
