@@ -1,7 +1,33 @@
 import 'dart:io';
-
+import 'package:json_annotation/json_annotation.dart';
 import 'package:isar/isar.dart';
 part 'net_config.g.dart';
+
+class ConnectionInfo {
+  final String bindAddr;
+  final String dstAddr;
+  final String proto;
+
+  ConnectionInfo({
+    required this.bindAddr,
+    required this.dstAddr,
+    required this.proto,
+  });
+}
+
+@JsonSerializable()
+class ConnectionManager {
+  final List<ConnectionInfo> connections;
+  final bool enabled;
+
+  ConnectionManager({
+    required this.connections,
+    required this.enabled,
+  });
+  
+  @JsonKey(ignore: true)
+  List<ConnectionManager> connection_managers = [];
+}
 
 @collection
 class NetConfig {
@@ -26,6 +52,9 @@ class NetConfig {
 
   // 子网代理
   List<String> cidrproxy = []; // 代理地址
+
+  // 转发配置
+  List<ConnectionManager> connection_managers = [];
   /// 默认协议
   String default_protocol = 'tcp'; //x
 
