@@ -51,7 +51,7 @@ class _ConnectButtonState extends State<ConnectButton>
   void _startVpn({
     required String ipv4Addr,
     int mtu = 1300,
-    List<String> disallowedApplications = const ['com.example.astral'],
+    List<String> disallowedApplications = const ['com.kevin.astral'],
   }) {
     if (ipv4Addr.isNotEmpty & (ipv4Addr != "")) {
       // 确保IP地址格式为"IP/掩码"

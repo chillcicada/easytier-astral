@@ -1048,7 +1048,7 @@ dependencies = [
 [[package]]
 name = "easytier"
 version = "2.3.0"
-source = "git+https://github.com/ldoubil/EasyTier?branch=main#d7c3179c6ea3e84eb147249392425aca252ae5ad"
+source = "git+https://github.com/ldoubil/EasyTier?branch=main#846dbedb11397ae1e2cabfbcd328de33c50fd366"
 dependencies = [
  "anyhow",
  "async-compression",
