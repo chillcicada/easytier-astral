@@ -22,19 +22,17 @@ jobs:
       # 安装 Flutter
       - name: 🐦 安装 Flutter
         run: |
-          echo "正在克隆 Flutter 稳定分支..."
-          git clone https://github.com/flutter/flutter.git --branch 3.29.3 $HOME/flutter --depth 1
-          echo "正在将Flutter添加到PATH..."
-          $env:PATH = "$env:GITHUB_WORKSPACE\flutter\bin;$env:PATH"
-          flutter doctor -v
-          echo "Flutter 安装完成！"
+          echo "正在克隆Flutter稳定分支..."
+          git clone https://github.com/flutter/flutter.git --branch 3.29.3 $env:GITHUB_WORKSPACE/flutter --depth 1
+          echo "Flutter安装路径：$env:GITHUB_WORKSPACE\flutter"
+          Get-ChildItem -Path $env:GITHUB_WORKSPACE/flutter/bin
 
-      # 安装 Flutter 依赖
-      - name: 📦 安装 Flutter 依赖
+      # 安装Flutter依赖
+      - name: 📦 安装Flutter依赖
         run: |
-          echo "正在获取 Flutter 依赖..."
-          flutter pub get
-          echo "Flutter 依赖安装完成！"
+          echo "正在获取Flutter依赖..."
+          $env:GITHUB_WORKSPACE\flutter\bin\flutter.bat pub get --verbose
+          echo "Flutter依赖安装完成！"
 
       # 编译 Flutter Windows 应用
       - name: 🛠️ 编译 Flutter Windows 应用
