@@ -32,6 +32,8 @@ void main() async {
       runApp(const KevinApp());
     },
     (exception, stackTrace) async {
+      print(exception);
+      print(stackTrace);
       await Sentry.captureException(exception, stackTrace: stackTrace);
     },
   );

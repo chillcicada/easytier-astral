@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:astral/fun/random_name.dart';
+import 'package:astral/k/models/net_config.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/src/rust/api/firewall.dart';
@@ -91,9 +92,39 @@ class Aps {
     }
 
   }
+  // ConnectionManager
+  final Signal<List<ConnectionManager>> connections = signal([]);
+
+  // 更新连接管理器列表
+  Future<void> updateConnections() async {
+    connections.value = await AppDatabase().netConfigSetting.getConnectionManagers();
+  }
+
+  // 添加连接管理器
+  Future<void> addConnection(ConnectionManager manager) async {
+    await AppDatabase().netConfigSetting.addConnectionManager(manager);
+    await updateConnections();
+  }
+
+  // 更新连接管理器
+  Future<void> updateConnection(int index, ConnectionManager manager) async {
+    await AppDatabase().netConfigSetting.updateConnectionManager(index, manager);
+    await updateConnections();
+  }
+
+  // 删除连接管理器
+  Future<void> removeConnection(int index) async {
+    await AppDatabase().netConfigSetting.removeConnectionManager(index);
+    await updateConnections();
+  }
+
+  // 更新连接管理器启用状态
+  Future<void> updateConnectionEnabled(int index, bool enabled) async {
+    await AppDatabase().netConfigSetting.updateConnectionManagerEnabled(index, enabled);
+    await updateConnections();
+  }
 
   // 开机自启动
-
   final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
 
   /// PLAYERname

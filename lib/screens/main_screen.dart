@@ -3,6 +3,7 @@ import 'package:astral/fun/up.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
+import 'package:astral/screens/route_page.dart';
 import 'package:astral/screens/server_page.dart';
 import 'package:astral/screens/settings_page.dart';
 import 'package:astral/screens/user_page.dart';
@@ -83,6 +84,13 @@ class _MainScreenState extends State<MainScreen>
       label: '服务器', // 导航项标签
       page: const ServerPage(), // 对应的页面
     ),
+    NavigationItem(
+      icon: Icons.route_outlined, // 未选中时的图标
+      activeIcon: Icons.route, // 选中时的图标Icon(Icons.room_preferences)
+      label: '转发', // 导航项标签
+      page: const RoutePage(), // 对应的页面
+    ),
+
 
     NavigationItem(
       icon: Icons.settings_outlined, // 未选中时的图标

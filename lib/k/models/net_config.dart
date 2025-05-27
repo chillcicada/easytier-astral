@@ -7,18 +7,23 @@ class ConnectionInfo {
   late String bindAddr;
   late String dstAddr;
   late String proto;
+  ConnectionInfo() {
+    bindAddr = '';
+    dstAddr = '';
+    proto = '';
+  }
 }
 
-@Collection()
+@embedded
 class ConnectionManager {
-  Id id = Isar.autoIncrement;
-  List<ConnectionInfo> connections;
-  final bool enabled;
-
-  ConnectionManager({
-    required this.connections,
-    required this.enabled,
-  });
+  late String name; // 分组名称
+  late List<ConnectionInfo> connections;
+  late bool enabled;
+ ConnectionManager() {
+    name = '';
+    connections = [];
+    enabled = false;
+  }
 }
 
 @collection
@@ -46,7 +51,7 @@ class NetConfig {
   List<String> cidrproxy = []; // 代理地址
 
   // 转发配置
-  final connectionManagers = IsarLinks<ConnectionManager>();
+  List<ConnectionManager>  connectionManagers = [];
   /// 默认协议
   String default_protocol = 'tcp'; //x
 
