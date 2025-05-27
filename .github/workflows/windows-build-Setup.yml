@@ -99,7 +99,7 @@ jobs:
           WizardStyle=modern
 
           [Languages]
-          Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+          Name: "chinese"; MessagesFile: "D:\ChineseSimplified.isl"
 
           [Tasks]
           Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -140,10 +140,8 @@ jobs:
         run: |
           echo "正在编译 Inno Setup 安装程序..."
           # 下载中文语言文件
-          curl -o ChineseSimplified.isl https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl
-          # 使用管理员权限创建目录和复制文件
-          runas /user:Administrator "mkdir ""C:\Program Files (x86)\Inno Setup 6\Languages"""
-          runas /user:Administrator "copy ""ChineseSimplified.isl"" ""C:\Program Files (x86)\Inno Setup 6\Languages\"""
+          # 下载中文语言文件到 D: 根目录
+          curl -o D:\ChineseSimplified.isl https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl
           # 编译安装程序
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "$env:GITHUB_WORKSPACE\setup.iss"
           echo "Inno Setup 安装程序编译完成！"
