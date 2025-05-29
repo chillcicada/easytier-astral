@@ -154,13 +154,5 @@ jobs:
         with:
           name: setup
           path: ${{ github.workspace }}/Output/Astralsetup.exe
-          
-      # 创建 GitHub Release 并上传文件
-      - name: 📢 创建 GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            ${{ github.workspace }}/Output/Astralsetup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
