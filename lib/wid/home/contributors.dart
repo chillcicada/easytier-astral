@@ -1,6 +1,8 @@
 import 'package:astral/wid/home_box.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class Contributors extends StatefulWidget {
   const Contributors({super.key});
@@ -10,41 +12,92 @@ class Contributors extends StatefulWidget {
 }
 
 class _ContributorsState extends State<Contributors> {
-  // 贡献者数据
-  final List<Map<String, dynamic>> contributors = [
-    {
-      'name': 'ldoubil',
-      'role': '项目作者 & 维护者',
-      'avatar': 'https://avatars.githubusercontent.com/u/26994456?v=4',
-      'github': 'https://github.com/ldoubil',
-      'isAuthor': true,
-      'contributions': 446,
-    },
-    {
-      'name': 'syster-0',
-      'role': '核心贡献者',
-      'avatar': 'https://avatars.githubusercontent.com/u/158539129?v=4',
-      'github': 'https://github.com/syster-0',
-      'isAuthor': false,
-      'contributions': 34,
-    },
-    {
-      'name': 'faithleysath',
-      'role': '贡献者',
-      'avatar': 'https://avatars.githubusercontent.com/u/120073078?v=4',
-      'github': 'https://github.com/faithleysath',
-      'isAuthor': false,
-      'contributions': 6,
-    },
-    {
-      'name': 'dependabot[bot]',
-      'role': '自动化助手',
-      'avatar': 'https://avatars.githubusercontent.com/in/29110?v=4',
-      'github': 'https://github.com/apps/dependabot',
-      'isAuthor': false,
-      'contributions': 1,
-    },
-  ];
+  List<Map<String, dynamic>> contributors = [];
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchContributors();
+  }
+
+  Future<void> _fetchContributors() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final response = await http.get(
+        Uri.parse('https://api.github.com/repos/ldoubil/astral/contributors'),
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        
+        setState(() {
+          contributors = data.map((contributor) {
+            final String login = contributor['login'] ?? '';
+            final bool isAuthor = login == 'ldoubil';
+            
+            // 根据贡献数量和用户名确定角色
+            String role;
+            if (isAuthor) {
+              role = '项目作者 & 维护者';
+            } else if (contributor['contributions'] >= 30) {
+              role = '核心贡献者';
+            } else if (contributor['contributions'] >= 5) {
+              role = '贡献者';
+            } else if (login.contains('bot')) {
+              role = '自动化助手';
+            } else {
+              role = '贡献者';
+            }
+            
+            return {
+              'name': login,
+              'role': role,
+              'avatar': contributor['avatar_url'] ?? '',
+              'github': contributor['html_url'] ?? '',
+              'isAuthor': isAuthor,
+              'contributions': contributor['contributions'] ?? 0,
+            };
+          }).toList();
+          
+          // 按贡献数量排序，作者始终在最前面
+          contributors.sort((a, b) {
+            if (a['isAuthor']) return -1;
+            if (b['isAuthor']) return 1;
+            return (b['contributions'] as int).compareTo(a['contributions'] as int);
+          });
+          
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load contributors: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = '加载贡献者信息失败: $e';
+        // 使用备用数据
+        contributors = [
+          {
+            'name': 'ldoubil',
+            'role': '项目作者 & 维护者',
+            'avatar': 'https://avatars.githubusercontent.com/u/26994456?v=4',
+            'github': 'https://github.com/ldoubil',
+            'isAuthor': true,
+            'contributions': 446,
+          },
+        ];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,13 +119,60 @@ class _ContributorsState extends State<Contributors> {
                 '贡献者',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
               ),
+              if (isLoading) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 16),
-          ...contributors.map((contributor) => _buildContributorItem(
-                contributor,
-                colorScheme,
-              )),
+          if (errorMessage != null)
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: colorScheme.onErrorContainer,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      errorMessage!,
+                      style: TextStyle(
+                        color: colorScheme.onErrorContainer,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text('正在加载贡献者信息...'),
+              ),
+            )
+          else
+            ...contributors.map((contributor) => _buildContributorItem(
+                  contributor,
+                  colorScheme,
+                )),
           const SizedBox(height: 8),
           // 查看更多贡献者链接
           InkWell(
@@ -106,6 +206,7 @@ class _ContributorsState extends State<Contributors> {
     ColorScheme colorScheme,
   ) {
     final bool isAuthor = contributor['isAuthor'] ?? false;
+    final int contributions = contributor['contributions'] ?? 0;
     
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -141,11 +242,16 @@ class _ContributorsState extends State<Contributors> {
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: colorScheme.primary.withOpacity(0.1),
-                    backgroundImage: NetworkImage(contributor['avatar']!),
-                    onBackgroundImageError: (exception, stackTrace) {
-                      // 如果头像加载失败，显示默认图标
-                    },
-                    child: Container(), // 用于在图片加载失败时显示默认图标
+                    backgroundImage: contributor['avatar'].isNotEmpty 
+                        ? NetworkImage(contributor['avatar']!) 
+                        : null,
+                    child: contributor['avatar'].isEmpty 
+                        ? Icon(
+                            Icons.person,
+                            color: colorScheme.primary,
+                            size: 20,
+                          )
+                        : null,
                   ),
                   if (isAuthor)
                     Positioned(
@@ -178,12 +284,15 @@ class _ContributorsState extends State<Contributors> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          contributor['name']!,
-                          style: TextStyle(
-                            fontWeight: isAuthor ? FontWeight.w900 : FontWeight.bold,
-                            fontSize: isAuthor ? 15 : 14,
-                            color: isAuthor ? colorScheme.primary : null,
+                        Expanded(
+                          child: Text(
+                            contributor['name']!,
+                            style: TextStyle(
+                              fontWeight: isAuthor ? FontWeight.w900 : FontWeight.bold,
+                              fontSize: isAuthor ? 15 : 14,
+                              color: isAuthor ? colorScheme.primary : null,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isAuthor) ...[
@@ -197,19 +306,33 @@ class _ContributorsState extends State<Contributors> {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      contributor['role']!,
-                      style: TextStyle(
-                        color: isAuthor 
-                            ? colorScheme.primary.withOpacity(0.8)
-                            : colorScheme.secondary,
-                        fontSize: 12,
-                        fontWeight: isAuthor ? FontWeight.w600 : FontWeight.normal,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            contributor['role']!,
+                            style: TextStyle(
+                              color: isAuthor 
+                                  ? colorScheme.primary.withOpacity(0.8)
+                                  : colorScheme.secondary,
+                              fontSize: 12,
+                              fontWeight: isAuthor ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '$contributions 次贡献',
+                          style: TextStyle(
+                            color: colorScheme.secondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               // GitHub 图标
               Icon(
                 Icons.code,
