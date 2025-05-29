@@ -253,17 +253,44 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
   /// 下载文件并显示进度
   Future<String?> _downloadFile(String url, String fileName, Function(double) onProgress) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final request = http.Request('GET', Uri.parse(url));
+      final response = await request.send();
+      
       if (response.statusCode != 200) return null;
-
-      final bytes = response.bodyBytes;
+  
+      final contentLength = response.contentLength;
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$fileName');
-
-      // 模拟下载进度（实际项目中应该使用流式下载）
-      await file.writeAsBytes(bytes);
-      onProgress(1.0); // 下载完成
-
+      
+      // 检查文件是否存在，如果存在则删除
+      if (await file.exists()) {
+        await file.delete();
+      }
+      
+      final sink = file.openWrite();
+      
+      int downloadedBytes = 0;
+      
+      await response.stream.listen(
+        (chunk) {
+          sink.add(chunk);
+          downloadedBytes += chunk.length;
+          
+          if (contentLength != null && contentLength > 0) {
+            final progress = downloadedBytes / contentLength;
+            onProgress(progress);
+          }
+        },
+        onDone: () async {
+          await sink.close();
+          onProgress(1.0); // 确保进度达到100%
+        },
+        onError: (error) async {
+          await sink.close();
+          throw error;
+        },
+      ).asFuture();
+  
       return file.path;
     } catch (e) {
       return null;

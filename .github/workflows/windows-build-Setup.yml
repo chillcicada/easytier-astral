@@ -81,7 +81,7 @@ jobs:
           #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
 
           [Setup]
-          AppId={9A41EC10-FBE6-4B63-8B18-A466907374B5}
+          AppId={{9A41EC10-FBE6-4B63-8B18-A466907374B5}
           AppName={#MyAppName}
           AppVersion={#MyAppVersion}
           AppPublisher={#MyAppPublisher}
