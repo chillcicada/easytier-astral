@@ -116,6 +116,28 @@ class _ConnectButtonState extends State<ConnectButton>
     final rom = Aps().selectroom.value;
     if (rom == null) return;
 
+    // 检查服务器列表是否为空
+    final enabledServers = Aps().servers.value.where((server) => server.enable).toList();
+    if (enabledServers.isEmpty) {
+      // 显示提示信息
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('请先添加并启用至少一个服务器'),
+            action: SnackBarAction(
+              label: '去添加',
+              onPressed: () {
+                // 跳转到服务器页面（索引为2）
+                Aps().selectedIndex.set(2);
+              },
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       // 初始化服务器
       await _initializeServer(rom);

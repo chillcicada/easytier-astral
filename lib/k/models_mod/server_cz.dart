@@ -9,22 +9,6 @@ class ServerCz {
   }
 
   Future<void> init() async {
-    // 如果一条数据都没有，就添加一条
-    if (await _isar.serverMods.count() == 0) {
-      await addServer(
-        ServerMod(
-          name: "快乐服务器",
-          url: "124.71.134.95:11010",
-          enable: true,
-          tcp: true,
-          udp: false,
-          ws: false,
-          wss: false,
-          quic: false,
-          wg: false,
-        ),
-      );
-    }
   }
 
   // 添加服务器
