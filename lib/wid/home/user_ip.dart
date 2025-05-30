@@ -25,7 +25,7 @@ class _UserIpBoxState extends State<UserIpBox> {
 
   bool _isValidIPv4(String ip) {
     final RegExp ipRegex = RegExp(
-      r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+      r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
     );
     return ipRegex.hasMatch(ip);
   }
@@ -35,10 +35,18 @@ class _UserIpBoxState extends State<UserIpBox> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 初始化时同步一次状态
-      _usernameController.text = _aps.PlayerName.watch(context);
-      _virtualIPController.text = _aps.ipv4.watch(context);
-      _roomController.text = _aps.selectroom.value?.name ?? '';
-      
+      effect(() {
+        // 只在控件没有焦点时才更新，避免与用户输入冲突
+        if (!_usernameControllerFocusNode.hasFocus) {
+          _usernameController.text = _aps.PlayerName.value; // 监听玩家名变化
+        }
+        if (!_virtualIPFocusNode.hasFocus) {
+          _virtualIPController.text = _aps.ipv4.value; // 监听IP地址变化
+        }
+        // 房间选择器不是文本输入框，可以直接更新
+        _roomController.text = _aps.selectroom.value?.name ?? ''; // 监听房间选择变化
+      });
+
       // 初始化验证状态
       setState(() {
         _isValidIP = _isValidIPv4(_virtualIPController.text);
@@ -101,9 +109,10 @@ class _UserIpBoxState extends State<UserIpBox> {
           TextField(
             controller: _usernameController,
             focusNode: _usernameControllerFocusNode,
-            enabled: (Aps().Connec_state.watch(context) != CoState.idle)
-                ? false
-                : true,
+            enabled:
+                (Aps().Connec_state.watch(context) != CoState.idle)
+                    ? false
+                    : true,
             onChanged: (value) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _aps.updatePlayerName(value);
@@ -115,51 +124,55 @@ class _UserIpBoxState extends State<UserIpBox> {
               border: const OutlineInputBorder(),
               prefixIcon: Icon(Icons.person, color: colorScheme.primary),
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12), 
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 12,
+              ),
             ),
           ),
-          
+
           const SizedBox(height: 14),
           InkWell(
-            onTap: Aps().Connec_state.watch(context) != CoState.connected
-                ? () => CanvasJump.show(
+            onTap:
+                Aps().Connec_state.watch(context) != CoState.connected
+                    ? () => CanvasJump.show(
                       context,
                       rooms: _aps.rooms.watch(context).cast<Room>(),
                       onSelect: (Room room) {
                         _aps.setRoom(room);
                       },
                     )
-                : null,
+                    : null,
             child: InputDecorator(
               decoration: InputDecoration(
                 labelText: '选择房间',
-                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 12,
+                ),
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 enabled: Aps().Connec_state.watch(context) == CoState.idle,
                 border: const OutlineInputBorder(),
-                prefixIcon: Icon(
-                  Icons.apartment, color: colorScheme.primary,
-                ),
-                suffixIcon: Icon(
-                  Icons.menu, color: colorScheme.primary,
-                )
-                
+                prefixIcon: Icon(Icons.apartment, color: colorScheme.primary),
+                suffixIcon: Icon(Icons.menu, color: colorScheme.primary),
               ),
               child: IgnorePointer(
-                ignoring: Aps().Connec_state.watch(context) == CoState.connected,
+                ignoring:
+                    Aps().Connec_state.watch(context) == CoState.connected,
                 child: Text(
                   Aps().selectroom.watch(context)?.name ?? '请选择房间',
                   style: TextStyle(
-                    color: Aps().Connec_state.watch(context) != CoState.connected
-                        ? Theme.of(context).textTheme.bodyLarge?.color
-                        : Theme.of(context).disabledColor,
+                    color:
+                        Aps().Connec_state.watch(context) != CoState.connected
+                            ? Theme.of(context).textTheme.bodyLarge?.color
+                            : Theme.of(context).disabledColor,
                   ),
                 ),
               ),
             ),
           ),
-          
-          const SizedBox(height: 9), 
+
+          const SizedBox(height: 9),
 
           SizedBox(
             height: 60,
@@ -169,7 +182,8 @@ class _UserIpBoxState extends State<UserIpBox> {
                   child: TextField(
                     controller: _virtualIPController,
                     focusNode: _virtualIPFocusNode,
-                    enabled: !_aps.dhcp.watch(context) &&
+                    enabled:
+                        !_aps.dhcp.watch(context) &&
                         (Aps().Connec_state.watch(context) == CoState.idle),
                     onChanged: (value) {
                       if (!_aps.dhcp.watch(context)) {
@@ -185,16 +199,20 @@ class _UserIpBoxState extends State<UserIpBox> {
                       border: const OutlineInputBorder(),
                       prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
                       floatingLabelBehavior: FloatingLabelBehavior.always,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                      errorText: (!_aps.dhcp.watch(context) && !_isValidIP)
-                          ? '请输入有效的IPv4地址'
-                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      errorText:
+                          (!_aps.dhcp.watch(context) && !_isValidIP)
+                              ? '请输入有效的IPv4地址'
+                              : null,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Column(
-                  mainAxisAlignment: MainAxisAlignment.center, 
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Switch(
                       value: _aps.dhcp.watch(context),
@@ -217,10 +235,7 @@ class _UserIpBoxState extends State<UserIpBox> {
           if (_aps.dhcp.watch(context))
             const Padding(
               padding: EdgeInsets.only(top: 8.0),
-              child: Text(
-                '系统将自动分配虚拟网IP',
-                style: TextStyle(fontSize: 12),
-              ),
+              child: Text('系统将自动分配虚拟网IP', style: TextStyle(fontSize: 12)),
             )
           else
             const SizedBox(height: 12),
