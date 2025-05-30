@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class UpdateChecker {
   /// GitHub 仓库所有者
@@ -521,11 +522,26 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
 
   Future<void> _installFile(String filePath) async {
     try {
-      await OpenFile.open(filePath);
+      if (Platform.isAndroid) {
+        // Android平台需要特殊处理
+        final result = await OpenFile.open(
+          filePath,
+          type: "application/vnd.android.package-archive"
+        );
+        
+        if (result.type != ResultType.done) {
+          throw Exception('安装失败: ${result.message}');
+        }
+      } else {
+        await OpenFile.open(filePath);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('无法打开安装文件: $e')),
+          SnackBar(
+            content: Text('无法打开安装文件: $e\n\n提示：请确保已开启"允许安装未知来源应用"权限'),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
