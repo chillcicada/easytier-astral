@@ -72,7 +72,7 @@ jobs:
           echo "Windows 文件:"
           ls -la ./downloaded/windows || echo "目录不存在"
           echo "WindowsSetup 文件:"
-          ls -la./downloaded/WindowsSetup || echo "目录不存在"
+          ls -la ./downloaded/WindowsSetup || echo "目录不存在"
           
       - name: 🤖 生成分支差异提交内容
         id: generate_changelog
@@ -183,7 +183,7 @@ jobs:
           prerelease: true  # 标记为预发布版本
           files: |
             ./downloaded/arm64-v8a/*.apk
-            ./downloaded/WindowsSetup*.exe
+            ./downloaded/WindowsSetup/*.exe
             ./downloaded/windows/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
