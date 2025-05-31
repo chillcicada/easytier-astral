@@ -106,20 +106,7 @@ jobs:
 
           [Files]
           Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\Ak.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\app_links_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\flutter_localization_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\isar.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\isar_flutter_libs_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\Packet.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\rust_lib_astral.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\screen_retriever_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\sentry.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\system_tray_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\window_manager_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\wintun.dll"; DestDir: "{app}"; Flags: ignoreversion
+          Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
           Source: "$env:GITHUB_WORKSPACE\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
 
           [Registry]
