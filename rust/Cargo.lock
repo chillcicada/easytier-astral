@@ -1047,8 +1047,7 @@ dependencies = [
 
 [[package]]
 name = "easytier"
-version = "2.3.1"
-source = "git+https://github.com/ldoubil/EasyTier?branch=main#985f0c548b7b043f3e630efad65236341255a04f"
+version = "2.3.0"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -1077,7 +1076,6 @@ dependencies = [
  "gethostname",
  "git-version",
  "globwalk",
- "hashbrown 0.15.3",
  "hickory-client",
  "hickory-proto",
  "hickory-resolver",
