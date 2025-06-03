@@ -18,7 +18,8 @@ humansize = "1.1.1"
 tokio = "1.39.2"
 anyhow = "1.0.95"
 surge-ping = "0.8"
-easytier = { path = "./easytier" }
+# easytier = { path = "./easytier" }
+easytier = { git = "https://github.com/ldoubil/EasyTier", branch = "main" }
 windows = { version = "0.48.0", features = ["Win32_NetworkManagement_WindowsFirewall",
  "Win32_System_Com", 
  "Win32_NetworkManagement_IpHelper",
