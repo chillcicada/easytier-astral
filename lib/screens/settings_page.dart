@@ -18,6 +18,49 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _hasInstallPermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) {
+      _checkInstallPermission();
+    }
+  }
+
+  Future<void> _checkInstallPermission() async {
+    try {
+      final result = await const MethodChannel('astral_channel').invokeMethod('checkInstallPermission');
+      if (mounted) {
+        setState(() {
+          _hasInstallPermission = result ?? false;
+        });
+      }
+    } catch (e) {
+      // 权限检查失败，默认为false
+    }
+  }
+
+  Future<void> _requestInstallPermission() async {
+    try {
+      final result = await const MethodChannel('astral_channel').invokeMethod('requestInstallPermission');
+      if (!context.mounted) return;
+      
+      await _checkInstallPermission(); // 重新检查权限状态
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result ? '安装权限获取成功' : '安装权限获取失败'),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请求安装权限失败')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -54,6 +97,16 @@ class _SettingsPageState extends State<SettingsPage> {
             //       }
             //     },
             //   ),
+                if (Platform.isAndroid)
+                  ListTile(
+                    leading: const Icon(Icons.install_mobile),
+                    title: const Text('获取安装权限'),
+                    subtitle: Text(_hasInstallPermission ? '已获得安装权限' : '未获得安装权限，点击申请'),
+                    trailing: _hasInstallPermission 
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : const Icon(Icons.warning, color: Colors.orange),
+                    onTap: _hasInstallPermission ? null : _requestInstallPermission,
+                  ),
               if (!Platform.isAndroid)
                 SwitchListTile(
                   title: const Text('最小化'),
