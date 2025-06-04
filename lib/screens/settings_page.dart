@@ -18,15 +18,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  Future<bool> _checkRootStatus() async {
-    try {
-      final result = await const MethodChannel('astral_channel').invokeMethod('checkRoot');
-      return result as bool;
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -43,35 +34,24 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('软件设置'),
               children: [
             if (Platform.isAndroid)
-              FutureBuilder<bool>(
-                future: _checkRootStatus(),
-                builder: (context, snapshot) {
-                  final hasRoot = snapshot.data ?? false;
-                  return ListTile(
-                    leading: Icon(
-                      Icons.admin_panel_settings,
-                      color: hasRoot ? Colors.green : Colors.grey,
-                    ),
-                    title: Text(hasRoot ? 'Root权限已获取' : '申请Root权限'),
-                    subtitle: Text(hasRoot ? 'Root权限可用，无需创建VPN' : '获取Root权限则无需创建VPN'),
-                    trailing: hasRoot ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                    onTap: hasRoot ? null : () async {
-                      try {
-                        final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
-                        if (!context.mounted) return;
-                        
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
-                        );
-                        setState(() {}); // 刷新状态
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('请求Root权限失败')),
-                        );
-                      }
-                    },
-                  );
+              ListTile(
+                leading: const Icon(Icons.admin_panel_settings),
+                title: const Text('申请Root权限'),
+                subtitle: const Text('获取Root权限则无需创建VPN'),
+                onTap: () async {
+                  try {
+                    final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
+                    if (!context.mounted) return;
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
+                    );
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('请求Root权限失败')),
+                    );
+                  }
                 },
               ),
               if (!Platform.isAndroid)
