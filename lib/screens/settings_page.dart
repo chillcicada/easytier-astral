@@ -33,27 +33,27 @@ class _SettingsPageState extends State<SettingsPage> {
               leading: const Icon(Icons.info),
               title: const Text('软件设置'),
               children: [
-            if (Platform.isAndroid)
-              ListTile(
-                leading: const Icon(Icons.admin_panel_settings),
-                title: const Text('申请Root权限'),
-                subtitle: const Text('获取Root权限则无需创建VPN'),
-                onTap: () async {
-                  try {
-                    final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
-                    if (!context.mounted) return;
+            // if (Platform.isAndroid)
+            //   ListTile(
+            //     leading: const Icon(Icons.admin_panel_settings),
+            //     title: const Text('申请Root权限'),
+            //     subtitle: const Text('获取Root权限则无需创建VPN'),
+            //     onTap: () async {
+            //       try {
+            //         final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
+            //         if (!context.mounted) return;
                     
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('请求Root权限失败')),
-                    );
-                  }
-                },
-              ),
+            //         ScaffoldMessenger.of(context).showSnackBar(
+            //           SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
+            //         );
+            //       } catch (e) {
+            //         if (!context.mounted) return;
+            //         ScaffoldMessenger.of(context).showSnackBar(
+            //           const SnackBar(content: Text('请求Root权限失败')),
+            //         );
+            //       }
+            //     },
+            //   ),
               if (!Platform.isAndroid)
                 SwitchListTile(
                   title: const Text('最小化'),
@@ -1004,13 +1004,30 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               const ListTile(leading: Icon(Icons.info), title: Text('关于')),
               ListTile(
-                leading: const Icon(Icons.article),
+                leading: Hero(
+                  tag: "logs_hero",
+                  child: const Icon(Icons.article),
+                ),
                 title: const Text('查看日志'),
                 subtitle: const Text('查看应用运行日志'),
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LogsPage(),
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) => const LogsPage(),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(1.0, 0.0);
+                        const end = Offset.zero;
+                        const curve = Curves.ease;
+
+                        var tween = Tween(begin: begin, end: end).chain(
+                          CurveTween(curve: curve),
+                        );
+
+                        return SlideTransition(
+                          position: animation.drive(tween),
+                          child: child,
+                        );
+                      },
                     ),
                   );
                 },

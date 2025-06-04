@@ -56,6 +56,13 @@ class _LogsPageState extends State<LogsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Hero(
+          tag: "logs_hero",
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         title: const Text('日志'),
         actions: [
           IconButton(
@@ -187,6 +194,7 @@ class _LogsPageState extends State<LogsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _scrollToBottom,
         tooltip: '滚动到底部',
+        heroTag: "logs_fab", // 使用唯一标识
         child: const Icon(Icons.keyboard_arrow_down),
       ),
     );
