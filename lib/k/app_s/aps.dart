@@ -127,7 +127,8 @@ class Aps {
     await AppDatabase().netConfigSetting.updateConnectionManagerEnabled(index, enabled);
     await updateConnections();
   }
-
+  // 日志内容
+  final Signal<List<String>> logs = signal([]);
   // 开机自启动
   final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
 

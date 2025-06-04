@@ -5,6 +5,7 @@ import 'package:astral/fun/route_fun.dart';
 import 'package:astral/fun/up.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/src/rust/api/hops.dart';
+import 'package:astral/screens/logs_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -1002,6 +1003,18 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             children: [
               const ListTile(leading: Icon(Icons.info), title: Text('关于')),
+              ListTile(
+                leading: const Icon(Icons.article),
+                title: const Text('查看日志'),
+                subtitle: const Text('查看应用运行日志'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LogsPage(),
+                    ),
+                  );
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.group),
                 title: const Text('官方QQ群 808169040'),

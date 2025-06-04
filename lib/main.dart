@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:astral/fun/up.dart';
+import 'package:astral/k/app_s/log_capture.dart';
 import 'package:astral/k/database/app_data.dart';
 import 'package:astral/k/mod/window_manager.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +22,7 @@ void main() async {
       await AppDatabase().init();
       AppInfoUtil.init();
       await RustLib.init();
+      await LogCapture().startCapture();
       if (!kIsWeb &&
           (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
         await WindowManagerUtils.initializeWindow();
