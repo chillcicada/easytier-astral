@@ -160,7 +160,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   Aps().setUserListSimple(value);
                 },
               ),
-              SwitchListTile(
+              
+            ],
+          ),
+        ),
+        Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ExpansionTile(
+              initiallyExpanded: false, // 默认折叠,
+              leading: const Icon(Icons.system_update),
+              title: const Text('更新设置'),
+              children: [SwitchListTile(
                 title: const Text('参与内测版'),
                 subtitle: const Text('加群分享你的bug'),
                 value: Aps().beta.watch(context),
@@ -190,9 +202,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               ),
-            ],
+              ],
+            ),
           ),
-        ),
         if (Platform.isWindows)
           Card(
             shape: RoundedRectangleBorder(
