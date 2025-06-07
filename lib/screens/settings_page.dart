@@ -51,24 +51,22 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final status = await Permission.requestInstallPackages.request();
       if (!context.mounted) return;
-      
+
       await _checkInstallPermission(); // 重新检查权限状态
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(status.isGranted ? '安装权限获取成功' : '安装权限获取失败'),
-        ),
+        SnackBar(content: Text(status.isGranted ? '安装权限获取成功' : '安装权限获取失败')),
       );
-      
+
       // 如果权限被永久拒绝，提示用户去设置页面
       if (status.isPermanentlyDenied) {
         _showPermissionDialog();
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请求安装权限失败')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请求安装权限失败')));
     }
   }
 
@@ -104,45 +102,47 @@ class _SettingsPageState extends State<SettingsPage> {
 
       children: [
         Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ExpansionTile(
-              initiallyExpanded: false, // 默认折叠,
-              leading: const Icon(Icons.info),
-              title: const Text('软件设置'),
-              children: [
-            // if (Platform.isAndroid)
-            //   ListTile(
-            //     leading: const Icon(Icons.admin_panel_settings),
-            //     title: const Text('申请Root权限'),
-            //     subtitle: const Text('获取Root权限则无需创建VPN'),
-            //     onTap: () async {
-            //       try {
-            //         final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
-            //         if (!context.mounted) return;
-                    
-            //         ScaffoldMessenger.of(context).showSnackBar(
-            //           SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
-            //         );
-            //       } catch (e) {
-            //         if (!context.mounted) return;
-            //         ScaffoldMessenger.of(context).showSnackBar(
-            //           const SnackBar(content: Text('请求Root权限失败')),
-            //         );
-            //       }
-            //     },
-            //   ),
-                if (Platform.isAndroid)
-                  ListTile(
-                    leading: const Icon(Icons.install_mobile),
-                    title: const Text('获取安装权限'),
-                    subtitle: Text(_hasInstallPermission ? '已获得安装权限' : '未获得安装权限，点击申请'),
-                    trailing: _hasInstallPermission 
-                        ? const Icon(Icons.check_circle, color: Colors.green)
-                        : const Icon(Icons.warning, color: Colors.orange),
-                    onTap: _hasInstallPermission ? null : _requestInstallPermission,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: ExpansionTile(
+            initiallyExpanded: false, // 默认折叠,
+            leading: const Icon(Icons.info),
+            title: const Text('软件设置'),
+            children: [
+              // if (Platform.isAndroid)
+              //   ListTile(
+              //     leading: const Icon(Icons.admin_panel_settings),
+              //     title: const Text('申请Root权限'),
+              //     subtitle: const Text('获取Root权限则无需创建VPN'),
+              //     onTap: () async {
+              //       try {
+              //         final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
+              //         if (!context.mounted) return;
+
+              //         ScaffoldMessenger.of(context).showSnackBar(
+              //           SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
+              //         );
+              //       } catch (e) {
+              //         if (!context.mounted) return;
+              //         ScaffoldMessenger.of(context).showSnackBar(
+              //           const SnackBar(content: Text('请求Root权限失败')),
+              //         );
+              //       }
+              //     },
+              //   ),
+              if (Platform.isAndroid)
+                ListTile(
+                  leading: const Icon(Icons.install_mobile),
+                  title: const Text('获取安装权限'),
+                  subtitle: Text(
+                    _hasInstallPermission ? '已获得安装权限' : '未获得安装权限，点击申请',
                   ),
+                  trailing:
+                      _hasInstallPermission
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : const Icon(Icons.warning, color: Colors.orange),
+                  onTap:
+                      _hasInstallPermission ? null : _requestInstallPermission,
+                ),
               if (!Platform.isAndroid)
                 SwitchListTile(
                   title: const Text('最小化'),
@@ -160,19 +160,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   Aps().setUserListSimple(value);
                 },
               ),
-              
             ],
           ),
         ),
         Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ExpansionTile(
-              initiallyExpanded: false, // 默认折叠,
-              leading: const Icon(Icons.system_update),
-              title: const Text('更新设置'),
-              children: [SwitchListTile(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: ExpansionTile(
+            initiallyExpanded: false, // 默认折叠,
+            leading: const Icon(Icons.system_update),
+            title: const Text('更新设置'),
+            children: [
+              SwitchListTile(
                 title: const Text('参与内测版'),
                 subtitle: const Text('加群分享你的bug'),
                 value: Aps().beta.watch(context),
@@ -202,9 +200,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               ),
-              ],
-            ),
+            ],
           ),
+        ),
         if (Platform.isWindows)
           Card(
             shape: RoundedRectangleBorder(
@@ -1079,8 +1077,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
 
               SwitchListTile(
-                title: const Text('用KCP输入'),
-                subtitle: const Text('否接收 KCP 协议的数据'),
+                title: const Text('KCP输入'),
+                subtitle: const Text('是否否接收 KCP 协议的数据'),
                 value: Aps().disableKcpInput.watch(context),
                 onChanged: (value) {
                   Aps().updateDisableKcpInput(value);
@@ -1114,15 +1112,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 onTap: () {
                   Navigator.of(context).push(
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => const LogsPage(),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      pageBuilder:
+                          (context, animation, secondaryAnimation) =>
+                              const LogsPage(),
+                      transitionsBuilder: (
+                        context,
+                        animation,
+                        secondaryAnimation,
+                        child,
+                      ) {
                         const begin = Offset(1.0, 0.0);
                         const end = Offset.zero;
                         const curve = Curves.ease;
 
-                        var tween = Tween(begin: begin, end: end).chain(
-                          CurveTween(curve: curve),
-                        );
+                        var tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(CurveTween(curve: curve));
 
                         return SlideTransition(
                           position: animation.drive(tween),
