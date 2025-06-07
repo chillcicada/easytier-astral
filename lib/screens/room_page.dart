@@ -243,25 +243,27 @@ class _RoomPageState extends State<RoomPage> {
               : Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  FloatingActionButton(
-                    heroTag: 'paste',
-                    onPressed: _showPasteDialog,
-                    child: const Icon(Icons.paste),
-                  ),
-                  const SizedBox(width: 16),
-                  FloatingActionButton(
-                    heroTag: 'add',
-                    onPressed: () => showAddRoomDialog(context),
-                    child: const Icon(Icons.add),
-                  ),
-                  // 在 AppBar 的 actions 中添加排序按钮
-                  const SizedBox(width: 16),
+                  // 排序按钮移到最前
                   FloatingActionButton(
                     heroTag: 'sort',
                     onPressed: () {
                       RoomReorderSheet.show(context, _aps.rooms.value);
                     },
                     child: const Icon(Icons.sort),
+                  ),
+                  const SizedBox(width: 16),
+                  // 黏贴按钮居中
+                  FloatingActionButton(
+                    heroTag: 'paste',
+                    onPressed: _showPasteDialog,
+                    child: const Icon(Icons.paste),
+                  ),
+                  const SizedBox(width: 16),
+                  // 增加按钮最后
+                  FloatingActionButton(
+                    heroTag: 'add',
+                    onPressed: () => showAddRoomDialog(context),
+                    child: const Icon(Icons.add),
                   ),
                 ],
               ),

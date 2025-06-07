@@ -29,6 +29,8 @@ class ServerMod {
   bool http = false;
   // https 开启
   bool https = false;
+  /// 排序顺序
+  int sortOrder = 0;
 
   //构造
   ServerMod({
@@ -46,5 +48,6 @@ class ServerMod {
     this.srv = false,
     this.http = false,
     this.https = false,
+    this.sortOrder = 0, // 添加排序字段初始化
   });
 }

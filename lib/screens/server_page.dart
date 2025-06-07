@@ -7,6 +7,8 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:isar/isar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:astral/wid/server_reorder_sheet.dart';
+import 'package:astral/k/database/app_data.dart';
 
 class ServerPage extends StatefulWidget {
   const ServerPage({super.key});
@@ -42,6 +44,11 @@ class _ServerPageState extends State<ServerPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 监听连接状态
+    final isConnected = _aps.Connec_state.watch(context);
+    // 获取当前选中房间（如无此逻辑请替换为你的实际选中房间变量）
+    final selectedRoom = _aps.selectroom.watch(context); // 假设有 selectedRoom 字段
+
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -125,6 +132,20 @@ class _ServerPageState extends State<ServerPage> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: 'sort',
+            onPressed: () async {
+              final currentServers = _aps.servers.value;
+              final reorderedServers = await ServerReorderSheet.show(context, currentServers);
+              if (reorderedServers != null) {
+                await _aps.reorderServers(reorderedServers);
+                _aps.servers.value = reorderedServers; // 强制更新信号值
+                setState(() {});
+              }
+            },
+            child: const Icon(Icons.sort),
+          ),
+          const SizedBox(width: 16),
           FloatingActionButton(
             heroTag: '公共服务器',
             onPressed: () => _showPublicServersDialog(),
@@ -275,25 +296,24 @@ class _ServerPageState extends State<ServerPage> {
   void _showDeleteConfirmDialog(ServerMod server) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('删除服务器'),
-            content: Text('确定要删除服务器 "${server.name}" 吗？此操作不可撤销。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('取消'),
-              ),
-              TextButton(
-                onPressed: () {
-                  _aps.deleteServer(server);
-                  Navigator.of(context).pop();
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('删除'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('删除服务器'),
+        content: Text('确定要删除服务器 "${server.name}" 吗？此操作不可撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
           ),
+          TextButton(
+            onPressed: () {
+              _aps.deleteServer(server);
+              Navigator.of(context).pop();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
     );
   }
 }

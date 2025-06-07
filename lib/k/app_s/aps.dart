@@ -667,8 +667,14 @@ class Aps {
 
   /// 添加服务器
   Future<void> addServer(ServerMod server) async {
-    await AppDatabase().ServerSetting.addServer(server);
-    servers.value = await AppDatabase().ServerSetting.getAllServers();
+    try {
+      await AppDatabase().ServerSetting.addServer(server);
+      servers.value = await AppDatabase().ServerSetting.getAllServers();
+    } catch (e, stackTrace) {
+      // 记录错误日志
+      print('添加服务器失败: $e\n$stackTrace');
+      // 可以考虑向用户显示错误提示
+    }
   }
 
   /// 删除服务器
@@ -703,7 +709,7 @@ class Aps {
   }
 
   /// 设置是否启用
-  Future<Future<List<ServerMod>>> setServerEnable(
+  Future<List<ServerMod>> setServerEnable(
     ServerMod server,
     bool enable,
   ) async {
@@ -711,6 +717,12 @@ class Aps {
     await AppDatabase().ServerSetting.updateServer(server);
     servers.value = await AppDatabase().ServerSetting.getAllServers();
     return AppDatabase().ServerSetting.getAllServers();
+  }
+
+  /// 重新排序服务器
+  Future<void> reorderServers(List<ServerMod> reorderedServers) async {
+    await AppDatabase().ServerSetting.updateServersOrder(reorderedServers);
+    servers.value = await AppDatabase().ServerSetting.getAllServers(); // 新增状态更新
   }
 
   /// 是否处于连接中

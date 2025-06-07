@@ -33,13 +33,27 @@ class ServerCz {
 
   // 获取所有服务器
   Future<List<ServerMod>> getAllServers() async {
-    return await _isar.serverMods.where().findAll();
+    final servers = await _isar.serverMods.where().findAll();
+    servers.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return servers;
   }
 
   // 更新服务器
   Future<int> updateServer(ServerMod server) async {
     return await _isar.writeTxn(() async {
       return await _isar.serverMods.put(server);
+    });
+  }
+
+  // 更新服务器顺序
+  Future<void> updateServersOrder(List<ServerMod> orderedServers) async {
+    return await _isar.writeTxn(() async {
+      // 批量更新所有服务器的排序字段
+      for (int i = 0; i < orderedServers.length; i++) {
+        final server = orderedServers[i];
+        server.sortOrder = i;
+        await _isar.serverMods.put(server);
+      }
     });
   }
 

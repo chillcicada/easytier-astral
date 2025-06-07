@@ -1,10 +1,11 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:astral/k/models/room.dart';
+import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/k/app_s/aps.dart';
+import 'dart:async'; // 添加对dart:async的导入以使用Completer
 
-// 添加DragHandle定义
+// 如果存在原有代码，请保留
+
+// 新增服务器排序弹窗组件
 class DragHandle extends StatelessWidget {
   const DragHandle({Key? key}) : super(key: key);
 
@@ -21,21 +22,22 @@ class DragHandle extends StatelessWidget {
   }
 }
 
-class RoomReorderSheet extends StatefulWidget {
-  final List<Room> rooms;
-  final Function(List<Room>) onReorder;
+class ServerReorderSheet extends StatefulWidget {
+  final List<ServerMod> servers;
+  final Function(List<ServerMod>) onReorder;
 
-  const RoomReorderSheet({
+  const ServerReorderSheet({
     Key? key,
-    required this.rooms,
+    required this.servers,
     required this.onReorder,
   }) : super(key: key);
 
   @override
-  State<RoomReorderSheet> createState() => _RoomReorderSheetState();
+  State<ServerReorderSheet> createState() => _ServerReorderSheetState();
 
-  static Future<void> show(BuildContext context, List<Room> rooms) async {
+  static Future<List<ServerMod>?> show(BuildContext context, List<ServerMod> servers) async {
     final aps = Aps();
+    final completer = Completer<List<ServerMod>?>();
     
     if (MediaQuery.of(context).size.width > 600) {
       // PC端显示为对话框
@@ -45,10 +47,10 @@ class RoomReorderSheet extends StatefulWidget {
           child: Container(
             width: 400,
             height: 600,
-            child: RoomReorderSheet(
-              rooms: List.from(rooms),
-              onReorder: (reorderedRooms) {
-                aps.reorderRooms(reorderedRooms);
+            child: ServerReorderSheet(
+              servers: List.from(servers),
+              onReorder: (reorderedServers) {
+                completer.complete(reorderedServers);
                 Navigator.of(context).pop();
               }
             ),
@@ -72,28 +74,31 @@ class RoomReorderSheet extends StatefulWidget {
                 top: Radius.circular(28),
               ),
             ),
-            child: RoomReorderSheet(
-              rooms: List.from(rooms),
-              onReorder: (reorderedRooms) {
-                aps.reorderRooms(reorderedRooms);
-                Navigator.of(context).pop();
-              },
+            child: ServerReorderSheet(
+              servers: List.from(servers),
+              // 修改排序完成回调
+              onReorder: (reorderedServers) {
+                aps.reorderServers(reorderedServers);
+                Navigator.of(context).pop(reorderedServers);
+              }
             ),
           ),
         ),
       );
     }
+    
+    return completer.future;
   }
 }
 
-class _RoomReorderSheetState extends State<RoomReorderSheet> {
-  late List<Room> _rooms;
-  String _currentHoveredRoomName = ''; // 新增悬停状态变量
+class _ServerReorderSheetState extends State<ServerReorderSheet> {
+  late List<ServerMod> _servers;
+  String _currentHoveredServerName = '';
 
   @override
   void initState() {
     super.initState();
-    _rooms = List.from(widget.rooms);
+    _servers = List.from(widget.servers);
   }
 
   @override
@@ -118,7 +123,7 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '房间排序',
+                    '服务器排序',
                     style: TextStyle(
                       fontSize: 18,
                       color: colorScheme.primary,
@@ -129,7 +134,7 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                '拖拽房间卡片来调整显示顺序',
+                '拖拽服务器卡片来调整显示顺序',
                 textAlign: TextAlign.left,
                 maxLines: null,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -140,7 +145,7 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
           ),
         ),
 
-        // 房间列表 - 使用 Expanded 填充剩余空间
+        // 服务器列表 - 使用 Expanded 填充剩余空间
         Expanded(
           child: Padding( 
             padding: const EdgeInsets.only(
@@ -151,8 +156,8 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
             child: ReorderableListView.builder(
               // 移除水平内边距
               padding: EdgeInsets.zero,
-              // 列表项数量为房间数组长度
-              itemCount: _rooms.length,
+              // 列表项数量为服务器数组长度
+              itemCount: _servers.length,
               // proxyDecorator 用于自定义拖拽时的视觉效果
               proxyDecorator: (child, index, animation) {
                 return child;
@@ -164,19 +169,19 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
                   if (newIndex > oldIndex) {
                     newIndex -= 1;
                   }
-                  // 移除原位置的房间并插入到新位置
-                  final room = _rooms.removeAt(oldIndex);
-                  _rooms.insert(newIndex, room);
+                  // 移除原位置的服务器并插入到新位置
+                  final server = _servers.removeAt(oldIndex);
+                  _servers.insert(newIndex, server);
                 });
               },
               // 构建列表项
               itemBuilder: (context, index) {
-                final room = _rooms[index];
+                final server = _servers[index];
                 return Padding(
-                  key: ValueKey(room.id), // 将key提升到Padding层级
+                  key: ValueKey(server.id), // 将key提升到Padding层级
                   padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: _RoomReorderItem(
-                    room: room,
+                  child: _ServerReorderItem(
+                    server: server,
                     index: index,
                   ),
                 );
@@ -205,7 +210,7 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
               const SizedBox(width: 16),
               Expanded(
                 child: FilledButton(
-                  onPressed: () => widget.onReorder(_rooms),
+                  onPressed: () => widget.onReorder(_servers),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -223,21 +228,21 @@ class _RoomReorderSheetState extends State<RoomReorderSheet> {
   }
 }
 
-class _RoomReorderItem extends StatefulWidget {
-  final Room room;
+class _ServerReorderItem extends StatefulWidget {
+  final ServerMod server;
   final int index;
 
-  const _RoomReorderItem({
+  const _ServerReorderItem({
     Key? key,
-    required this.room,
+    required this.server,
     required this.index,
   }) : super(key: key);
 
   @override
-  _RoomReorderItemState createState() => _RoomReorderItemState();
+  _ServerReorderItemState createState() => _ServerReorderItemState();
 }
 
-class _RoomReorderItemState extends State<_RoomReorderItem> {
+class _ServerReorderItemState extends State<_ServerReorderItem> {
   bool _isHovered = false;
 
   @override
@@ -276,14 +281,14 @@ class _RoomReorderItemState extends State<_RoomReorderItem> {
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               title: Text(
-                widget.room.name, 
+                widget.server.name, 
                 style: TextStyle(
                   fontSize: 16, 
                   color: colorScheme.onSurface
                 )
               ),
               subtitle: Text(
-                widget.room.encrypted ? '加密房间' : '开放房间',
+                widget.server.enable ? '已启用' : '未启用',
                 style: TextStyle(color: colorScheme.onSurfaceVariant)
               ),
             ),

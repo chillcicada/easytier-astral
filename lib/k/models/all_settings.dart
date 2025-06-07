@@ -44,4 +44,8 @@ class AllSettings {
 
   /// 下载加速
   String downloadAccelerate = 'https://gh.xmly.dev/';
+
+  /// 服务器排序字段
+  String serverSortField = 'id';
+
 }

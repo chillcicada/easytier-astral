@@ -358,7 +358,17 @@ class AllSettingsCz {
     AllSettings? settings = await _isar.allSettings.get(1);
     return settings?.downloadAccelerate ?? AllSettings().downloadAccelerate;
   }
-}
+
+  /// 设置服务器排序字段
+  Future<void> setServerSortField(String field) async {
+    AllSettings? settings = await _isar.allSettings.get(1);
+    if (settings != null) {
+      settings.serverSortField = field;
+      await _isar.writeTxn(() async {
+        await _isar.allSettings.put(settings);
+      });
+    }
+  }
 
 // 在同一个文件中添加这个方法
 Future<String> _getDeviceName() async {
@@ -386,4 +396,5 @@ Future<String> _getDeviceName() async {
   } catch (e) {
     return "Default Player"; // 错误处理，返回默认名称
   }
+}
 }
