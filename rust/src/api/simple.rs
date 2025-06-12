@@ -1,4 +1,5 @@
 use easytier::common::config::PortForwardConfig;
+use crate::api::wfp::{block_app_traffic, TrafficDirection};
 pub use easytier::{
     common::{
         self,
@@ -1052,4 +1053,6 @@ pub fn get_network_status() -> KVNetworkStatus {
 
 pub fn init_app() {
     lazy_static::initialize(&RT);
+    
 }
+

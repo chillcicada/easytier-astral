@@ -8,6 +8,7 @@ import 'package:astral/k/app_s/log_capture.dart';
 import 'package:astral/k/database/app_data.dart';
 import 'package:astral/k/mod/window_manager.dart';
 import 'package:astral/services/app_links/app_link_registry.dart';
+import 'package:astral/src/rust/api/simple.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:astral/src/rust/frb_generated.dart';
@@ -26,13 +27,12 @@ void main() async {
       AppInfoUtil.init();
       await RustLib.init();
       await LogCapture().startCapture();
-      
       // 注册 URL scheme（在 Windows 上）
       await UrlSchemeRegistrar.registerUrlScheme();
-      
+
       // 初始化 app_links
       await _initAppLinks();
-      
+
       if (!kIsWeb &&
           (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
         await WindowManagerUtils.initializeWindow();

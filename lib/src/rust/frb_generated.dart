@@ -6,6 +6,7 @@
 import 'api/firewall.dart';
 import 'api/hops.dart';
 import 'api/simple.dart';
+import 'api/wfp.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -64,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.10.0';
 
   @override
-  int get rustContentHash => -109727010;
+  int get rustContentHash => -178773839;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -75,6 +76,45 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<BigInt> crateApiWfpWfpManagerAddAppFilter({
+    required WfpManager that,
+    required AppFilterRule rule,
+  });
+
+  Future<int> crateApiWfpWfpManagerClearAppFilters({
+    required WfpManager that,
+    required String appPath,
+  });
+
+  Future<bool> crateApiWfpWfpManagerIsAppBlocked({
+    required WfpManager that,
+    required String appPath,
+    required TrafficDirection direction,
+  });
+
+  Future<List<WfpFilterInfo>> crateApiWfpWfpManagerListAppFilters({
+    required WfpManager that,
+  });
+
+  Future<WfpManager> crateApiWfpWfpManagerNew();
+
+  Future<void> crateApiWfpWfpManagerRemoveFilter({
+    required WfpManager that,
+    required BigInt filterId,
+  });
+
+  Future<BigInt> crateApiWfpAllowAppTraffic({
+    required String appPath,
+    required TrafficDirection direction,
+    required String ruleName,
+  });
+
+  Future<BigInt> crateApiWfpBlockAppTraffic({
+    required String appPath,
+    required TrafficDirection direction,
+    required String ruleName,
+  });
+
   Future<void> crateApiSimpleCloseServer();
 
   Future<JoinHandleResultString> crateApiSimpleCreateServer({
@@ -89,6 +129,8 @@ abstract class RustLibApi extends BaseApi {
     required List<Forward> forwards,
     required FlagsC flag,
   });
+
+  Future<WfpManager> crateApiWfpCreateWfpManager();
 
   Future<String> crateApiSimpleEasytierVersion();
 
@@ -160,6 +202,14 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PeerRoutePairPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_WfpManager;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_WfpManager;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_WfpManagerPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -171,6 +221,296 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<BigInt> crateApiWfpWfpManagerAddAppFilter({
+    required WfpManager that,
+    required AppFilterRule rule,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_app_filter_rule(rule, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerAddAppFilterConstMeta,
+        argValues: [that, rule],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerAddAppFilterConstMeta =>
+      const TaskConstMeta(
+        debugName: "WfpManager_add_app_filter",
+        argNames: ["that", "rule"],
+      );
+
+  @override
+  Future<int> crateApiWfpWfpManagerClearAppFilters({
+    required WfpManager that,
+    required String appPath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+            that,
+            serializer,
+          );
+          sse_encode_String(appPath, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_32,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerClearAppFiltersConstMeta,
+        argValues: [that, appPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerClearAppFiltersConstMeta =>
+      const TaskConstMeta(
+        debugName: "WfpManager_clear_app_filters",
+        argNames: ["that", "appPath"],
+      );
+
+  @override
+  Future<bool> crateApiWfpWfpManagerIsAppBlocked({
+    required WfpManager that,
+    required String appPath,
+    required TrafficDirection direction,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+            that,
+            serializer,
+          );
+          sse_encode_String(appPath, serializer);
+          sse_encode_traffic_direction(direction, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerIsAppBlockedConstMeta,
+        argValues: [that, appPath, direction],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerIsAppBlockedConstMeta =>
+      const TaskConstMeta(
+        debugName: "WfpManager_is_app_blocked",
+        argNames: ["that", "appPath", "direction"],
+      );
+
+  @override
+  Future<List<WfpFilterInfo>> crateApiWfpWfpManagerListAppFilters({
+    required WfpManager that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_wfp_filter_info,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerListAppFiltersConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerListAppFiltersConstMeta =>
+      const TaskConstMeta(
+        debugName: "WfpManager_list_app_filters",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<WfpManager> crateApiWfpWfpManagerNew() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerNewConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerNewConstMeta =>
+      const TaskConstMeta(debugName: "WfpManager_new", argNames: []);
+
+  @override
+  Future<void> crateApiWfpWfpManagerRemoveFilter({
+    required WfpManager that,
+    required BigInt filterId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+            that,
+            serializer,
+          );
+          sse_encode_u_64(filterId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpWfpManagerRemoveFilterConstMeta,
+        argValues: [that, filterId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpWfpManagerRemoveFilterConstMeta =>
+      const TaskConstMeta(
+        debugName: "WfpManager_remove_filter",
+        argNames: ["that", "filterId"],
+      );
+
+  @override
+  Future<BigInt> crateApiWfpAllowAppTraffic({
+    required String appPath,
+    required TrafficDirection direction,
+    required String ruleName,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(appPath, serializer);
+          sse_encode_traffic_direction(direction, serializer);
+          sse_encode_String(ruleName, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpAllowAppTrafficConstMeta,
+        argValues: [appPath, direction, ruleName],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpAllowAppTrafficConstMeta => const TaskConstMeta(
+    debugName: "allow_app_traffic",
+    argNames: ["appPath", "direction", "ruleName"],
+  );
+
+  @override
+  Future<BigInt> crateApiWfpBlockAppTraffic({
+    required String appPath,
+    required TrafficDirection direction,
+    required String ruleName,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(appPath, serializer);
+          sse_encode_traffic_direction(direction, serializer);
+          sse_encode_String(ruleName, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpBlockAppTrafficConstMeta,
+        argValues: [appPath, direction, ruleName],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpBlockAppTrafficConstMeta => const TaskConstMeta(
+    debugName: "block_app_traffic",
+    argNames: ["appPath", "direction", "ruleName"],
+  );
+
+  @override
   Future<void> crateApiSimpleCloseServer() {
     return handler.executeNormal(
       NormalTask(
@@ -179,7 +519,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 9,
             port: port_,
           );
         },
@@ -227,7 +567,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 10,
             port: port_,
           );
         },
@@ -271,6 +611,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<WfpManager> crateApiWfpCreateWfpManager() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiWfpCreateWfpManagerConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiWfpCreateWfpManagerConstMeta =>
+      const TaskConstMeta(debugName: "create_wfp_manager", argNames: []);
+
+  @override
   Future<String> crateApiSimpleEasytierVersion() {
     return handler.executeNormal(
       NormalTask(
@@ -279,7 +647,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 12,
             port: port_,
           );
         },
@@ -306,7 +674,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 13,
             port: port_,
           );
         },
@@ -337,7 +705,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 14,
             port: port_,
           );
         },
@@ -367,7 +735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 15,
             port: port_,
           );
         },
@@ -394,7 +762,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 16,
             port: port_,
           );
         },
@@ -421,7 +789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 17,
             port: port_,
           );
         },
@@ -449,7 +817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 18,
             port: port_,
           );
         },
@@ -482,7 +850,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 19,
             port: port_,
           );
         },
@@ -510,7 +878,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 20,
             port: port_,
           );
         },
@@ -537,7 +905,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 21,
             port: port_,
           );
         },
@@ -565,7 +933,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 22,
             port: port_,
           );
         },
@@ -600,7 +968,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 23,
             port: port_,
           );
         },
@@ -635,7 +1003,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 24,
             port: port_,
           );
         },
@@ -666,7 +1034,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 25,
             port: port_,
           );
         },
@@ -716,6 +1084,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get rust_arc_decrement_strong_count_PeerRoutePair =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePair;
 
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_WfpManager =>
+      wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_WfpManager =>
+      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager;
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -761,6 +1137,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WfpManager
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  WfpManager
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   EventBusSubscriber
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     dynamic raw,
@@ -799,15 +1193,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WfpManager
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
   }
 
   @protected
+  AppFilterRule dco_decode_app_filter_rule(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return AppFilterRule(
+      name: dco_decode_String(arr[0]),
+      appPath: dco_decode_String(arr[1]),
+      direction: dco_decode_traffic_direction(arr[2]),
+      action: dco_decode_filter_action(arr[3]),
+      enabled: dco_decode_bool(arr[4]),
+      description: dco_decode_opt_String(arr[5]),
+    );
+  }
+
+  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  AppFilterRule dco_decode_box_autoadd_app_filter_rule(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_app_filter_rule(raw);
   }
 
   @protected
@@ -826,6 +1251,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  FilterAction dco_decode_filter_action(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return FilterAction.values[raw as int];
   }
 
   @protected
@@ -988,6 +1419,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<WfpFilterInfo> dco_decode_list_wfp_filter_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_wfp_filter_info).toList();
+  }
+
+  @protected
   NodeHopStats dco_decode_node_hop_stats(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1002,6 +1439,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
   (String, int) dco_decode_record_string_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1009,6 +1452,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('Expected 2 elements, got ${arr.length}');
     }
     return (dco_decode_String(arr[0]), dco_decode_u_32(arr[1]));
+  }
+
+  @protected
+  TrafficDirection dco_decode_traffic_direction(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TrafficDirection.values[raw as int];
   }
 
   @protected
@@ -1039,6 +1488,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt dco_decode_usize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeU64(raw);
+  }
+
+  @protected
+  WfpFilterInfo dco_decode_wfp_filter_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return WfpFilterInfo(
+      filterId: dco_decode_u_64(arr[0]),
+      name: dco_decode_String(arr[1]),
+      appPath: dco_decode_String(arr[2]),
+      direction: dco_decode_traffic_direction(arr[3]),
+      action: dco_decode_filter_action(arr[4]),
+      weight: dco_decode_u_64(arr[5]),
+    );
   }
 
   @protected
@@ -1097,6 +1562,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WfpManager
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  WfpManager
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   EventBusSubscriber
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     SseDeserializer deserializer,
@@ -1145,6 +1634,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WfpManager
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WfpManagerImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -1152,9 +1653,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AppFilterRule sse_decode_app_filter_rule(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_appPath = sse_decode_String(deserializer);
+    var var_direction = sse_decode_traffic_direction(deserializer);
+    var var_action = sse_decode_filter_action(deserializer);
+    var var_enabled = sse_decode_bool(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
+    return AppFilterRule(
+      name: var_name,
+      appPath: var_appPath,
+      direction: var_direction,
+      action: var_action,
+      enabled: var_enabled,
+      description: var_description,
+    );
+  }
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  AppFilterRule sse_decode_box_autoadd_app_filter_rule(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_app_filter_rule(deserializer));
   }
 
   @protected
@@ -1173,6 +1701,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FilterAction sse_decode_filter_action(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return FilterAction.values[inner];
   }
 
   @protected
@@ -1410,6 +1945,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<WfpFilterInfo> sse_decode_list_wfp_filter_info(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <WfpFilterInfo>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_wfp_filter_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   NodeHopStats sse_decode_node_hop_stats(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_targetIp = sse_decode_String(deserializer);
@@ -1425,11 +1974,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   (String, int) sse_decode_record_string_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_field0 = sse_decode_String(deserializer);
     var var_field1 = sse_decode_u_32(deserializer);
     return (var_field0, var_field1);
+  }
+
+  @protected
+  TrafficDirection sse_decode_traffic_direction(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return TrafficDirection.values[inner];
   }
 
   @protected
@@ -1459,6 +2026,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  WfpFilterInfo sse_decode_wfp_filter_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_filterId = sse_decode_u_64(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_appPath = sse_decode_String(deserializer);
+    var var_direction = sse_decode_traffic_direction(deserializer);
+    var var_action = sse_decode_filter_action(deserializer);
+    var var_weight = sse_decode_u_64(deserializer);
+    return WfpFilterInfo(
+      filterId: var_filterId,
+      name: var_name,
+      appPath: var_appPath,
+      direction: var_direction,
+      action: var_action,
+      weight: var_weight,
+    );
   }
 
   @protected
@@ -1524,6 +2110,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    WfpManager self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WfpManagerImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    WfpManager self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WfpManagerImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     EventBusSubscriber self,
     SseSerializer serializer,
@@ -1575,15 +2187,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
+    WfpManager self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WfpManagerImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
   }
 
   @protected
+  void sse_encode_app_filter_rule(
+    AppFilterRule self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.appPath, serializer);
+    sse_encode_traffic_direction(self.direction, serializer);
+    sse_encode_filter_action(self.action, serializer);
+    sse_encode_bool(self.enabled, serializer);
+    sse_encode_opt_String(self.description, serializer);
+  }
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_app_filter_rule(
+    AppFilterRule self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_app_filter_rule(self, serializer);
   }
 
   @protected
@@ -1602,6 +2250,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_filter_action(FilterAction self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -1778,12 +2432,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_wfp_filter_info(
+    List<WfpFilterInfo> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_wfp_filter_info(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_node_hop_stats(NodeHopStats self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.targetIp, serializer);
     sse_encode_f_64(self.latencyMs, serializer);
     sse_encode_f_32(self.packetLoss, serializer);
     sse_encode_String(self.nodeName, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
   }
 
   @protected
@@ -1794,6 +2470,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.$1, serializer);
     sse_encode_u_32(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_traffic_direction(
+    TrafficDirection self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -1823,6 +2508,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_wfp_filter_info(
+    WfpFilterInfo self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.filterId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.appPath, serializer);
+    sse_encode_traffic_direction(self.direction, serializer);
+    sse_encode_filter_action(self.action, serializer);
+    sse_encode_u_64(self.weight, serializer);
   }
 }
 
@@ -1921,4 +2620,122 @@ class PeerRoutePairImpl extends RustOpaque implements PeerRoutePair {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_PeerRoutePairPtr,
   );
+}
+
+@sealed
+class WfpManagerImpl extends RustOpaque implements WfpManager {
+  // Not to be used by end users
+  WfpManagerImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  WfpManagerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_WfpManager,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_WfpManager,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_WfpManagerPtr,
+  );
+
+  /// 为指定应用程序添加过滤规则
+  ///
+  /// # 参数
+  /// * `rule` - 应用程序过滤规则
+  ///
+  /// # 返回值
+  /// * `Result<u64>` - 成功返回过滤器ID，失败返回错误
+  ///
+  /// # 示例
+  /// ```rust
+  /// let rule = AppFilterRule {
+  ///     name: "Block Chrome Outbound".to_string(),
+  ///     app_path: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe".to_string(),
+  ///     direction: TrafficDirection::Outbound,
+  ///     action: FilterAction::Block,
+  ///     enabled: true,
+  ///     description: Some("阻止Chrome的出站连接".to_string()),
+  /// };
+  /// let filter_id = wfp_manager.add_app_filter(&rule)?;
+  /// ```
+  Future<BigInt> addAppFilter({required AppFilterRule rule}) => RustLib
+      .instance
+      .api
+      .crateApiWfpWfpManagerAddAppFilter(that: this, rule: rule);
+
+  /// 清除指定应用程序的所有过滤规则
+  ///
+  /// # 参数
+  /// * `app_path` - 应用程序路径
+  ///
+  /// # 返回值
+  /// * `Result<u32>` - 成功返回清除的规则数量，失败返回错误
+  ///
+  /// # 示例
+  /// ```rust
+  /// let removed_count = wfp_manager.clear_app_filters(
+  ///     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  /// )?;
+  /// println!("已清除 {} 条规则", removed_count);
+  /// ```
+  Future<int> clearAppFilters({required String appPath}) => RustLib.instance.api
+      .crateApiWfpWfpManagerClearAppFilters(that: this, appPath: appPath);
+
+  /// 检查指定应用程序是否被阻止
+  ///
+  /// # 参数
+  /// * `app_path` - 应用程序路径
+  /// * `direction` - 流量方向
+  ///
+  /// # 返回值
+  /// * `Result<bool>` - 成功返回是否被阻止，失败返回错误
+  ///
+  /// # 示例
+  /// ```rust
+  /// let is_blocked = wfp_manager.is_app_blocked(
+  ///     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  ///     &TrafficDirection::Outbound
+  /// )?;
+  /// ```
+  Future<bool> isAppBlocked({
+    required String appPath,
+    required TrafficDirection direction,
+  }) => RustLib.instance.api.crateApiWfpWfpManagerIsAppBlocked(
+    that: this,
+    appPath: appPath,
+    direction: direction,
+  );
+
+  /// 获取所有应用程序过滤器列表
+  ///
+  /// # 返回值
+  /// * `Result<Vec<WfpFilterInfo>>` - 成功返回过滤器信息列表，失败返回错误
+  ///
+  /// # 示例
+  /// ```rust
+  /// let filters = wfp_manager.list_app_filters()?;
+  /// for filter in filters {
+  ///     println!("过滤器: {} - {}", filter.name, filter.app_path);
+  /// }
+  /// ```
+  Future<List<WfpFilterInfo>> listAppFilters() =>
+      RustLib.instance.api.crateApiWfpWfpManagerListAppFilters(that: this);
+
+  /// 移除指定的过滤器
+  ///
+  /// # 参数
+  /// * `filter_id` - 过滤器ID
+  ///
+  /// # 返回值
+  /// * `Result<()>` - 成功返回()，失败返回错误
+  ///
+  /// # 示例
+  /// ```rust
+  /// wfp_manager.remove_filter(filter_id)?;
+  /// ```
+  Future<void> removeFilter({required BigInt filterId}) => RustLib.instance.api
+      .crateApiWfpWfpManagerRemoveFilter(that: this, filterId: filterId);
 }
