@@ -6,7 +6,6 @@
 import 'api/firewall.dart';
 import 'api/hops.dart';
 import 'api/simple.dart';
-import 'api/wfp.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
@@ -36,9 +35,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_PeerRoutePairPtr =>
       wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePairPtr;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_WfpManagerPtr =>
-      wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManagerPtr;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
@@ -67,18 +63,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpManager
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    dynamic raw,
-  );
-
-  @protected
-  WfpManager
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    dynamic raw,
-  );
-
-  @protected
   EventBusSubscriber
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     dynamic raw,
@@ -103,22 +87,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpManager
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    dynamic raw,
-  );
-
-  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
-  AppFilterRule dco_decode_app_filter_rule(dynamic raw);
-
-  @protected
   bool dco_decode_bool(dynamic raw);
-
-  @protected
-  AppFilterRule dco_decode_box_autoadd_app_filter_rule(dynamic raw);
 
   @protected
   FlagsC dco_decode_box_autoadd_flags_c(dynamic raw);
@@ -128,9 +100,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_64(dynamic raw);
-
-  @protected
-  FilterAction dco_decode_filter_action(dynamic raw);
 
   @protected
   FlagsC dco_decode_flags_c(dynamic raw);
@@ -180,19 +149,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<(String, int)> dco_decode_list_record_string_u_32(dynamic raw);
 
   @protected
-  List<WfpFilterInfo> dco_decode_list_wfp_filter_info(dynamic raw);
-
-  @protected
   NodeHopStats dco_decode_node_hop_stats(dynamic raw);
 
   @protected
-  String? dco_decode_opt_String(dynamic raw);
-
-  @protected
   (String, int) dco_decode_record_string_u_32(dynamic raw);
-
-  @protected
-  TrafficDirection dco_decode_traffic_direction(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -208,9 +168,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
-
-  @protected
-  WfpFilterInfo dco_decode_wfp_filter_info(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -240,18 +197,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpManager
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  WfpManager
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   EventBusSubscriber
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     SseDeserializer deserializer,
@@ -276,24 +221,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpManager
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
-  AppFilterRule sse_decode_app_filter_rule(SseDeserializer deserializer);
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
-  AppFilterRule sse_decode_box_autoadd_app_filter_rule(
-    SseDeserializer deserializer,
-  );
 
   @protected
   FlagsC sse_decode_box_autoadd_flags_c(SseDeserializer deserializer);
@@ -303,9 +234,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
-
-  @protected
-  FilterAction sse_decode_filter_action(SseDeserializer deserializer);
 
   @protected
   FlagsC sse_decode_flags_c(SseDeserializer deserializer);
@@ -361,21 +289,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  List<WfpFilterInfo> sse_decode_list_wfp_filter_info(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   NodeHopStats sse_decode_node_hop_stats(SseDeserializer deserializer);
 
   @protected
-  String? sse_decode_opt_String(SseDeserializer deserializer);
-
-  @protected
   (String, int) sse_decode_record_string_u_32(SseDeserializer deserializer);
-
-  @protected
-  TrafficDirection sse_decode_traffic_direction(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -391,9 +308,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  WfpFilterInfo sse_decode_wfp_filter_info(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -431,20 +345,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    WfpManager self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    WfpManager self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     EventBusSubscriber self,
     SseSerializer serializer,
@@ -472,26 +372,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    WfpManager self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
-  void sse_encode_app_filter_rule(AppFilterRule self, SseSerializer serializer);
-
-  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_app_filter_rule(
-    AppFilterRule self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_box_autoadd_flags_c(FlagsC self, SseSerializer serializer);
@@ -501,9 +385,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_filter_action(FilterAction self, SseSerializer serializer);
 
   @protected
   void sse_encode_flags_c(FlagsC self, SseSerializer serializer);
@@ -573,26 +454,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_wfp_filter_info(
-    List<WfpFilterInfo> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_node_hop_stats(NodeHopStats self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_string_u_32(
     (String, int) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_traffic_direction(
-    TrafficDirection self,
     SseSerializer serializer,
   );
 
@@ -610,9 +476,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_wfp_filter_info(WfpFilterInfo self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -763,39 +626,5 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePair =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePairPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManagerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_astral_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManagerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManagerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_astral_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManager =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpManagerPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }
