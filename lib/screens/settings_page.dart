@@ -211,7 +211,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ExpansionTile(
               initiallyExpanded: false, // 默认折叠,
               leading: const Icon(Icons.broadcast_on_personal),
-              title: const Text('广播管理'),
+              title: const Text('转发管理'),
               children: [
                 Builder(
                   builder: (context) {
@@ -288,7 +288,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         }),
                         ListTile(
                           leading: const Icon(Icons.add),
-                          title: const Text('新增广播分组'),
+                          title: const Text('新增转发分组'),
                           onTap: () => addConnectionManager(context),
                         ),
                       ],

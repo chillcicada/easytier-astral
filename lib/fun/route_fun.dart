@@ -8,7 +8,7 @@ Future<void> addConnectionManager(BuildContext context) async {
     context: context,
     builder:
         (context) => AlertDialog(
-          title: const Text('新增广播分组'),
+          title: const Text('新增转发分组'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -75,7 +75,7 @@ Future<void> editConnectionManager(
         (context) => StatefulBuilder(
           builder:
               (context, setState) => AlertDialog(
-                title: const Text('编辑广播分组'),
+                title: const Text('编辑转发分组'),
                 content: SizedBox(
                   width: double.maxFinite,
                   child: SingleChildScrollView(
@@ -259,7 +259,7 @@ Future<void> deleteConnectionManager(
     builder:
         (context) => AlertDialog(
           title: const Text('确认删除'),
-          content: Text('确定要删除广播分组 "${name.isEmpty ? '未命名分组' : name}" 吗？'),
+          content: Text('确定要删除转发分组 "${name.isEmpty ? '未命名分组' : name}" 吗？'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),

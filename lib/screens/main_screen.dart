@@ -4,6 +4,7 @@ import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
 import 'package:astral/screens/server_page.dart';
+import 'package:astral/screens/chat_page.dart';
 import 'package:astral/screens/settings_page.dart';
 import 'package:astral/screens/user_page.dart';
 import 'package:astral/wid/bottom_nav.dart';
@@ -88,7 +89,12 @@ class _MainScreenState extends State<MainScreen>
       label: '服务器', // 导航项标签
       page: const ServerPage(), // 对应的页面
     ),
-
+    NavigationItem(
+      icon: Icons.chat_bubble_outline, // 未选中时的图标
+      activeIcon: Icons.chat_bubble, // 选中时的图标
+      label: '聊天', // 导航项标签
+      page: const ChatPage(), // 对应的页面
+    ),
     NavigationItem(
       icon: Icons.settings_outlined, // 未选中时的图标
       activeIcon: Icons.settings, // 选中时的图标

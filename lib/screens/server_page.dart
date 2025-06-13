@@ -178,7 +178,7 @@ class _ServerPageState extends State<ServerPage> {
           ),
           const SizedBox(width: 16),
           FloatingActionButton(
-            heroTag: '公共服务器',
+            heroTag: 'public_servers_dialog',
             onPressed: () => _showPublicServersDialog(),
             child: const Icon(Icons.public),
           ),
@@ -195,9 +195,7 @@ class _ServerPageState extends State<ServerPage> {
 
   // 显示公共服务器列表对话框
   void _showPublicServersDialog() {
-    // 改为直接收集完整的URL字符串
-    final existingUrls = _aps.servers.value.map((server) => server.url).toList();
-    PublicServersDialog.show(context, _addPublicServer, existingUrls);
+    PublicServersDialog.show(context, _addPublicServer);
   }
 
   // 添加公共服务器

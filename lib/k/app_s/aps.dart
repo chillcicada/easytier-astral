@@ -7,6 +7,7 @@ import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/src/rust/api/firewall.dart';
 import 'package:astral/src/rust/api/hops.dart';
 import 'package:astral/src/rust/api/simple.dart';
+import 'package:astral/services/node_discovery_service.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:astral/k/database/app_data.dart';
@@ -98,7 +99,24 @@ class Aps {
           autoSetMTU.value = await AppDatabase().AllSettings.getAutoSetMTU();
     Aps().updateConnections();
     }
-
+    
+    // 启动节点发现服务
+    _initNodeDiscoveryService();
+  }
+  
+  // 初始化节点发现服务
+  Future<void> _initNodeDiscoveryService() async {
+    try {
+      await nodeDiscoveryService.start();
+      // 使用当前的玩家名称初始化用户信息
+      if (PlayerName.value.isNotEmpty) {
+        await nodeDiscoveryService.updateCurrentUser(
+          userName: PlayerName.value,
+        );
+      }
+    } catch (e) {
+      print('节点发现服务启动失败: $e');
+    }
   }
   // ConnectionManager
   final Signal<List<ConnectionManager>> connections = signal([]);
@@ -147,6 +165,9 @@ class Aps {
   
     /// beta - 参与测试版
   final Signal<bool> beta = signal(false);
+  
+  /// 节点发现服务
+  final NodeDiscoveryService nodeDiscoveryService = NodeDiscoveryService();
   
   /// autoCheckUpdate - 自动检查更新
   final Signal<bool> autoCheckUpdate = signal(true);
@@ -243,6 +264,13 @@ class Aps {
   Future<void> updatePlayerName(String name) async {
     PlayerName.value = name;
     await AppDatabase().AllSettings.setPlayerName(name);
+    
+    // 同步更新节点发现服务中的用户信息
+    try {
+      await nodeDiscoveryService.updateCurrentUser(userName: name);
+    } catch (e) {
+      print('更新节点发现服务用户名失败: $e');
+    }
   }
 
   /// **********************************************************************************************************

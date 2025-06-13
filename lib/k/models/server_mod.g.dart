@@ -42,43 +42,48 @@ const ServerModSchema = CollectionSchema(
       name: r'quic',
       type: IsarType.bool,
     ),
-    r'srv': PropertySchema(
+    r'sortOrder': PropertySchema(
       id: 5,
+      name: r'sortOrder',
+      type: IsarType.long,
+    ),
+    r'srv': PropertySchema(
+      id: 6,
       name: r'srv',
       type: IsarType.bool,
     ),
     r'tcp': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'tcp',
       type: IsarType.bool,
     ),
     r'txt': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'txt',
       type: IsarType.bool,
     ),
     r'udp': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'udp',
       type: IsarType.bool,
     ),
     r'url': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'url',
       type: IsarType.string,
     ),
     r'wg': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'wg',
       type: IsarType.bool,
     ),
     r'ws': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'ws',
       type: IsarType.bool,
     ),
     r'wss': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'wss',
       type: IsarType.bool,
     )
@@ -119,14 +124,15 @@ void _serverModSerialize(
   writer.writeBool(offsets[2], object.https);
   writer.writeString(offsets[3], object.name);
   writer.writeBool(offsets[4], object.quic);
-  writer.writeBool(offsets[5], object.srv);
-  writer.writeBool(offsets[6], object.tcp);
-  writer.writeBool(offsets[7], object.txt);
-  writer.writeBool(offsets[8], object.udp);
-  writer.writeString(offsets[9], object.url);
-  writer.writeBool(offsets[10], object.wg);
-  writer.writeBool(offsets[11], object.ws);
-  writer.writeBool(offsets[12], object.wss);
+  writer.writeLong(offsets[5], object.sortOrder);
+  writer.writeBool(offsets[6], object.srv);
+  writer.writeBool(offsets[7], object.tcp);
+  writer.writeBool(offsets[8], object.txt);
+  writer.writeBool(offsets[9], object.udp);
+  writer.writeString(offsets[10], object.url);
+  writer.writeBool(offsets[11], object.wg);
+  writer.writeBool(offsets[12], object.ws);
+  writer.writeBool(offsets[13], object.wss);
 }
 
 ServerMod _serverModDeserialize(
@@ -142,14 +148,15 @@ ServerMod _serverModDeserialize(
     id: id,
     name: reader.readStringOrNull(offsets[3]) ?? "",
     quic: reader.readBoolOrNull(offsets[4]) ?? false,
-    srv: reader.readBoolOrNull(offsets[5]) ?? false,
-    tcp: reader.readBoolOrNull(offsets[6]) ?? true,
-    txt: reader.readBoolOrNull(offsets[7]) ?? false,
-    udp: reader.readBoolOrNull(offsets[8]) ?? false,
-    url: reader.readStringOrNull(offsets[9]) ?? "",
-    wg: reader.readBoolOrNull(offsets[10]) ?? false,
-    ws: reader.readBoolOrNull(offsets[11]) ?? false,
-    wss: reader.readBoolOrNull(offsets[12]) ?? false,
+    sortOrder: reader.readLongOrNull(offsets[5]) ?? 0,
+    srv: reader.readBoolOrNull(offsets[6]) ?? false,
+    tcp: reader.readBoolOrNull(offsets[7]) ?? true,
+    txt: reader.readBoolOrNull(offsets[8]) ?? false,
+    udp: reader.readBoolOrNull(offsets[9]) ?? false,
+    url: reader.readStringOrNull(offsets[10]) ?? "",
+    wg: reader.readBoolOrNull(offsets[11]) ?? false,
+    ws: reader.readBoolOrNull(offsets[12]) ?? false,
+    wss: reader.readBoolOrNull(offsets[13]) ?? false,
   );
   return object;
 }
@@ -172,20 +179,22 @@ P _serverModDeserializeProp<P>(
     case 4:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 5:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 6:
-      return (reader.readBoolOrNull(offset) ?? true) as P;
-    case 7:
       return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 7:
+      return (reader.readBoolOrNull(offset) ?? true) as P;
     case 8:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 9:
-      return (reader.readStringOrNull(offset) ?? "") as P;
-    case 10:
       return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 10:
+      return (reader.readStringOrNull(offset) ?? "") as P;
     case 11:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 12:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 13:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -506,6 +515,60 @@ extension ServerModQueryFilter
     });
   }
 
+  QueryBuilder<ServerMod, ServerMod, QAfterFilterCondition> sortOrderEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sortOrder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ServerMod, ServerMod, QAfterFilterCondition>
+      sortOrderGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sortOrder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ServerMod, ServerMod, QAfterFilterCondition> sortOrderLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sortOrder',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ServerMod, ServerMod, QAfterFilterCondition> sortOrderBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sortOrder',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<ServerMod, ServerMod, QAfterFilterCondition> srvEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -774,6 +837,18 @@ extension ServerModQuerySortBy on QueryBuilder<ServerMod, ServerMod, QSortBy> {
     });
   }
 
+  QueryBuilder<ServerMod, ServerMod, QAfterSortBy> sortBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ServerMod, ServerMod, QAfterSortBy> sortBySortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.desc);
+    });
+  }
+
   QueryBuilder<ServerMod, ServerMod, QAfterSortBy> sortBySrv() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'srv', Sort.asc);
@@ -945,6 +1020,18 @@ extension ServerModQuerySortThenBy
     });
   }
 
+  QueryBuilder<ServerMod, ServerMod, QAfterSortBy> thenBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ServerMod, ServerMod, QAfterSortBy> thenBySortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.desc);
+    });
+  }
+
   QueryBuilder<ServerMod, ServerMod, QAfterSortBy> thenBySrv() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'srv', Sort.asc);
@@ -1075,6 +1162,12 @@ extension ServerModQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ServerMod, ServerMod, QDistinct> distinctBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sortOrder');
+    });
+  }
+
   QueryBuilder<ServerMod, ServerMod, QDistinct> distinctBySrv() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'srv');
@@ -1160,6 +1253,12 @@ extension ServerModQueryProperty
   QueryBuilder<ServerMod, bool, QQueryOperations> quicProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'quic');
+    });
+  }
+
+  QueryBuilder<ServerMod, int, QQueryOperations> sortOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sortOrder');
     });
   }
 

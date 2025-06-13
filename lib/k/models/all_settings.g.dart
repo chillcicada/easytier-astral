@@ -62,23 +62,28 @@ const AllSettingsSchema = CollectionSchema(
       name: r'room',
       type: IsarType.long,
     ),
-    r'startup': PropertySchema(
+    r'serverSortField': PropertySchema(
       id: 9,
+      name: r'serverSortField',
+      type: IsarType.string,
+    ),
+    r'startup': PropertySchema(
+      id: 10,
       name: r'startup',
       type: IsarType.bool,
     ),
     r'startupAutoConnect': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'startupAutoConnect',
       type: IsarType.bool,
     ),
     r'startupMinimize': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'startupMinimize',
       type: IsarType.bool,
     ),
     r'userListSimple': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'userListSimple',
       type: IsarType.bool,
     )
@@ -129,6 +134,7 @@ int _allSettingsEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.serverSortField.length * 3;
   return bytesCount;
 }
 
@@ -147,10 +153,11 @@ void _allSettingsSerialize(
   writer.writeStringList(offsets[6], object.listenList);
   writer.writeString(offsets[7], object.playerName);
   writer.writeLong(offsets[8], object.room);
-  writer.writeBool(offsets[9], object.startup);
-  writer.writeBool(offsets[10], object.startupAutoConnect);
-  writer.writeBool(offsets[11], object.startupMinimize);
-  writer.writeBool(offsets[12], object.userListSimple);
+  writer.writeString(offsets[9], object.serverSortField);
+  writer.writeBool(offsets[10], object.startup);
+  writer.writeBool(offsets[11], object.startupAutoConnect);
+  writer.writeBool(offsets[12], object.startupMinimize);
+  writer.writeBool(offsets[13], object.userListSimple);
 }
 
 AllSettings _allSettingsDeserialize(
@@ -170,10 +177,11 @@ AllSettings _allSettingsDeserialize(
   object.listenList = reader.readStringList(offsets[6]);
   object.playerName = reader.readStringOrNull(offsets[7]);
   object.room = reader.readLongOrNull(offsets[8]);
-  object.startup = reader.readBool(offsets[9]);
-  object.startupAutoConnect = reader.readBool(offsets[10]);
-  object.startupMinimize = reader.readBool(offsets[11]);
-  object.userListSimple = reader.readBool(offsets[12]);
+  object.serverSortField = reader.readString(offsets[9]);
+  object.startup = reader.readBool(offsets[10]);
+  object.startupAutoConnect = reader.readBool(offsets[11]);
+  object.startupMinimize = reader.readBool(offsets[12]);
+  object.userListSimple = reader.readBool(offsets[13]);
   return object;
 }
 
@@ -203,12 +211,14 @@ P _allSettingsDeserializeProp<P>(
     case 8:
       return (reader.readLongOrNull(offset)) as P;
     case 9:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 10:
       return (reader.readBool(offset)) as P;
     case 11:
       return (reader.readBool(offset)) as P;
     case 12:
+      return (reader.readBool(offset)) as P;
+    case 13:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1229,6 +1239,142 @@ extension AllSettingsQueryFilter
     });
   }
 
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'serverSortField',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'serverSortField',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'serverSortField',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'serverSortField',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition>
+      serverSortFieldIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'serverSortField',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<AllSettings, AllSettings, QAfterFilterCondition> startupEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -1363,6 +1509,19 @@ extension AllSettingsQuerySortBy
   QueryBuilder<AllSettings, AllSettings, QAfterSortBy> sortByRoomDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'room', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterSortBy> sortByServerSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterSortBy>
+      sortByServerSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverSortField', Sort.desc);
     });
   }
 
@@ -1521,6 +1680,19 @@ extension AllSettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<AllSettings, AllSettings, QAfterSortBy> thenByServerSortField() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverSortField', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AllSettings, AllSettings, QAfterSortBy>
+      thenByServerSortFieldDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverSortField', Sort.desc);
+    });
+  }
+
   QueryBuilder<AllSettings, AllSettings, QAfterSortBy> thenByStartup() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startup', Sort.asc);
@@ -1634,6 +1806,14 @@ extension AllSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AllSettings, AllSettings, QDistinct> distinctByServerSortField(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'serverSortField',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<AllSettings, AllSettings, QDistinct> distinctByStartup() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'startup');
@@ -1723,6 +1903,13 @@ extension AllSettingsQueryProperty
   QueryBuilder<AllSettings, int?, QQueryOperations> roomProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'room');
+    });
+  }
+
+  QueryBuilder<AllSettings, String, QQueryOperations>
+      serverSortFieldProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'serverSortField');
     });
   }
 
