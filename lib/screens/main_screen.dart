@@ -84,16 +84,16 @@ class _MainScreenState extends State<MainScreen>
       page: const RoomPage(), // 对应的页面
     ),
     NavigationItem(
+      icon: Icons.chat_bubble_outline, // 未选中时的图标
+      activeIcon: Icons.chat_bubble, // 选中时的图标
+      label: '大厅', // 导航项标签
+      page: const ChatPage(), // 对应的页面
+    ),
+    NavigationItem(
       icon: Icons.dns_outlined, // 未选中时的图标
       activeIcon: Icons.dns, // 选中时的图标Icon(Icons.room_preferences)
       label: '服务器', // 导航项标签
       page: const ServerPage(), // 对应的页面
-    ),
-    NavigationItem(
-      icon: Icons.chat_bubble_outline, // 未选中时的图标
-      activeIcon: Icons.chat_bubble, // 选中时的图标
-      label: '聊天', // 导航项标签
-      page: const ChatPage(), // 对应的页面
     ),
     NavigationItem(
       icon: Icons.settings_outlined, // 未选中时的图标

@@ -4,6 +4,7 @@ import 'package:astral/k/models/net_config.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/k/models/rule_group.dart';
 import 'package:astral/k/models/server_mod.dart';
+import 'package:astral/k/models/user_node.dart';
 import 'package:astral/k/models_mod/all_settings_cz.dart';
 import 'package:astral/k/models_mod/net_config_cz.dart';
 import 'package:astral/k/models_mod/room_cz.dart';
@@ -52,6 +53,7 @@ class AppDatabase {
       RoomSchema,
       AllSettingsSchema,
       ServerModSchema,
+      UserNodeSchema,
     ], directory: dbDir);
     themeSettings = ThemeSettingsRepository(isar);
     netConfigSetting = NetConfigRepository(isar);

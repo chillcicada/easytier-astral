@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/screens/user_list_page.dart';
+import 'package:astral/k/models/user_node.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -35,8 +36,15 @@ class _ChatPageState extends State<ChatPage> {
         isOwn: false,
       ),
     ]);
+    
+    // 设置消息接收回调
+    _aps.nodeDiscoveryService.setMessageCallback((String senderId, String messageId, String message) {
+      _onMessageReceived(senderId, message);
+    });
+    
   }
 
+  @override
   @override
   void dispose() {
     _messageController.dispose();
@@ -63,8 +71,8 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.clear();
     _scrollToBottom();
 
-    // TODO: 这里应该通过P2P网络发送消息
-    // 可以集成现有的网络模块
+    // 向所有在线用户发送消息
+    _broadcastMessage(content);
   }
 
   void _scrollToBottom() {
@@ -78,6 +86,7 @@ class _ChatPageState extends State<ChatPage> {
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -338,6 +347,7 @@ class _ChatPageState extends State<ChatPage> {
           FloatingActionButton.small(
             onPressed: _sendMessage,
             backgroundColor: colorScheme.primary,
+            heroTag: "chat_send",
             child: Icon(
               Icons.send,
               color: colorScheme.onPrimary,
@@ -364,56 +374,69 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   int _getOnlineUserCount() {
-    // TODO: 从P2P网络获取在线用户数量
-    return 3;
+    return _aps.allUsersNode.value.length;
   }
 
-  void _showChatSettings() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('聊天设置'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.notifications_outlined),
-              title: const Text('消息通知'),
-              trailing: Switch(
-                value: true,
-                onChanged: (value) {
-                  // TODO: 实现通知设置
-                },
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.volume_up_outlined),
-              title: const Text('声音提醒'),
-              trailing: Switch(
-                value: true,
-                onChanged: (value) {
-                  // TODO: 实现声音设置
-                },
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.block_outlined),
-              title: const Text('屏蔽列表'),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                // TODO: 显示屏蔽列表
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
+
+
+  void _broadcastMessage(String content) async {
+    // 向所有在线用户发送消息
+    for (final user in _aps.allUsersNode.value) {
+      if (user.userId != _aps.nodeDiscoveryService.currentUser?.userId) {
+        try {
+          await _aps.nodeDiscoveryService.sendMessageToUser(user.userId, content);
+        } catch (e) {
+          print('发送消息给 ${user.userName} 失败: $e');
+        }
+      }
+    }
+  }
+
+  void _onMessageReceived(String senderId, String message) {
+    // 打印所有在线用户信息
+    print('当前在线用户列表:');
+    for (var user in _aps.allUsersNode.value) {
+      print('用户ID: ${user.userId}, 用户名: ${user.userName}, IP: ${user.ipAddress}');
+    }
+
+    // 查找发送者信息并打印详细信息
+    final sender = _aps.allUsersNode.value.firstWhere(
+      (user) => user.userId == senderId,
+      orElse: () {
+        print('未找到ID为 $senderId 的用户，使用默认用户信息');
+        return UserNode(
+          userId: senderId,
+          userName: '未知用户',
+          ipAddress: '',
+          messagePort: 0,
+          statusMessage: '',
+          tags: [],
+        );
+      },
     );
+
+    // 打印找到的发送者详细信息
+    print('发送者详细信息:');
+    print('用户ID: ${sender.userId}');
+    print('用户名: ${sender.userName}');
+    print('IP地址: ${sender.ipAddress}');
+    print('消息端口: ${sender.messagePort}');
+    print('状态消息: ${sender.statusMessage}');
+    print('标签: ${sender.tags.join(", ")}');
+
+    final chatMessage = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      content: message,
+      sender: sender.userName,
+      timestamp: DateTime.now(),
+      isOwn: false,
+    );
+
+    setState(() {
+      _messages.add(chatMessage);
+    });
+
+    _scrollToBottom();
   }
 
   void _showEmojiPicker() {

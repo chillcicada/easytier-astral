@@ -48,4 +48,7 @@ class AllSettings {
   /// 服务器排序字段
   String serverSortField = 'id';
 
+  /// 用户ID
+  String? userId;
+
 }

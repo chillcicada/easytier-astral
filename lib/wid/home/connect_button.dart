@@ -324,6 +324,8 @@ class _ConnectButtonState extends State<ConnectButton>
     });
     Aps().Connec_state.value = CoState.connected;
     Aps().isConnecting.value = true;
+    // 启动消息服务
+    await Aps().nodeDiscoveryService.start();
     if (Platform.isAndroid) {
       _startVpn(ipv4Addr: Aps().ipv4.value, mtu: Aps().mtu.value);
     }
@@ -374,7 +376,8 @@ class _ConnectButtonState extends State<ConnectButton>
     // 取消计时器
     _connectionTimer?.cancel();
     _connectionTimer = null;
-
+    // 停止消息服务
+    Aps().nodeDiscoveryService.stop();
     closeServer();
     Aps().Connec_state.value = CoState.idle;
   }
@@ -538,6 +541,7 @@ class _ConnectButtonState extends State<ConnectButton>
                     Aps().Connec_state.watch(context) == CoState.connecting
                         ? null
                         : _toggleConnection,
+                heroTag: "connect_button",
                 extendedPadding: const EdgeInsets.symmetric(horizontal: 2),
                 splashColor:
                     Aps().Connec_state.watch(context) != CoState.idle

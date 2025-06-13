@@ -4,6 +4,7 @@ import 'package:astral/fun/random_name.dart';
 import 'package:astral/k/models/net_config.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:astral/k/models/server_mod.dart';
+import 'package:astral/k/models/user_node.dart';
 import 'package:astral/src/rust/api/firewall.dart';
 import 'package:astral/src/rust/api/hops.dart';
 import 'package:astral/src/rust/api/simple.dart';
@@ -51,6 +52,10 @@ class Aps {
     updateNetConfig();
     initMisc();
     loadStartupSettings();
+    nodeDiscoveryService.watchOnlineUsers().listen((users) {
+      allUsersNode.value = users;
+    });
+
   }
 
   // 初始化主题设置
@@ -100,24 +105,8 @@ class Aps {
     Aps().updateConnections();
     }
     
-    // 启动节点发现服务
-    _initNodeDiscoveryService();
   }
-  
-  // 初始化节点发现服务
-  Future<void> _initNodeDiscoveryService() async {
-    try {
-      await nodeDiscoveryService.start();
-      // 使用当前的玩家名称初始化用户信息
-      if (PlayerName.value.isNotEmpty) {
-        await nodeDiscoveryService.updateCurrentUser(
-          userName: PlayerName.value,
-        );
-      }
-    } catch (e) {
-      print('节点发现服务启动失败: $e');
-    }
-  }
+
   // ConnectionManager
   final Signal<List<ConnectionManager>> connections = signal([]);
 
@@ -162,12 +151,21 @@ class Aps {
 
   /// userListSimple
   final Signal<bool> userListSimple = signal(false); // 玩家列表
+
+  /// allUsersNode - 所有用户节点
+  final Signal<List<UserNode>> allUsersNode = signal([]);
   
     /// beta - 参与测试版
   final Signal<bool> beta = signal(false);
   
   /// 节点发现服务
-  final NodeDiscoveryService nodeDiscoveryService = NodeDiscoveryService();
+  NodeDiscoveryService? _nodeDiscoveryService;
+  NodeDiscoveryService get nodeDiscoveryService {
+    _nodeDiscoveryService ??= NodeDiscoveryService();
+    return _nodeDiscoveryService!;
+  }
+
+
   
   /// autoCheckUpdate - 自动检查更新
   final Signal<bool> autoCheckUpdate = signal(true);

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,44 +21,39 @@ class _UserListPageState extends State<UserListPage> {
   final TextEditingController _statusController = TextEditingController();
   final TextEditingController _tagController = TextEditingController();
   final Aps _aps = Aps();
-  
+
+  // 过滤后的用户列表
   List<UserNode> _filteredUsers = [];
-  List<UserNode> _allUsers = [];
   String _searchQuery = '';
-  
+
   @override
   void initState() {
     super.initState();
     _initializeService();
-    _loadUsers();
   }
-  
+
   Future<void> _initializeService() async {
     await _nodeService.start();
-  }
-  
-  void _loadUsers() {
-    _nodeService.watchOnlineUsers().listen((users) {
-      if (mounted) {
-        setState(() {
-          _allUsers = users;
-          _filterUsers();
-        });
+    effect(() {
+      if (_searchQuery.isEmpty) {
+        _filteredUsers = _aps.allUsersNode.value;
+      } else {
+        _filteredUsers =
+            _aps.allUsersNode.value.where((user) {
+              return user.userName.toLowerCase().contains(
+                    _searchQuery.toLowerCase(),
+                  ) ||
+                  user.tags.any(
+                    (tag) =>
+                        tag.toLowerCase().contains(_searchQuery.toLowerCase()),
+                  );
+            }).toList();
       }
     });
   }
-  
-  void _filterUsers() {
-    if (_searchQuery.isEmpty) {
-      _filteredUsers = _allUsers;
-    } else {
-      _filteredUsers = _allUsers.where((user) {
-        return user.userName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               user.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
-      }).toList();
-    }
-  }
-  
+
+  void _filterUsers() {}
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -70,7 +66,7 @@ class _UserListPageState extends State<UserListPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDesktop = _aps.isDesktop.watch(context);
-    
+
     return Scaffold(
       body: Column(
         children: [
@@ -80,54 +76,45 @@ class _UserListPageState extends State<UserListPage> {
           _buildSearchBar(colorScheme),
           // 用户列表
           Expanded(
-            child: _filteredUsers.isEmpty
-                ? _buildEmptyState(colorScheme)
-                : _buildUserList(colorScheme),
+            child:
+                _filteredUsers.isEmpty
+                    ? _buildEmptyState(colorScheme)
+                    : _buildUserList(colorScheme),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showUserProfileDialog(context),
-        backgroundColor: colorScheme.primary,
-        child: Icon(
-          Icons.person_add,
-          color: colorScheme.onPrimary,
-        ),
-        tooltip: '编辑个人资料',
-      ),
     );
   }
-  
+
   Widget _buildHeader(ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outline.withOpacity(0.2),
-          ),
+          bottom: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.people_outline,
-            color: colorScheme.primary,
-            size: 24,
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+            tooltip: '返回',
           ),
+          Icon(Icons.people_outline, color: colorScheme.primary, size: 24),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '用户列表',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                '在线用户: ${_allUsers.length}',
+                '在线用户: ${_aps.allUsersNode.watch(context).length}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurface.withOpacity(0.6),
                 ),
@@ -147,7 +134,7 @@ class _UserListPageState extends State<UserListPage> {
       ),
     );
   }
-  
+
   Widget _buildSearchBar(ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -155,25 +142,23 @@ class _UserListPageState extends State<UserListPage> {
         controller: _searchController,
         decoration: InputDecoration(
           hintText: '搜索用户或标签...',
-          prefixIcon: Icon(
-            Icons.search,
-            color: colorScheme.onSurfaceVariant,
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchQuery = '';
-                      _filterUsers();
-                    });
-                  },
-                  icon: Icon(
-                    Icons.clear,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                )
-              : null,
+          prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
+          suffixIcon:
+              _searchQuery.isNotEmpty
+                  ? IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _searchQuery = '';
+                        _filterUsers();
+                      });
+                    },
+                    icon: Icon(
+                      Icons.clear,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                  : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -190,7 +175,7 @@ class _UserListPageState extends State<UserListPage> {
       ),
     );
   }
-  
+
   Widget _buildEmptyState(ColorScheme colorScheme) {
     return Center(
       child: Column(
@@ -219,7 +204,7 @@ class _UserListPageState extends State<UserListPage> {
       ),
     );
   }
-  
+
   Widget _buildUserList(ColorScheme colorScheme) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -230,10 +215,10 @@ class _UserListPageState extends State<UserListPage> {
       },
     );
   }
-  
+
   Widget _buildUserCard(UserNode user, ColorScheme colorScheme) {
     final isCurrentUser = user.userId == _nodeService.currentUser?.userId;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -245,7 +230,8 @@ class _UserListPageState extends State<UserListPage> {
               child: Text(
                 user.userName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                  fontWeight:
+                      isCurrentUser ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -285,7 +271,10 @@ class _UserListPageState extends State<UserListPage> {
                 child: Wrap(
                   spacing: 4,
                   runSpacing: 4,
-                  children: user.tags.map((tag) => _buildTagChip(tag, colorScheme)).toList(),
+                  children:
+                      user.tags
+                          .map((tag) => _buildTagChip(tag, colorScheme))
+                          .toList(),
                 ),
               ),
             Padding(
@@ -324,62 +313,57 @@ class _UserListPageState extends State<UserListPage> {
             ),
           ],
         ),
-        trailing: isCurrentUser
-            ? IconButton(
-                onPressed: () => _showUserProfileDialog(context),
-                icon: Icon(
-                  Icons.edit_outlined,
-                  color: colorScheme.primary,
+        trailing:
+            isCurrentUser
+                ? IconButton(
+                  onPressed: () => _showUserProfileDialog(context),
+                  icon: Icon(Icons.edit_outlined, color: colorScheme.primary),
+                  tooltip: '编辑资料',
+                )
+                : IconButton(
+                  onPressed: () => _showUserDetailsDialog(context, user),
+                  icon: Icon(
+                    Icons.info_outline,
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                  tooltip: '用户详情',
                 ),
-                tooltip: '编辑资料',
-              )
-            : IconButton(
-                onPressed: () => _showUserDetailsDialog(context, user),
-                icon: Icon(
-                  Icons.info_outline,
-                  color: colorScheme.onSurface.withOpacity(0.7),
-                ),
-                tooltip: '用户详情',
-              ),
       ),
     );
   }
-  
+
   Widget _buildUserAvatar(UserNode user, ColorScheme colorScheme) {
     if (user.avatar != null && user.avatar!.isNotEmpty) {
       try {
         // 尝试解析base64图片
         final bytes = base64Decode(user.avatar!);
-        return CircleAvatar(
-          radius: 24,
-          backgroundImage: MemoryImage(bytes),
-        );
+        return CircleAvatar(radius: 20, backgroundImage: MemoryImage(bytes));
       } catch (e) {
         // 如果不是base64，可能是URL或文件路径
         if (user.avatar!.startsWith('http')) {
           return CircleAvatar(
-            radius: 24,
+            radius: 20,
             backgroundImage: NetworkImage(user.avatar!),
           );
         }
       }
     }
-    
+
     // 默认头像
     return CircleAvatar(
-      radius: 24,
+      radius: 20,
       backgroundColor: colorScheme.primary.withOpacity(0.1),
       child: Text(
         user.userName.isNotEmpty ? user.userName[0].toUpperCase() : '?',
         style: TextStyle(
           color: colorScheme.primary,
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
-  
+
   Widget _buildTagChip(String tag, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -395,150 +379,155 @@ class _UserListPageState extends State<UserListPage> {
       ),
     );
   }
-  
+
   void _showUserProfileDialog(BuildContext context) {
     final currentUser = _nodeService.currentUser;
     if (currentUser == null) return;
-    
+
     _statusController.text = currentUser.statusMessage ?? '';
     final tags = List<String>.from(currentUser.tags);
-    
+
     showDialog(
       context: context,
-      builder: (context) => _UserProfileDialog(
-        currentUser: currentUser,
-        statusController: _statusController,
-        tagController: _tagController,
-        tags: tags,
-        onSave: (userName, avatar, newTags, statusMessage) async {
-          await _nodeService.updateCurrentUser(
-            userName: userName,
-            avatar: avatar,
-            tags: newTags,
-            statusMessage: statusMessage,
-          );
-          
-          // 同时更新Aps中的玩家名称
-          if (userName != null && userName.isNotEmpty) {
-            await _aps.updatePlayerName(userName);
-          }
-        },
-      ),
+      builder:
+          (context) => _UserProfileDialog(
+            currentUser: currentUser,
+            statusController: _statusController,
+            tagController: _tagController,
+            tags: tags,
+            onSave: (userName, avatar, newTags, statusMessage) async {
+              await _nodeService.updateCurrentUser(
+                userName: userName,
+                avatar: avatar,
+                tags: newTags,
+                statusMessage: statusMessage,
+              );
+
+              // 同时更新Aps中的玩家名称
+              if (userName != null && userName.isNotEmpty) {
+                await _aps.updatePlayerName(userName);
+              }
+            },
+          ),
     );
   }
-  
+
   void _showUserDetailsDialog(BuildContext context, UserNode user) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('用户详情'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      builder:
+          (context) => AlertDialog(
+            title: Text('用户详情'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildUserAvatar(user, Theme.of(context).colorScheme),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.userName,
-                        style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  children: [
+                    _buildUserAvatar(user, Theme.of(context).colorScheme),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.userName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          if (user.statusMessage?.isNotEmpty == true)
+                            Text(
+                              user.statusMessage!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
                       ),
-                      if (user.statusMessage?.isNotEmpty == true)
-                        Text(
-                          user.statusMessage!,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (user.tags.isNotEmpty) ...[
+                  Text('标签:', style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children:
+                        user.tags
+                            .map(
+                              (tag) => _buildTagChip(
+                                tag,
+                                Theme.of(context).colorScheme,
+                              ),
+                            )
+                            .toList(),
                   ),
+                  const SizedBox(height: 16),
+                ],
+                Text(
+                  '用户ID: ${user.userId}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '最后活跃: ${user.lastSeen != null ? _formatTime(user.lastSeen!) : '未知'}',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            if (user.tags.isNotEmpty) ...[
-              Text(
-                '标签:',
-                style: Theme.of(context).textTheme.titleSmall,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('关闭'),
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: user.tags.map((tag) => 
-                  _buildTagChip(tag, Theme.of(context).colorScheme)
-                ).toList(),
-              ),
-              const SizedBox(height: 16),
             ],
-            Text(
-              '用户ID: ${user.userId}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '最后活跃: ${user.lastSeen != null ? _formatTime(user.lastSeen!) : '未知'}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
           ),
-        ],
-      ),
     );
   }
-  
+
   void _showSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('节点设置'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.refresh),
-              title: const Text('刷新用户列表'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _loadUsers();
-              },
+      builder:
+          (context) => AlertDialog(
+            title: const Text('节点设置'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.refresh),
+                  title: const Text('刷新用户列表'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cleaning_services),
+                  title: const Text('清理离线用户'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    // 手动清理离线用户
+                    await _nodeService.cleanupOfflineUsers();
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(const SnackBar(content: Text('已清理离线用户')));
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.cleaning_services),
-              title: const Text('清理离线用户'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                // 手动清理离线用户
-                await _nodeService.cleanupOfflineUsers();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('已清理离线用户')),
-                );
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('关闭'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
-  
+
   String _formatTime(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}天前';
     } else if (difference.inHours > 0) {
@@ -557,7 +546,7 @@ class _UserProfileDialog extends StatefulWidget {
   final TextEditingController tagController;
   final List<String> tags;
   final Function(String?, String?, List<String>, String?) onSave;
-  
+
   const _UserProfileDialog({
     required this.currentUser,
     required this.statusController,
@@ -565,7 +554,7 @@ class _UserProfileDialog extends StatefulWidget {
     required this.tags,
     required this.onSave,
   });
-  
+
   @override
   State<_UserProfileDialog> createState() => _UserProfileDialogState();
 }
@@ -574,7 +563,7 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
   late TextEditingController _nameController;
   String? _avatarBase64;
   late List<String> _tags;
-  
+
   @override
   void initState() {
     super.initState();
@@ -582,17 +571,17 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
     _avatarBase64 = widget.currentUser.avatar;
     _tags = List<String>.from(widget.tags);
   }
-  
+
   @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return AlertDialog(
       title: const Text('编辑个人资料'),
       content: SingleChildScrollView(
@@ -612,18 +601,19 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
                     color: colorScheme.outline.withOpacity(0.5),
                   ),
                 ),
-                child: _avatarBase64 != null
-                    ? ClipOval(
-                        child: Image.memory(
-                          base64Decode(_avatarBase64!),
-                          fit: BoxFit.cover,
+                child:
+                    _avatarBase64 != null
+                        ? ClipOval(
+                          child: Image.memory(
+                            base64Decode(_avatarBase64!),
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                        : Icon(
+                          Icons.add_a_photo,
+                          size: 32,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                      )
-                    : Icon(
-                        Icons.add_a_photo,
-                        size: 32,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
               ),
             ),
             const SizedBox(height: 16),
@@ -671,11 +661,16 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
               Wrap(
                 spacing: 4,
                 runSpacing: 4,
-                children: _tags.map((tag) => Chip(
-                  label: Text(tag),
-                  deleteIcon: const Icon(Icons.close, size: 16),
-                  onDeleted: () => _removeTag(tag),
-                )).toList(),
+                children:
+                    _tags
+                        .map(
+                          (tag) => Chip(
+                            label: Text(tag),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () => _removeTag(tag),
+                          ),
+                        )
+                        .toList(),
               ),
           ],
         ),
@@ -685,14 +680,11 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
-        ElevatedButton(
-          onPressed: _saveProfile,
-          child: const Text('保存'),
-        ),
+        ElevatedButton(onPressed: _saveProfile, child: const Text('保存')),
       ],
     );
   }
-  
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
@@ -701,7 +693,7 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
       maxHeight: 200,
       imageQuality: 80,
     );
-    
+
     if (pickedFile != null) {
       final bytes = await File(pickedFile.path).readAsBytes();
       setState(() {
@@ -709,7 +701,7 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
       });
     }
   }
-  
+
   void _addTag(String tag) {
     final trimmedTag = tag.trim();
     if (trimmedTag.isNotEmpty && !_tags.contains(trimmedTag)) {
@@ -719,13 +711,13 @@ class _UserProfileDialogState extends State<_UserProfileDialog> {
       widget.tagController.clear();
     }
   }
-  
+
   void _removeTag(String tag) {
     setState(() {
       _tags.remove(tag);
     });
   }
-  
+
   void _saveProfile() {
     widget.onSave(
       _nameController.text.trim(),

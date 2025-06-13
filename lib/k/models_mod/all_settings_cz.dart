@@ -370,6 +370,29 @@ class AllSettingsCz {
     }
   }
 
+  /// 获取服务器排序字段
+  Future<String> getServerSortField() async {
+    AllSettings? settings = await _isar.allSettings.get(1);
+    return settings?.serverSortField ?? AllSettings().serverSortField;
+  }
+
+  /// 获取用户ID
+  Future<String?> getUserId() async {
+    AllSettings? settings = await _isar.allSettings.get(1);
+    return settings?.userId;
+  }
+
+  /// 设置用户ID
+  Future<void> setUserId(String userId) async {
+    AllSettings? settings = await _isar.allSettings.get(1);
+    if (settings != null) {
+      settings.userId = userId;
+      await _isar.writeTxn(() async {
+        await _isar.allSettings.put(settings);
+      });
+    }
+  }
+
 // 在同一个文件中添加这个方法
 Future<String> _getDeviceName() async {
   try {

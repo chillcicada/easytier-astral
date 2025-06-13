@@ -12,30 +12,35 @@ class UserNodeCz {
 
   /// 添加或更新用户节点
   Future<void> addOrUpdateUserNode(UserNode userNode) async {
-    await _isar.writeTxn(() async {
-      // 先查找是否已存在相同userId的用户
-      final existingUser = await _isar.userNodes
-          .filter()
-          .userIdEqualTo(userNode.userId)
-          .findFirst();
-      
-      if (existingUser != null) {
-        // 更新现有用户信息
-        existingUser.userName = userNode.userName;
-        existingUser.avatar = userNode.avatar;
-        existingUser.tags = userNode.tags;
-        existingUser.statusMessage = userNode.statusMessage;
-        existingUser.lastSeen = userNode.lastSeen;
-        existingUser.isOnline = userNode.isOnline;
-        existingUser.ipAddress = userNode.ipAddress;
-        existingUser.latency = userNode.latency;
+    try {
+      await _isar.writeTxn(() async {
+        // 先查找是否已存在相同userId的用户
+        final existingUser = await _isar.userNodes
+            .filter()
+            .userIdEqualTo(userNode.userId)
+            .findFirst();
         
-        await _isar.userNodes.put(existingUser);
-      } else {
-        // 添加新用户
-        await _isar.userNodes.put(userNode);
-      }
-    });
+        if (existingUser != null) {
+          // 更新现有用户信息
+          existingUser.userName = userNode.userName;
+          existingUser.avatar = userNode.avatar;
+          existingUser.tags = userNode.tags;
+          existingUser.statusMessage = userNode.statusMessage;
+          existingUser.lastSeen = userNode.lastSeen;
+          existingUser.isOnline = userNode.isOnline;
+          existingUser.ipAddress = userNode.ipAddress;
+          existingUser.latency = userNode.latency;
+          existingUser.messagePort = userNode.messagePort;
+          await _isar.userNodes.put(existingUser);
+        } else {
+          // 添加新用户
+          await _isar.userNodes.put(userNode);
+        }
+      });
+    } catch (e, stack) {
+      print('addOrUpdateUserNode异常: \$e');
+      print(stack);
+    }
   }
 
   /// 获取所有用户节点

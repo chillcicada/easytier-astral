@@ -52,23 +52,28 @@ const UserNodeSchema = CollectionSchema(
       name: r'latency',
       type: IsarType.long,
     ),
-    r'statusMessage': PropertySchema(
+    r'messagePort': PropertySchema(
       id: 7,
+      name: r'messagePort',
+      type: IsarType.long,
+    ),
+    r'statusMessage': PropertySchema(
+      id: 8,
       name: r'statusMessage',
       type: IsarType.string,
     ),
     r'tags': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'tags',
       type: IsarType.stringList,
     ),
     r'userId': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'userId',
       type: IsarType.string,
     ),
     r'userName': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'userName',
       type: IsarType.string,
     )
@@ -136,10 +141,11 @@ void _userNodeSerialize(
   writer.writeBool(offsets[4], object.isOnline);
   writer.writeDateTime(offsets[5], object.lastSeen);
   writer.writeLong(offsets[6], object.latency);
-  writer.writeString(offsets[7], object.statusMessage);
-  writer.writeStringList(offsets[8], object.tags);
-  writer.writeString(offsets[9], object.userId);
-  writer.writeString(offsets[10], object.userName);
+  writer.writeLong(offsets[7], object.messagePort);
+  writer.writeString(offsets[8], object.statusMessage);
+  writer.writeStringList(offsets[9], object.tags);
+  writer.writeString(offsets[10], object.userId);
+  writer.writeString(offsets[11], object.userName);
 }
 
 UserNode _userNodeDeserialize(
@@ -155,10 +161,11 @@ UserNode _userNodeDeserialize(
     isOnline: reader.readBoolOrNull(offsets[4]) ?? false,
     lastSeen: reader.readDateTimeOrNull(offsets[5]),
     latency: reader.readLongOrNull(offsets[6]),
-    statusMessage: reader.readStringOrNull(offsets[7]),
-    tags: reader.readStringList(offsets[8]) ?? const [],
-    userId: reader.readString(offsets[9]),
-    userName: reader.readString(offsets[10]),
+    messagePort: reader.readLongOrNull(offsets[7]),
+    statusMessage: reader.readStringOrNull(offsets[8]),
+    tags: reader.readStringList(offsets[9]) ?? const [],
+    userId: reader.readString(offsets[10]),
+    userName: reader.readString(offsets[11]),
   );
   object.id = id;
   return object;
@@ -186,12 +193,14 @@ P _userNodeDeserializeProp<P>(
     case 6:
       return (reader.readLongOrNull(offset)) as P;
     case 7:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
-      return (reader.readStringList(offset) ?? const []) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringList(offset) ?? const []) as P;
     case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -851,6 +860,77 @@ extension UserNodeQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'latency',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition> messagePortIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'messagePort',
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition>
+      messagePortIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'messagePort',
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition> messagePortEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'messagePort',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition>
+      messagePortGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'messagePort',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition> messagePortLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'messagePort',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterFilterCondition> messagePortBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'messagePort',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1579,6 +1659,18 @@ extension UserNodeQuerySortBy on QueryBuilder<UserNode, UserNode, QSortBy> {
     });
   }
 
+  QueryBuilder<UserNode, UserNode, QAfterSortBy> sortByMessagePort() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messagePort', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterSortBy> sortByMessagePortDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messagePort', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserNode, UserNode, QAfterSortBy> sortByStatusMessage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusMessage', Sort.asc);
@@ -1714,6 +1806,18 @@ extension UserNodeQuerySortThenBy
     });
   }
 
+  QueryBuilder<UserNode, UserNode, QAfterSortBy> thenByMessagePort() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messagePort', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserNode, UserNode, QAfterSortBy> thenByMessagePortDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messagePort', Sort.desc);
+    });
+  }
+
   QueryBuilder<UserNode, UserNode, QAfterSortBy> thenByStatusMessage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusMessage', Sort.asc);
@@ -1797,6 +1901,12 @@ extension UserNodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<UserNode, UserNode, QDistinct> distinctByMessagePort() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'messagePort');
+    });
+  }
+
   QueryBuilder<UserNode, UserNode, QDistinct> distinctByStatusMessage(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1873,6 +1983,12 @@ extension UserNodeQueryProperty
   QueryBuilder<UserNode, int?, QQueryOperations> latencyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'latency');
+    });
+  }
+
+  QueryBuilder<UserNode, int?, QQueryOperations> messagePortProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'messagePort');
     });
   }
 

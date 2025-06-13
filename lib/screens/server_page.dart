@@ -161,7 +161,7 @@ class _ServerPageState extends State<ServerPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            heroTag: 'sort',
+            heroTag: 'server_sort',
             onPressed: () async {
               final currentServers = _aps.servers.value;
               final reorderedServers = await ServerReorderSheet.show(context, currentServers);

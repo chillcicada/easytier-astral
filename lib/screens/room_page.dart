@@ -245,7 +245,7 @@ class _RoomPageState extends State<RoomPage> {
                 children: [
                   // 排序按钮移到最前
                   FloatingActionButton(
-                    heroTag: 'sort',
+                    heroTag: 'room_sort',
                     onPressed: () {
                       RoomReorderSheet.show(context, _aps.rooms.value);
                     },

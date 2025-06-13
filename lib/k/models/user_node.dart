@@ -27,6 +27,9 @@ class UserNode {
   /// IP地址
   String? ipAddress;
   
+  /// 消息接收端口
+  int? messagePort;
+  
   /// 网络延迟（毫秒）
   int? latency;
   
@@ -44,6 +47,7 @@ class UserNode {
     DateTime? lastSeen,
     this.isOnline = false,
     this.ipAddress,
+    this.messagePort,
     this.latency,
     this.statusMessage,
     DateTime? createdAt,
@@ -62,6 +66,7 @@ class UserNode {
       'avatar': avatar,
       'tags': tags,
       'statusMessage': statusMessage,
+      'messagePort': messagePort,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
   }
@@ -74,6 +79,7 @@ class UserNode {
       avatar: data['avatar'],
       tags: List<String>.from(data['tags'] ?? []),
       statusMessage: data['statusMessage'],
+      messagePort: data['messagePort'],
       lastSeen: DateTime.fromMillisecondsSinceEpoch(
         data['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
       ),
@@ -87,10 +93,9 @@ class UserNode {
     lastSeen = DateTime.now();
   }
   
-  /// 检查是否离线（超过30秒未收到广播）
   bool get isOffline {
     final lastSeenTime = lastSeen;
     if (lastSeenTime == null) return true;
-    return DateTime.now().difference(lastSeenTime).inSeconds > 30;
+    return DateTime.now().difference(lastSeenTime).inSeconds > 10;
   }
 }
