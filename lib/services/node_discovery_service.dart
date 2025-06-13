@@ -9,6 +9,7 @@ import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/k/database/app_data.dart';
 import 'package:astral/k/models_mod/all_settings_cz.dart';
 import 'package:astral/k/models_mod/user_node_cz.dart';
+import 'package:astral/services/encryption_service.dart';
 
 import '../k/models/user_node.dart';
 
@@ -24,6 +25,7 @@ class NodeDiscoveryService {
   final UserNodeCz _userNodeCz = UserNodeCz();
   AllSettingsCz? _allSettingsCz;
   Aps? _aps;
+  final EncryptionService _encryptionService = EncryptionService();
   
   /// 当前用户节点信息
   UserNode? _currentUser;
@@ -559,7 +561,20 @@ class NodeDiscoveryService {
       final data = jsonDecode(message) as Map<String, dynamic>;
       final fromUserId = data['fromUserId'] as String;
       final fromUserName = data['fromUserName'] as String;
-      final messageContent = data['message'] as String;
+      String messageContent = data['message'] as String;
+      
+      // 获取当前房间密码用于解密
+      final currentRoom = Aps().selectroom.value;
+      
+      // 如果当前房间是保护房间且消息看起来是加密的，则尝试解密
+      if (currentRoom != null && currentRoom.encrypted && currentRoom.password.isNotEmpty) {
+        if (_encryptionService.isEncryptedMessage(messageContent)) {
+          final decryptedMessage = _encryptionService.decryptMessage(messageContent, currentRoom.password);
+          print('收到加密消息，解密前: $messageContent');
+          print('解密后: $decryptedMessage');
+          messageContent = decryptedMessage;
+        }
+      }
       
       print('收到来自 $fromUserName ($fromIpAddress) 的消息: $messageContent');
       
@@ -585,12 +600,23 @@ class NodeDiscoveryService {
         return false;
       }
       
+      // 获取当前房间密码用于加密
+      final currentRoom = Aps().selectroom.value;
+      String encryptedMessage = message;
+      
+      // 如果当前房间是保护房间，则加密消息
+      if (currentRoom != null && currentRoom.encrypted && currentRoom.password.isNotEmpty) {
+        encryptedMessage = _encryptionService.encryptMessage(message, currentRoom.password);
+        print('消息已加密，原文: $message');
+        print('加密后: $encryptedMessage');
+      }
+      
       // 构建消息
       final messageData = {
         'type': 'direct_message',
         'fromUserId': _currentUser?.userId ?? '',
         'fromUserName': _currentUser?.userName ?? '',
-        'message': message,
+        'message': encryptedMessage,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       };
       

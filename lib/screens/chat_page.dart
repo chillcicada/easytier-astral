@@ -31,13 +31,6 @@ class _ChatPageState extends State<ChatPage> {
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
         isOwn: false,
       ),
-      ChatMessage(
-        id: '2',
-        content: '这是一个基于P2P网络的聊天系统',
-        sender: 'System',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
-        isOwn: false,
-      ),
     ]);
 
     // 设置消息接收回调
@@ -103,6 +96,39 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDesktop = _aps.isDesktop.watch(context);
+    final currentRoom = _aps.selectroom.watch(context);
+
+    // 检查当前房间是否为保护类型
+    if (currentRoom == null || !currentRoom.encrypted) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: colorScheme.onSurface.withOpacity(0.3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '此房间非保护房间',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '聊天功能仅在保护房间中可用',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: Column(

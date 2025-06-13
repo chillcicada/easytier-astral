@@ -324,8 +324,11 @@ class _ConnectButtonState extends State<ConnectButton>
     });
     Aps().Connec_state.value = CoState.connected;
     Aps().isConnecting.value = true;
-    // 启动消息服务
-    await Aps().nodeDiscoveryService.start();
+    // 只有当前选中房间类型为保护类型的才启动消息服务
+    final currentRoom = Aps().selectroom.value;
+    if (currentRoom != null && currentRoom.encrypted) {
+      await Aps().nodeDiscoveryService.start();
+    }
     if (Platform.isAndroid) {
       _startVpn(ipv4Addr: Aps().ipv4.value, mtu: Aps().mtu.value);
     }

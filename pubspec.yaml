@@ -3,7 +3,7 @@ description: "astral"
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 
-version: 2.0.0-109
+version: 2.0.0-111
 
 environment:
   sdk: ^3.7.2
@@ -50,6 +50,8 @@ dependencies:
   permission_handler: ^11.0.1
   image_picker: ^1.1.2
   photo_view: ^0.15.0
+  crypto: ^3.0.3
+  pointycastle: ^4.0.0
 
 dev_dependencies:
   flutter_test:
