@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/screens/user_list_page.dart';
 import 'package:astral/k/models/user_node.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert'; // 用于base64编码
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -62,6 +64,7 @@ class _ChatPageState extends State<ChatPage> {
       sender: '我',
       timestamp: DateTime.now(),
       isOwn: true,
+      type: MessageType.text,
     );
 
     setState(() {
@@ -119,7 +122,7 @@ class _ChatPageState extends State<ChatPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '去中心化聊天',
+                      '大厅',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -260,14 +263,20 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                       ),
                     ),
-                  Text(
-                    message.content,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: message.isOwn
-                          ? colorScheme.onPrimary
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  message.type == MessageType.text
+                      ? Text(
+                          message.content,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: message.isOwn
+                                ? colorScheme.onPrimary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      : Image.memory(
+                          base64Decode(message.content),
+                          width: 200,
+                          fit: BoxFit.cover,
+                        ),
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
@@ -315,6 +324,12 @@ class _ChatPageState extends State<ChatPage> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(Icons.image, color: colorScheme.onSurfaceVariant),
+            onPressed: _sendImage,
+            tooltip: '发送图片',
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -330,17 +345,15 @@ class _ChatPageState extends State<ChatPage> {
                   horizontal: 20,
                   vertical: 12,
                 ),
-                prefixIcon: IconButton(
-                  onPressed: _showEmojiPicker,
-                  icon: Icon(
-                    Icons.emoji_emotions_outlined,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                
               ),
               maxLines: null,
               textInputAction: isDesktop ? TextInputAction.newline : TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(),
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  _sendMessage();
+                }
+              },
             ),
           ),
           const SizedBox(width: 8),
@@ -426,10 +439,11 @@ class _ChatPageState extends State<ChatPage> {
 
     final chatMessage = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      content: message,
+      content: message.startsWith('image_base64:') ? message.substring('image_base64:'.length) : message,
       sender: sender.userName,
       timestamp: DateTime.now(),
       isOwn: false,
+      type: message.startsWith('image_base64:') ? MessageType.image : MessageType.text,
     );
 
     setState(() {
@@ -439,15 +453,50 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
   }
 
-  void _showEmojiPicker() {
-    // TODO: 实现表情选择器
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('表情选择器功能待实现'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _sendImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      // 在这里处理图片发送逻辑
+      final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+      final imageBytes = await image.readAsBytes();
+      final base64Image = base64Encode(imageBytes);
+      final imageMessageContent = 'image_base64:$base64Image';
+
+      // 发送Base64编码的图片数据
+      final onlineUsers = await _aps.nodeDiscoveryService.getOnlineUsers();
+      for (var user in onlineUsers) {
+        if (user.userId != _aps.nodeDiscoveryService.currentUser?.userId) {
+          await _aps.nodeDiscoveryService.sendMessageToUser(user.userId, imageMessageContent);
+        }
+      }
+
+      // 更新本地消息列表时，也使用去除前缀的纯Base64数据
+      final localChatMessage = ChatMessage(
+        id: messageId,
+        content: base64Image, // 存储纯Base64编码的图片数据
+        sender: '我',
+        timestamp: DateTime.now(),
+        isOwn: true,
+        type: MessageType.image,
+        imageUrl: null,
+      );
+
+      setState(() {
+        _messages.add(localChatMessage);
+      });
+      _scrollToBottom();
+      // No return here, allow the function to complete normally if image is picked.
+      // If image is not picked (image == null), the rest of the function will not execute this block.
+    }
+    // If no image is picked, the function will simply end here.
   }
+}
+
+enum MessageType {
+  text,
+  image,
 }
 
 class ChatMessage {
@@ -456,6 +505,8 @@ class ChatMessage {
   final String sender;
   final DateTime timestamp;
   final bool isOwn;
+  final MessageType type;
+  final String? imageUrl;
 
   ChatMessage({
     required this.id,
@@ -463,5 +514,7 @@ class ChatMessage {
     required this.sender,
     required this.timestamp,
     required this.isOwn,
+    this.type = MessageType.text,
+    this.imageUrl,
   });
 }
