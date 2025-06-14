@@ -152,6 +152,30 @@ class Aps {
   /// userListSimple
   final Signal<bool> userListSimple = signal(false); // 玩家列表
 
+  /// 添加排序选项状态
+  final Signal<int> sortOption = signal(0); // 0: 不排序, 1: 按延迟排序, 2: 按用户名长度排序
+
+  /// 设置sortOption
+  Future<void> setSortOption(int option) async {
+    sortOption.value = option;
+  }
+
+  /// 添加排序顺序状态
+  final Signal<int> sortOrder = signal(0); // 0: 升序, 1: 降序
+
+  /// 添加显示模式状态
+  final Signal<int> displayMode = signal(0); // 0: 默认, 1: 仅用户, 2: 仅服务器
+
+  /// 设置sortOrder
+  Future<void> setSortOrder(int order) async {
+    sortOrder.value = order;
+  }
+
+  /// 设置displayMode
+  Future<void> setDisplayMode(int mode) async {
+    displayMode.value = mode;
+  }
+
   /// allUsersNode - 所有用户节点
   final Signal<List<UserNode>> allUsersNode = signal([]);
   

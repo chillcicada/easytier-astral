@@ -5,6 +5,7 @@ import 'package:astral/wid/mini_user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:astral/wid/room_settings_sheet.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -19,6 +20,11 @@ class _UserPageState extends State<UserPage> {
     final colorScheme = Theme.of(context).colorScheme;
     // 使用 Riverpod 监听节点数据
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => RoomSettingsSheet.show(context),
+        child: const Icon(Icons.bar_chart),
+        tooltip: '房间设置',
+      ),
       body: Builder(
         builder: (context) {
           final netStatus = Aps().netStatus.watch(context);
@@ -73,6 +79,43 @@ class _UserPageState extends State<UserPage> {
               ),
             );
           } else {
+            // 获取排序选项
+            final sortOption = Aps().sortOption.watch(context);
+            // 获取排序顺序
+            final sortOrder = Aps().sortOrder.watch(context);
+            // 获取显示模式
+            final displayMode = Aps().displayMode.watch(context);
+            // 获取原始节点列表
+            var nodes = Aps().netStatus.watch(context)!.nodes;
+            
+            // 根据排序选项对节点进行排序
+            if (sortOption == 1) {
+              // 按延迟排序
+              nodes.sort((a, b) {
+                int comparison = a.latencyMs.compareTo(b.latencyMs);
+                return sortOrder == 0 ? comparison : -comparison;
+              });
+            } else if (sortOption == 2) {
+              // 按用户名长度排序
+              nodes.sort((a, b) {
+                int comparison = a.hostname.length.compareTo(b.hostname.length);
+                return sortOrder == 0 ? comparison : -comparison;
+              });
+            }
+            // 如果sortOption为0，则不排序
+
+            // 根据显示模式过滤节点
+            List<KVNodeInfo> filteredNodes = nodes;
+            if (displayMode == 1) {
+              // 仅显示用户（排除服务器）
+              filteredNodes = nodes.where((node) => 
+                  !node.hostname.startsWith('PublicServer_')).toList();
+            } else if (displayMode == 2) {
+              // 仅显示服务器
+              filteredNodes = nodes.where((node) => 
+                  node.hostname.startsWith('PublicServer_')).toList();
+            }
+
             return CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -89,21 +132,20 @@ class _UserPageState extends State<UserPage> {
                     crossAxisSpacing: 8.0,
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final player =
-                            Aps().netStatus.watch(context)!.nodes[index];
+                        final player = filteredNodes[index];
                         return Aps().userListSimple.watch(context)
                             ? MiniUserCard(
-                              player: player,
-                              colorScheme: colorScheme,
-                              localIPv4: Aps().ipv4.watch(context),
-                            )
+                                player: player,
+                                colorScheme: colorScheme,
+                                localIPv4: Aps().ipv4.watch(context),
+                              )
                             : AllUserCard(
-                              player: player,
-                              colorScheme: colorScheme,
-                              localIPv4: Aps().ipv4.watch(context),
-                            );
+                                player: player,
+                                colorScheme: colorScheme,
+                                localIPv4: Aps().ipv4.watch(context),
+                              );
                       },
-                      childCount: Aps().netStatus.watch(context)!.nodes.length,
+                      childCount: filteredNodes.length,
                     ),
                   ),
                 ),
