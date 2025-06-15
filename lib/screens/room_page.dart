@@ -2,6 +2,7 @@ import 'package:astral/fun/e_d_room.dart';
 import 'package:astral/fun/random_name.dart';
 import 'package:astral/fun/show_add_room_dialog.dart';
 import 'package:astral/fun/show_edit_room_dialog.dart';
+import 'package:astral/fun/error_dialog.dart';
 import 'package:astral/screens/user_page.dart';
 import 'package:astral/wid/room_card.dart';
 import 'package:astral/wid/room_reorder_sheet.dart';
@@ -74,8 +75,9 @@ class _RoomPageState extends State<RoomPage> {
                         
                       if (existingRoom != null) {
                         Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('添加失败，已有完全相同房间：${room.name}')),
+                        showErrorDialog(
+                          context,
+                          '添加失败，已有完全相同房间：${room.name}',
                         );
                         return;
                       }
