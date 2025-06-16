@@ -28,18 +28,22 @@ pub use easytier::{
 use lazy_static::lazy_static;
 use serde_json::json;
 pub use std::collections::BTreeMap;
-use std::{collections::HashMap, sync::Mutex};
+use std::{collections::HashMap, future, sync::Mutex};
 use tokio::runtime::Runtime;
 pub use tokio::task::JoinHandle;
 use tokio::time::interval;
 use std::env;
 use std::io::{self, Write};
 
+use crate::api::{astral_wfp::{Direction, FilterAction, FilterRule, WfpController}, nt::get_nt_path};
+
 static INSTANCE: Mutex<Option<NetworkInstance>> = Mutex::new(None);
 // 创建一个 NetworkInstance 类型变量 储存当前服务器
 lazy_static! {
     static ref RT: Runtime = Runtime::new().expect("创建 Tokio 运行时失败");
+    static ref RT2: Runtime = Runtime::new().expect("创建 Tokio 运行时失败");
 }
+
 
 fn peer_conn_info_to_string(p: proto::cli::PeerConnInfo) -> String {
     format!(
@@ -520,6 +524,55 @@ pub struct Forward{
     pub proto:String
 }
 
+
+
+pub fn add_advanced_network_filter_async()-> JoinHandle<Result<(), String>>{
+    RT2.spawn(async move {
+
+    let path = r"C:\program files (x86)\microsoft\edge\application\msedge.exe";
+        let nt_path = match get_nt_path(path) {
+            Some(path) => path,
+            None => {
+                eprintln!("转换失败");
+                return Ok(());
+            }
+        };
+
+        let nt_path: &'static str = Box::leak(nt_path.into_boxed_str());
+        // 创建WFP控制器实例
+        let mut wfp_controller = WfpController::new().map_err(|e| e.to_string())?;
+
+        // 初始化WFP引擎
+        if let Err(e) = wfp_controller.initialize() {
+            eprintln!("WFP引擎初始化失败: {}", e);
+            return Err(format!("WFP引擎初始化失败: {}", e));
+        }
+
+        println!("🎯 目标应用程序: {:?}", nt_path);
+        println!("\n🔧 添加禁止所有网络连接的规则...");
+        let advanced_rules = vec![
+            // 禁止 Chrome 的所有网络连接（入站和出站，所有协议、所有端口、所有 IP）
+            FilterRule::new("禁止 Chrome 所有网络连接")
+                .app_path(nt_path)
+        ];
+
+        if let Err(e) = wfp_controller.add_advanced_filters(&advanced_rules) {
+            eprintln!("添加高级过滤规则失败: {}", e);
+            return Err(format!("添加高级过滤规则失败: {}", e));
+        }
+        println!("✅ 规则已添加。");
+        println!("⏳ 等待规则生效...");
+        // 永远等待，直到手动停止
+        future::pending::<()>().await; // 永远等待
+        // 下面这行不会被执行，因为上面 pending 永远不会返回
+        println!("✅ 内部规则已添加。");
+        Ok(())
+    })
+   
+}
+
+
+
 // 创建服务器
 pub fn create_server(
     username: String,
@@ -619,7 +672,7 @@ pub fn create_server(
         // Set network identity
         cfg.set_network_identity(NetworkIdentity::new(room_name, room_password));
 
-        // Start network instance directly without nesting spawns
+        // 直接启动网络实例，无需嵌套 spawn
         create_and_store_network_instance(cfg).await
     })
 }
@@ -1052,6 +1105,5 @@ pub fn get_network_status() -> KVNetworkStatus {
 
 pub fn init_app() {
     lazy_static::initialize(&RT);
-    
 }
 

@@ -149,7 +149,11 @@ class _UserIpBoxState extends State<UserIpBox> {
                 (Aps().Connec_state.watch(context) != CoState.idle)
                     ? false
                     : true,
-            onChanged: (value) {},
+            onChanged: (value) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _aps.updatePlayerName(value);
+              });
+            },
             decoration: InputDecoration(
               labelText: '用户名',
               hintText: '输入喜欢的名字',

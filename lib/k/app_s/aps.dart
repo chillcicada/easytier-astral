@@ -145,6 +145,11 @@ class Aps {
   final Signal<List<String>> logs = signal([]);
   // 开机自启动
   final Signal<KVNetworkStatus?> netStatus = signal(null); // 网络状态
+  /// 更新玩家名称
+  Future<void> updatePlayerName(String name) async {
+    PlayerName.value = name;
+    await AppDatabase().AllSettings.setPlayerName(name);
+  }
 
   /// PLAYERname
   final Signal<String> PlayerName = signal(''); // 玩家名称

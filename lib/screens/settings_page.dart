@@ -101,108 +101,6 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.all(14.0),
 
       children: [
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          child: ExpansionTile(
-            initiallyExpanded: false, // 默认折叠,
-            leading: const Icon(Icons.info),
-            title: const Text('软件设置'),
-            children: [
-              // if (Platform.isAndroid)
-              //   ListTile(
-              //     leading: const Icon(Icons.admin_panel_settings),
-              //     title: const Text('申请Root权限'),
-              //     subtitle: const Text('获取Root权限则无需创建VPN'),
-              //     onTap: () async {
-              //       try {
-              //         final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
-              //         if (!context.mounted) return;
-
-              //         ScaffoldMessenger.of(context).showSnackBar(
-              //           SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
-              //         );
-              //       } catch (e) {
-              //         if (!context.mounted) return;
-              //         ScaffoldMessenger.of(context).showSnackBar(
-              //           const SnackBar(content: Text('请求Root权限失败')),
-              //         );
-              //       }
-              //     },
-              //   ),
-              if (Platform.isAndroid)
-                ListTile(
-                  leading: const Icon(Icons.install_mobile),
-                  title: const Text('获取安装权限'),
-                  subtitle: Text(
-                    _hasInstallPermission ? '已获得安装权限' : '未获得安装权限，点击申请',
-                  ),
-                  trailing:
-                      _hasInstallPermission
-                          ? const Icon(Icons.check_circle, color: Colors.green)
-                          : const Icon(Icons.warning, color: Colors.orange),
-                  onTap:
-                      _hasInstallPermission ? null : _requestInstallPermission,
-                ),
-              if (!Platform.isAndroid)
-                SwitchListTile(
-                  title: const Text('最小化'),
-                  subtitle: const Text('是否点击关闭按钮最小化到托盘'),
-                  value: Aps().closeMinimize.watch(context),
-                  onChanged: (value) {
-                    Aps().updateCloseMinimize(value);
-                  },
-                ),
-              SwitchListTile(
-                title: const Text('玩家列表卡片'),
-                subtitle: const Text('是否简约显示'),
-                value: Aps().userListSimple.watch(context),
-                onChanged: (value) {
-                  Aps().setUserListSimple(value);
-                },
-              ),
-            ],
-          ),
-        ),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          child: ExpansionTile(
-            initiallyExpanded: false, // 默认折叠,
-            leading: const Icon(Icons.system_update),
-            title: const Text('更新设置'),
-            children: [
-              SwitchListTile(
-                title: const Text('参与内测版'),
-                subtitle: const Text('加群分享你的bug'),
-                value: Aps().beta.watch(context),
-                onChanged: (value) {
-                  Aps().setBeta(value);
-                },
-              ),
-              if (!Aps().beta.watch(context))
-                SwitchListTile(
-                  title: const Text('自动更新'),
-                  subtitle: const Text('享受最新bug'),
-                  value: Aps().autoCheckUpdate.watch(context),
-                  onChanged: (value) {
-                    Aps().setAutoCheckUpdate(value);
-                  },
-                ),
-              ListTile(
-                title: const Text('下载加速'),
-                subtitle: TextFormField(
-                  decoration: const InputDecoration(
-                    hintText: '启用下载加速功能',
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: Aps().downloadAccelerate.watch(context),
-                  onChanged: (value) {
-                    Aps().setDownloadAccelerate(value);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
         if (Platform.isWindows)
           Card(
             shape: RoundedRectangleBorder(
@@ -1096,7 +994,108 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: ExpansionTile(
+            initiallyExpanded: false, // 默认折叠,
+            leading: const Icon(Icons.info),
+            title: const Text('软件设置'),
+            children: [
+              // if (Platform.isAndroid)
+              //   ListTile(
+              //     leading: const Icon(Icons.admin_panel_settings),
+              //     title: const Text('申请Root权限'),
+              //     subtitle: const Text('获取Root权限则无需创建VPN'),
+              //     onTap: () async {
+              //       try {
+              //         final result = await const MethodChannel('astral_channel').invokeMethod('requestRoot');
+              //         if (!context.mounted) return;
 
+              //         ScaffoldMessenger.of(context).showSnackBar(
+              //           SnackBar(content: Text(result ? 'Root权限获取成功' : 'Root权限获取失败')),
+              //         );
+              //       } catch (e) {
+              //         if (!context.mounted) return;
+              //         ScaffoldMessenger.of(context).showSnackBar(
+              //           const SnackBar(content: Text('请求Root权限失败')),
+              //         );
+              //       }
+              //     },
+              //   ),
+              if (Platform.isAndroid)
+                ListTile(
+                  leading: const Icon(Icons.install_mobile),
+                  title: const Text('获取安装权限'),
+                  subtitle: Text(
+                    _hasInstallPermission ? '已获得安装权限' : '未获得安装权限，点击申请',
+                  ),
+                  trailing:
+                      _hasInstallPermission
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : const Icon(Icons.warning, color: Colors.orange),
+                  onTap:
+                      _hasInstallPermission ? null : _requestInstallPermission,
+                ),
+              if (!Platform.isAndroid)
+                SwitchListTile(
+                  title: const Text('最小化'),
+                  subtitle: const Text('是否点击关闭按钮最小化到托盘'),
+                  value: Aps().closeMinimize.watch(context),
+                  onChanged: (value) {
+                    Aps().updateCloseMinimize(value);
+                  },
+                ),
+              SwitchListTile(
+                title: const Text('玩家列表卡片'),
+                subtitle: const Text('是否简约显示'),
+                value: Aps().userListSimple.watch(context),
+                onChanged: (value) {
+                  Aps().setUserListSimple(value);
+                },
+              ),
+            ],
+          ),
+        ),
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: ExpansionTile(
+            initiallyExpanded: false, // 默认折叠,
+            leading: const Icon(Icons.system_update),
+            title: const Text('更新设置'),
+            children: [
+              SwitchListTile(
+                title: const Text('参与内测版'),
+                subtitle: const Text('加群分享你的bug'),
+                value: Aps().beta.watch(context),
+                onChanged: (value) {
+                  Aps().setBeta(value);
+                },
+              ),
+              if (!Aps().beta.watch(context))
+                SwitchListTile(
+                  title: const Text('自动更新'),
+                  subtitle: const Text('享受最新bug'),
+                  value: Aps().autoCheckUpdate.watch(context),
+                  onChanged: (value) {
+                    Aps().setAutoCheckUpdate(value);
+                  },
+                ),
+              ListTile(
+                title: const Text('下载加速'),
+                subtitle: TextFormField(
+                  decoration: const InputDecoration(
+                    hintText: '启用下载加速功能',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: Aps().downloadAccelerate.watch(context),
+                  onChanged: (value) {
+                    Aps().setDownloadAccelerate(value);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
         Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: Column(

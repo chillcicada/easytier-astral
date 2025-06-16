@@ -3602,6 +3602,7 @@ dependencies = [
  "serde_json",
  "surge-ping",
  "tokio",
+ "widestring",
  "winapi",
  "windows 0.48.0",
  "windows-sys 0.52.0",
