@@ -1,9 +1,12 @@
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
-use windows::Win32::Storage::FileSystem::QueryDosDeviceW;
-use windows::core::{PCWSTR, PWSTR};
 
+#[cfg(windows)]
+use windows::Win32::Storage::FileSystem::QueryDosDeviceW;
+#[cfg(windows)]
+use windows::core::{PCWSTR, PWSTR};
+#[cfg(windows)]
 pub fn get_nt_path(dos_path: &str) -> Option<String> {
     // 提取盘符（如 C:）
     let prefix = &dos_path[..2]; // e.g., "C:"
@@ -46,4 +49,9 @@ pub fn get_nt_path(dos_path: &str) -> Option<String> {
     };
 
     Some(final_path.to_lowercase())
+}
+
+#[cfg(not(windows))]
+pub fn get_nt_path(_dos_path: &str) -> Option<String> {
+    None
 }

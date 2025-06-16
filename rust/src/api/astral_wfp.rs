@@ -1,7 +1,9 @@
 use std::ffi::OsStr;
+#[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 use std::ptr;
-pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr}; // 移除未使用的导入 Ipv4Addr 和 Ipv6Addr
+pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+#[cfg(windows)]
 use windows::{
     Win32::Foundation::*, Win32::NetworkManagement::WindowsFilteringPlatform::*,
     Win32::System::Rpc::*, core::*,
