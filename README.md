@@ -8,7 +8,7 @@ This work is licensed under a
 
 [![CC BY-NC-ND 4.0][cc-by-nc-nd-image]][cc-by-nc-nd]
 
-[cc-by-nc-nd]: http://creativecommons.org/licenses/by-nc-nd/4.0/
+[cc-by-nc-nd]: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans
 [cc-by-nc-nd-image]: https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png
 [cc-by-nc-nd-shield]: https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg
 ⚠️ 本软件仅供学习和非商业用途使用
