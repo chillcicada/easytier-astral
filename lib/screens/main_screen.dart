@@ -7,7 +7,6 @@ import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
 import 'package:astral/screens/server_page.dart';
 import 'package:astral/screens/settings_page.dart';
-import 'package:astral/screens/wfp_page.dart';
 import 'package:astral/wid/bottom_nav.dart';
 import 'package:astral/wid/left_nav.dart';
 import 'package:astral/wid/status_bar.dart';

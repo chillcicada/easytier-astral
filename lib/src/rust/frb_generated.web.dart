@@ -6,15 +6,12 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
-import 'api/astral_wfp.dart';
 import 'api/firewall.dart';
 import 'api/hops.dart';
-import 'api/nt.dart';
 import 'api/simple.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
-import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -29,12 +26,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_EventBusSubscriberPtr =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_IpAddrPtr =>
-      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_IpNetworkPtr =>
-      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork;
-
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_JoinHandlePtr =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJoinHandle;
 
@@ -46,28 +37,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_PeerRoutePairPtr =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePair;
 
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_WfpControllerPtr =>
-      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   EventBusSubscriber
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
-    dynamic raw,
-  );
-
-  @protected
-  IpAddr
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    dynamic raw,
-  );
-
-  @protected
-  IpNetwork
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     dynamic raw,
   );
 
@@ -90,56 +65,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpController
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    dynamic raw,
-  );
-
-  @protected
-  IpNetwork
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    dynamic raw,
-  );
-
-  @protected
-  WfpController
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    dynamic raw,
-  );
-
-  @protected
-  IpAddr
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    dynamic raw,
-  );
-
-  @protected
-  IpNetwork
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    dynamic raw,
-  );
-
-  @protected
-  WfpController
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    dynamic raw,
-  );
-
-  @protected
   EventBusSubscriber
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
-    dynamic raw,
-  );
-
-  @protected
-  IpAddr
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    dynamic raw,
-  );
-
-  @protected
-  IpNetwork
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     dynamic raw,
   );
 
@@ -162,43 +89,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpController
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    dynamic raw,
-  );
-
-  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
-  FilterRule dco_decode_box_autoadd_filter_rule(dynamic raw);
-
-  @protected
   FlagsC dco_decode_box_autoadd_flags_c(dynamic raw);
-
-  @protected
-  Protocol dco_decode_box_autoadd_protocol(dynamic raw);
-
-  @protected
-  int dco_decode_box_autoadd_u_16(dynamic raw);
-
-  @protected
-  Direction dco_decode_direction(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
-
-  @protected
-  FilterAction dco_decode_filter_action(dynamic raw);
-
-  @protected
-  FilterRule dco_decode_filter_rule(dynamic raw);
 
   @protected
   FlagsC dco_decode_flags_c(dynamic raw);
@@ -228,9 +131,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
-  List<FilterRule> dco_decode_list_filter_rule(dynamic raw);
-
-  @protected
   List<Forward> dco_decode_list_forward(dynamic raw);
 
   @protected
@@ -245,9 +145,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<NodeHopStats> dco_decode_list_node_hop_stats(dynamic raw);
 
   @protected
-  Uint16List dco_decode_list_prim_u_16_strict(dynamic raw);
-
-  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
@@ -257,22 +154,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   NodeHopStats dco_decode_node_hop_stats(dynamic raw);
 
   @protected
-  String? dco_decode_opt_String(dynamic raw);
-
-  @protected
-  Protocol? dco_decode_opt_box_autoadd_protocol(dynamic raw);
-
-  @protected
-  int? dco_decode_opt_box_autoadd_u_16(dynamic raw);
-
-  @protected
-  Protocol dco_decode_protocol(dynamic raw);
-
-  @protected
   (String, int) dco_decode_record_string_u_32(dynamic raw);
-
-  @protected
-  int dco_decode_u_16(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -299,18 +181,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  IpAddr
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpNetwork
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   JoinHandle
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJoinHandle(
     SseDeserializer deserializer,
@@ -329,56 +199,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpController
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpNetwork
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  WfpController
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpAddr
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpNetwork
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  WfpController
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   EventBusSubscriber
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpAddr
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  IpNetwork
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     SseDeserializer deserializer,
   );
 
@@ -401,43 +223,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  WfpController
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
-  FilterRule sse_decode_box_autoadd_filter_rule(SseDeserializer deserializer);
-
-  @protected
   FlagsC sse_decode_box_autoadd_flags_c(SseDeserializer deserializer);
-
-  @protected
-  Protocol sse_decode_box_autoadd_protocol(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_box_autoadd_u_16(SseDeserializer deserializer);
-
-  @protected
-  Direction sse_decode_direction(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
-
-  @protected
-  FilterAction sse_decode_filter_action(SseDeserializer deserializer);
-
-  @protected
-  FilterRule sse_decode_filter_rule(SseDeserializer deserializer);
 
   @protected
   FlagsC sse_decode_flags_c(SseDeserializer deserializer);
@@ -469,9 +267,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
-  List<FilterRule> sse_decode_list_filter_rule(SseDeserializer deserializer);
-
-  @protected
   List<Forward> sse_decode_list_forward(SseDeserializer deserializer);
 
   @protected
@@ -488,9 +283,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Uint16List sse_decode_list_prim_u_16_strict(SseDeserializer deserializer);
-
-  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
@@ -502,22 +294,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   NodeHopStats sse_decode_node_hop_stats(SseDeserializer deserializer);
 
   @protected
-  String? sse_decode_opt_String(SseDeserializer deserializer);
-
-  @protected
-  Protocol? sse_decode_opt_box_autoadd_protocol(SseDeserializer deserializer);
-
-  @protected
-  int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer);
-
-  @protected
-  Protocol sse_decode_protocol(SseDeserializer deserializer);
-
-  @protected
   (String, int) sse_decode_record_string_u_32(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -549,20 +326,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    IpAddr self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    IpNetwork self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJoinHandle(
     JoinHandle self,
     SseSerializer serializer,
@@ -584,64 +347,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    WfpController self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    IpNetwork self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    WfpController self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    IpAddr self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    IpNetwork self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    WfpController self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
     EventBusSubscriber self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    IpAddr self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    IpNetwork self,
     SseSerializer serializer,
   );
 
@@ -667,47 +374,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    WfpController self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_filter_rule(
-    FilterRule self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_flags_c(FlagsC self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_protocol(Protocol self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_direction(Direction self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_filter_action(FilterAction self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_filter_rule(FilterRule self, SseSerializer serializer);
 
   @protected
   void sse_encode_flags_c(FlagsC self, SseSerializer serializer);
@@ -744,12 +423,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_filter_rule(
-    List<FilterRule> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_list_forward(List<Forward> self, SseSerializer serializer);
 
   @protected
@@ -771,12 +444,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_prim_u_16_strict(
-    Uint16List self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -792,28 +459,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_node_hop_stats(NodeHopStats self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_String(String? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_box_autoadd_protocol(
-    Protocol? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_protocol(Protocol self, SseSerializer serializer);
-
-  @protected
   void sse_encode_record_string_u_32(
     (String, int) self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_u_16(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -849,38 +498,6 @@ class RustLibWire implements BaseWire {
     int ptr,
   ) => wasmModule
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
-        ptr,
-      );
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-        ptr,
-      );
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
         ptr,
       );
 
@@ -931,22 +548,6 @@ class RustLibWire implements BaseWire {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePair(
         ptr,
       );
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-        ptr,
-      );
 }
 
 @JS('wasm_bindgen')
@@ -962,26 +563,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEventBusSubscriber(
-    int ptr,
-  );
-
-  external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr(
-    int ptr,
-  );
-
-  external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     int ptr,
   );
 
@@ -1012,16 +593,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPeerRoutePair(
-    int ptr,
-  );
-
-  external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWfpController(
     int ptr,
   );
 }

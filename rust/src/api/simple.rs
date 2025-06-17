@@ -35,7 +35,6 @@ use tokio::time::interval;
 use std::env;
 use std::io::{self, Write};
 
-use crate::api::{astral_wfp::{Direction, FilterAction, FilterRule, WfpController}, nt::get_nt_path};
 
 static INSTANCE: Mutex<Option<NetworkInstance>> = Mutex::new(None);
 // 创建一个 NetworkInstance 类型变量 储存当前服务器

@@ -230,38 +230,6 @@ impl FilterRule {
     }
 }
 
-#[cfg(not(windows))]
-impl FilterRule {
-    pub fn new(_name: &str) -> Self {
-        Self {
-            name: String::new(),
-            app_path: None,
-            local_ip: None,
-            remote_ip: None,
-            local_ip_network: None,
-            remote_ip_network: None,
-            local_port: None,
-            remote_port: None,
-            protocol: None,
-            direction: Direction::Both,
-            action: FilterAction::Block,
-        }
-    }
-    pub fn app_path(self, _path: &str) -> Self { self }
-    pub fn local_ip(self, _ip: IpAddr) -> Self { self }
-    pub fn remote_ip(self, _ip: IpAddr) -> Self { self }
-    pub fn local_ip_network(self, _network: IpNetwork) -> Self { self }
-    pub fn remote_ip_network(self, _network: IpNetwork) -> Self { self }
-    pub fn local_ip_str(self, _ip: &str) -> Self { self }
-    pub fn remote_ip_str(self, _ip: &str) -> Self { self }
-    pub fn local_ip_network_str(self, _cidr: &str) -> Self { self }
-    pub fn remote_ip_network_str(self, _cidr: &str) -> Self { self }
-    pub fn local_port(self, _port: u16) -> Self { self }
-    pub fn remote_port(self, _port: u16) -> Self { self }
-    pub fn protocol(self, _protocol: Protocol) -> Self { self }
-    pub fn direction(self, _direction: Direction) -> Self { self }
-    pub fn action(self, _action: FilterAction) -> Self { self }
-}
 
 // 创建宽字符字符串的辅助函数
 #[cfg(windows)]
