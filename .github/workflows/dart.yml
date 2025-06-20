@@ -57,6 +57,15 @@ jobs:
           search_artifacts: true
           if_no_artifact_found: warn
 
+      - name: 📦 下载 linux 构件
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: 'linux-build.yaml'
+          name: linux-release
+          path: ./downloaded/linux
+          search_artifacts: true
+          if_no_artifact_found: warn
+
       - name: 📝 列出下载的文件
         run: |
           echo "已下载的文件列表:"
@@ -73,6 +82,8 @@ jobs:
           ls -la ./downloaded/windows || echo "目录不存在"
           echo "WindowsSetup 文件:"
           ls -la ./downloaded/WindowsSetup || echo "目录不存在"
+          echo "Linux 文件:"
+          ls -la ./downloaded/linux || echo "目录不存在"
           
       - name: 🤖 生成分支差异提交内容
         id: generate_changelog
@@ -185,5 +196,6 @@ jobs:
             ./downloaded/arm64-v8a/*.apk
             ./downloaded/WindowsSetup/*.exe
             ./downloaded/windows/*.zip
+            ./downloaded/linux/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
