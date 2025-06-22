@@ -1,8 +1,8 @@
 import 'package:astral/k/app_s/aps.dart';
 import 'package:flutter/material.dart';
-import 'package:system_tray/system_tray.dart';
 import 'dart:io';
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 
 class WindowControls extends StatefulWidget {
   const WindowControls({super.key});
@@ -11,60 +11,66 @@ class WindowControls extends StatefulWidget {
   State<WindowControls> createState() => _WindowControlsState();
 }
 
-class _WindowControlsState extends State<WindowControls> with WindowListener {
+class _WindowControlsState extends State<WindowControls>
+    with TrayListener, WindowListener {
   bool _isMaximized = false;
-  final SystemTray _systemTray = SystemTray();
+  final TrayManager trayManager = TrayManager.instance;
 
   @override
   void initState() {
-    super.initState();
+    trayManager.addListener(this);
     windowManager.addListener(this);
     _updateMaximizedStatus();
     // 桌面平台代码
     _initTray();
-
+    super.initState();
   }
 
   Future<void> _initTray() async {
-    String path = 'assets/icon.ico';
-    final Menu menu = Menu();
-    await menu.buildFrom([
-      MenuItemLabel(
-        label: '显示主界面',
-        onClicked: (menuItem) {
-          // 添加窗口显示逻辑
-          windowManager.show();
-        },
-      ),
-      MenuItemLabel(
-        label: '退出',
-        onClicked: (menuItem) {
-          _systemTray.destroy();
-          windowManager.close();
-        },
-      ),
-    ]);
-
-    // 添加异常处理
-    try {
-      await _systemTray.initSystemTray(title: "Astral", iconPath: path);
-      await _systemTray.setContextMenu(menu);
-    } catch (e) {
-     debugPrint('托盘初始化失败: $e');
+    if (Platform.isWindows) {
+      await trayManager.setIcon('assets/icon.ico');
+    } else {
+      await trayManager.setIcon('assets/logo.png');
     }
 
-    // 注册右键事件处理
-    _systemTray.registerSystemTrayEventHandler((eventName) {
-      if (eventName == kSystemTrayEventRightClick) {
-        _systemTray.popUpContextMenu(); // 显式弹出上下文菜单
-      } else if (eventName == kSystemTrayEventClick) {
+    if (!Platform.isLinux) {
+      await trayManager.setToolTip('Astral');
+    }
+
+    Menu trayMenu = Menu(
+      items: [
+        MenuItem(key: 'show_window', label: '显示主界面'),
+        MenuItem.separator(),
+        MenuItem(key: 'exit', label: '退出'),
+      ],
+    );
+
+    await trayManager.setContextMenu(trayMenu);
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.show();
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    switch (menuItem.key) {
+      case 'show_window':
         windowManager.show();
-      }
-    });
+      case 'exit':
+        exit(0);
+    }
   }
 
   @override
   void dispose() {
+    trayManager.removeListener(this);
     windowManager.removeListener(this);
     super.dispose();
   }

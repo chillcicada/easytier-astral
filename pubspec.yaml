@@ -1,7 +1,6 @@
 name: astral
-description: "astral"
-publish_to: "none" # Remove this line if you wish to publish to pub.dev
-
+description: 'astral'
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 version: 2.1.2
 
@@ -14,7 +13,7 @@ dependencies:
     path: vpn_service_plugin
   flutter:
     sdk: flutter
-  path: ^1.8.3  # Add this line
+  path: ^1.8.3 # Add this line
   cupertino_icons: ^1.0.8
   rust_lib_astral:
     path: rust_builder
@@ -41,7 +40,7 @@ dependencies:
   package_info_plus: ^8.3.0
   url_launcher: ^6.3.1
   path_provider: ^2.1.5
-  system_tray: ^2.0.3
+  tray_manager: ^0.5.0
   app_links: ^6.4.0
   sentry_flutter: ^8.14.2
   flutter_dotenv: ^5.2.1
@@ -71,10 +70,11 @@ flutter:
   assets:
     # - assets/dlls/
     - assets/icon.ico
-  
+    - assets/logo.png
+
   fonts:
     - family: MiSans
       fonts:
-          - asset: fonts/MiSans-Demibold.ttf
-          - asset: fonts/MiSans-Regular.ttf
-            weight: 800
+        - asset: fonts/MiSans-Demibold.ttf
+        - asset: fonts/MiSans-Regular.ttf
+          weight: 800
