@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'dart:async'; 
+import 'package:flutter/widgets.dart'; 
+import 'package:astral/fun/net/ping_util.dart'; 
 
 import 'package:astral/fun/random_name.dart';
 import 'package:astral/k/models/net_config.dart';
@@ -52,6 +55,18 @@ class Aps {
     loadStartupSettings();
   }
 
+  // 在类中混入WidgetsBindingObserver
+  void Function()? _setState;
+  void setState(VoidCallback fn) {
+    if (_setState != null) {
+      _setState!();
+    } else {
+      fn();
+    }
+  }
+
+  bool get mounted => true; // 添加mounted属性模拟
+
   // 初始化主题设置
   Future<void> _initThemeSettings() async {
     final database = AppDatabase();
@@ -86,6 +101,12 @@ class Aps {
     PlayerName.value = await AppDatabase().AllSettings.getPlayerName();
     listenList.value = await AppDatabase().AllSettings.getListenList();
     servers.value = await AppDatabase().ServerSetting.getAllServers();
+    
+    // 确保服务器列表初始化后启动Ping测试
+    if (servers.value.isNotEmpty) {
+      _startPingAllServers();
+    }
+    
     userListSimple.value = await AppDatabase().AllSettings.getUserMinimal();
     closeMinimize.value = await AppDatabase().AllSettings.getCloseMinimize();
     customVpn.value = await AppDatabase().AllSettings.getCustomVpn();
@@ -693,10 +714,67 @@ class Aps {
   Future<void> setRoom(Room room) async {
     await AppDatabase().AllSettings.updateRoom(room);
     selectroom.value = await AppDatabase().AllSettings.getRoom();
+    _startPingAllServers(); // 启动Ping测试
   }
 
   /// 服务器列表
   final Signal<List<ServerMod>> servers = signal([]);
+
+  // 储存ping的结果
+  final Signal<Map<String, int?>> pingResults = signal({});
+
+  // 修改Ping结果访问方式
+  int? getPingResult(String url) => pingResults.value[url];
+
+  // Ping测试
+  Future<List<ServerMod>> setServerEnable(ServerMod server, bool enable) async {
+    server.enable = enable;
+    await AppDatabase().ServerSetting.updateServer(server);
+    servers.value = await AppDatabase().ServerSetting.getAllServers();
+    
+    // 当启用时开始Ping测试
+    if(enable) {
+      _pingServerOnce(server.url);
+    }
+    
+    return AppDatabase().ServerSetting.getAllServers();
+  }
+
+  // 新增Ping测试方法
+  Future<void> _pingServerOnce(String server) async {
+    try {
+      final pingResult = await PingUtil.ping(server);
+      // 通过Signal更新触发界面刷新
+      pingResults.value = {
+        ...pingResults.value,
+        server: pingResult ?? -1, // 使用-1表示超时
+      };
+    } catch (e, stackTrace) {
+      debugPrint('Ping测试异常: $e\n$stackTrace');
+      // 记录错误日志
+      pingResults.value = {
+        ...pingResults.value,
+        server: -1, // 异常情况标记为无法连接
+      };
+    }
+  }
+
+  // 新增启动Ping测试方法
+  void _startPingAllServers() {
+    _pingTimer?.cancel();
+    _pingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      for (var server in servers.value) {
+        if(server.enable) {
+          _pingServerOnce(server.url);
+        }
+      }
+    });
+  }
 
   /// 添加服务器
   Future<void> addServer(ServerMod server) async {
@@ -739,14 +817,6 @@ class Aps {
   Future<void> deleteServer(ServerMod server) async {
     await AppDatabase().ServerSetting.deleteServer(server);
     servers.value = await AppDatabase().ServerSetting.getAllServers();
-  }
-
-  /// 设置是否启用
-  Future<List<ServerMod>> setServerEnable(ServerMod server, bool enable) async {
-    server.enable = enable;
-    await AppDatabase().ServerSetting.updateServer(server);
-    servers.value = await AppDatabase().ServerSetting.getAllServers();
-    return AppDatabase().ServerSetting.getAllServers();
   }
 
   /// 重新排序服务器
@@ -827,5 +897,13 @@ class Aps {
         await AppDatabase().AllSettings.getStartupMinimize();
     startupAutoConnect.value =
         await AppDatabase().AllSettings.getStartupAutoConnect();
+  }
+
+  Timer? _pingTimer;
+
+  @override
+  void dispose() {
+    _pingTimer?.cancel();
+    _pingTimer = null;
   }
 }

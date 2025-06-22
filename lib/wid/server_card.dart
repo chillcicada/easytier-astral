@@ -19,7 +19,12 @@ class ServerCard extends StatefulWidget {
 }
 
 class _ServerCardState extends State<ServerCard> {
-  bool _isHovered = false;
+  late final Signal<bool> _hoveredSignal = signal(false);
+  late final Computed<int?> _pingSignal = computed(() {
+    final pingMap = Aps().pingResults.value;
+    final url = widget.server.url;
+    return pingMap.containsKey(url) ? pingMap[url] : null;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +32,16 @@ class _ServerCardState extends State<ServerCard> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => _hoveredSignal.value = true,
+      onExit: (_) => _hoveredSignal.value = false,
       child: Card(
-        elevation: _isHovered ? 8 : 4,
+        elevation: _hoveredSignal.value ? 8.0 : 4.0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
-            color: _isHovered ? colorScheme.primary : Colors.transparent,
+            color: _hoveredSignal.value 
+                ? colorScheme.primary 
+                : Colors.transparent,
             width: 1,
           ),
         ),
@@ -91,15 +98,46 @@ class _ServerCardState extends State<ServerCard> {
                   children: [
                     Icon(Icons.link, size: 16, color: colorScheme.primary),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        server.url,
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    // 显示服务器地址文本
+                    Text(
+                      server.url,
+                      style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
+                // Ping结果显示逻辑
+                if (_pingSignal.value == null)
+                  const Icon(
+                    Icons.flash_on_rounded,
+                    color: Colors.grey,
+                    size: 16,
+                  )
+                else if (_pingSignal.value == -1)
+                  Text(
+                    '无法连接',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: _getPingColor(_pingSignal.value),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      _pingSignal.value == null || _pingSignal.value == -1 
+                          ? '无法连接' 
+                          : '${_pingSignal.value}ms',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 // 协议支持
                 Wrap(
@@ -145,5 +183,13 @@ class _ServerCardState extends State<ServerCard> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
+  }
+
+  // 修改_getPingColor方法，处理可空int类型
+  Color _getPingColor(int? ping) {
+    if (ping == null || ping == -1) return Colors.red;
+    return ping < 100 
+        ? Colors.green 
+        : (ping < 300 ? Colors.orange : Colors.red);
   }
 }

@@ -3,10 +3,12 @@ import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/wid/server_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:isar/isar.dart';
 import 'package:astral/wid/server_reorder_sheet.dart';
 import 'package:astral/wid/public_servers_dialog.dart'; // 新增公共服务器对话框导入
+import 'dart:async'; // 添加Timer导入
 
 
 class ServerPage extends StatefulWidget {
@@ -16,7 +18,7 @@ class ServerPage extends StatefulWidget {
   State<ServerPage> createState() => _ServerPageState();
 }
 
-class _ServerPageState extends State<ServerPage> {
+class _ServerPageState extends State<ServerPage> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   int _getColumnCount(double width) {
     if (width >= 1200) {
       return 4;
@@ -29,12 +31,96 @@ class _ServerPageState extends State<ServerPage> {
   }
 
   final _aps = Aps();
+  late TickerProvider _tickerProvider;
+  late AnimationController _animationController;
+  late Timer _updateTimer;
+  bool _isForeground = true;
+  bool _isVisible = true;
 
   @override
   void initState() {
     super.initState();
-    // 初始化时加载所有服务器
+    
+    // 使用mixin提供的vsync实现
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    // 初始加载服务器列表
     _loadServers();
+    
+    // 添加生命周期监听
+    WidgetsBinding.instance.addObserver(this);
+    
+    // 启动初始更新定时器
+    _startUpdateTimer();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 检查页面可见性
+    final isVisible = ModalRoute.of(context)?.isCurrent ?? false;
+    if (isVisible != _isVisible) {
+      _isVisible = isVisible;
+      _restartUpdateTimer();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // 更新应用前后台状态
+    final isForeground = state == AppLifecycleState.resumed;
+    if (isForeground != _isForeground) {
+      _isForeground = isForeground;
+      _restartUpdateTimer();
+    }
+  }
+
+  void _startUpdateTimer() {
+    final interval = _calculateUpdateInterval();
+    _updateTimer = Timer.periodic(interval, (timer) async {
+      if (mounted && _isVisible && _isForeground) {
+        await _aps.getAllServers();
+        setState(() {}); // 强制刷新UI
+      }
+    });
+    
+    // 立即触发一次更新
+    if (mounted && _isVisible && _isForeground) {
+      _updateServers();
+    }
+  }
+
+  void _restartUpdateTimer() {
+    if (_updateTimer.isActive) {
+      _updateTimer.cancel();
+    }
+    _startUpdateTimer();
+  }
+
+  Duration _calculateUpdateInterval() {
+    if (_isForeground && _isVisible) {
+      return const Duration(seconds: 5);
+    }
+    return const Duration(seconds: 30);
+  }
+
+  Future<void> _updateServers() async {
+    await _aps.getAllServers();
+    if (mounted) {
+      setState(() {}); // 强制刷新UI
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _updateTimer.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _loadServers() async {
@@ -45,14 +131,13 @@ class _ServerPageState extends State<ServerPage> {
   Widget build(BuildContext context) {
     // 监听连接状态
     final isConnected = _aps.Connec_state.watch(context);
-    // 获取当前选中房间（如无此逻辑请替换为你的实际选中房间变量）
-    final selectedRoom = _aps.selectroom.watch(context); // 假设有 selectedRoom 字段
-
+    // 获取服务器列表并添加自动监听
+    final servers = _aps.servers.watch(context);
+    
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           final columnCount = _getColumnCount(constraints.maxWidth);
-          final servers = _aps.servers.watch(context);
           
           // 强制创建新的列表实例以触发更新
           final List<ServerMod> displayServers = List.from(servers);
