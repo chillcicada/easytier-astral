@@ -727,34 +727,20 @@ class Aps {
   int? getPingResult(String url) => pingResults.value[url];
 
   // Ping测试
-  Future<List<ServerMod>> setServerEnable(ServerMod server, bool enable) async {
-    server.enable = enable;
-    await AppDatabase().ServerSetting.updateServer(server);
-    servers.value = await AppDatabase().ServerSetting.getAllServers();
-    
-    // 当启用时开始Ping测试
-    if(enable) {
-      _pingServerOnce(server.url);
-    }
-    
-    return AppDatabase().ServerSetting.getAllServers();
-  }
-
-  // 新增Ping测试方法
-  Future<void> _pingServerOnce(String server) async {
+  Future<void> pingServerOnce(ServerMod server) async {
     try {
-      final pingResult = await PingUtil.ping(server);
+      final pingResult = await PingUtil.ping(server.url);
       // 通过Signal更新触发界面刷新
       pingResults.value = {
         ...pingResults.value,
-        server: pingResult ?? -1, // 使用-1表示超时
+        server.url: pingResult ?? -1, // 使用-1表示超时
       };
     } catch (e, stackTrace) {
       debugPrint('Ping测试异常: $e\n$stackTrace');
       // 记录错误日志
       pingResults.value = {
         ...pingResults.value,
-        server: -1, // 异常情况标记为无法连接
+        server.url: -1, // 异常情况标记为无法连接
       };
     }
   }
@@ -769,9 +755,7 @@ class Aps {
       }
       
       for (var server in servers.value) {
-        if(server.enable) {
-          _pingServerOnce(server.url);
-        }
+        pingServerOnce(server);
       }
     });
   }
@@ -781,10 +765,11 @@ class Aps {
     try {
       await AppDatabase().ServerSetting.addServer(server);
       servers.value = await AppDatabase().ServerSetting.getAllServers();
+      // 添加后立即触发Ping测试
+      pingServerOnce(server);
     } catch (e, stackTrace) {
       // 记录错误日志
       debugPrint('添加服务器失败: $e\n$stackTrace');
-      // 可以考虑向用户显示错误提示
     }
   }
 
@@ -905,5 +890,17 @@ class Aps {
   void dispose() {
     _pingTimer?.cancel();
     _pingTimer = null;
+  }
+
+  // Ping测试
+  Future<List<ServerMod>> setServerEnable(ServerMod server, bool enable) async {
+    server.enable = enable;
+    await AppDatabase().ServerSetting.updateServer(server);
+    servers.value = await AppDatabase().ServerSetting.getAllServers();
+    
+    // 无论启用状态如何都开始Ping测试
+    pingServerOnce(server);
+    
+    return AppDatabase().ServerSetting.getAllServers();
   }
 }

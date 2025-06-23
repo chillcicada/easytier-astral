@@ -93,51 +93,51 @@ class _ServerCardState extends State<ServerCard> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // 服务器地址
+                // 服务器地址行
                 Row(
                   children: [
+                    // Ping结果显示逻辑
+                    if (_pingSignal.value == null)
+                      const Text(
+                        '连接超时',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                        ),
+                      )
+                    else if (_pingSignal.value == -1)
+                      const Text(
+                        '无法连接',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        margin: EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: _getPingColor(_pingSignal.value),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${_pingSignal.value}ms',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    // 链接图标和服务器地址文本
                     Icon(Icons.link, size: 16, color: colorScheme.primary),
                     const SizedBox(width: 8),
-                    // 显示服务器地址文本
                     Text(
                       server.url,
                       style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
-                // Ping结果显示逻辑
-                if (_pingSignal.value == null)
-                  const Icon(
-                    Icons.flash_on_rounded,
-                    color: Colors.grey,
-                    size: 16,
-                  )
-                else if (_pingSignal.value == -1)
-                  Text(
-                    '无法连接',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 12,
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: _getPingColor(_pingSignal.value),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _pingSignal.value == null || _pingSignal.value == -1 
-                          ? '无法连接' 
-                          : '${_pingSignal.value}ms',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
                 const SizedBox(height: 16),
                 // 协议支持
                 Wrap(
@@ -172,7 +172,7 @@ class _ServerCardState extends State<ServerCard> {
     return Chip(
       label: Text(
         label,
-        style: TextStyle(
+      style: TextStyle(
           color:
               isEnabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
           fontSize: 12,

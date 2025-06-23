@@ -84,6 +84,10 @@ class _ServerPageState extends State<ServerPage> with WidgetsBindingObserver, Si
     _updateTimer = Timer.periodic(interval, (timer) async {
       if (mounted && _isVisible && _isForeground) {
         await _aps.getAllServers();
+        // 强制刷新所有服务器的Ping状态
+        for (var server in _aps.servers.value) {
+          _aps.pingServerOnce(server);
+        }
         setState(() {}); // 强制刷新UI
       }
     });
@@ -110,6 +114,10 @@ class _ServerPageState extends State<ServerPage> with WidgetsBindingObserver, Si
 
   Future<void> _updateServers() async {
     await _aps.getAllServers();
+    // 强制刷新所有服务器的Ping状态
+    for (var server in _aps.servers.value) {
+      _aps.pingServerOnce(server);
+    }
     if (mounted) {
       setState(() {}); // 强制刷新UI
     }

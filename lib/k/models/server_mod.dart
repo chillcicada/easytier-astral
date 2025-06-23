@@ -36,9 +36,9 @@ class ServerMod {
   ServerMod({
     this.id = Isar.autoIncrement,
     this.enable = false,
-    this.name = "",
-    this.url = "",
-    this.tcp = true,
+    required this.name,
+    required this.url,
+    this.tcp = false,
     this.udp = false,
     this.ws = false,
     this.wss = false,
@@ -48,6 +48,6 @@ class ServerMod {
     this.srv = false,
     this.http = false,
     this.https = false,
-    this.sortOrder = 0, // 添加排序字段初始化
+    this.sortOrder = 0,  // 添加排序字段初始化
   });
 }
