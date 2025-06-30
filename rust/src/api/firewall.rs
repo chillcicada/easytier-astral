@@ -10,6 +10,7 @@ pub use windows::{
         System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED},
     },
 };
+
 #[cfg(target_os = "windows")]
 pub fn get_firewall_status(profile_index: u32) -> Result<bool> {
     unsafe {
@@ -36,10 +37,6 @@ pub fn get_firewall_status(profile_index: u32) -> Result<bool, std::io::Error> {
 }
 #[cfg(target_os = "windows")]
 pub fn set_firewall_status(profile_index: u32, enable: bool) -> Result<()> {
-    // 不是window就返回false
-    if!cfg!(windows) {
-        return Ok(());
-    }
     unsafe {
         CoInitializeEx(None, COINIT_APARTMENTTHREADED)?;
 

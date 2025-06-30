@@ -20,6 +20,8 @@ anyhow = "1.0.95"
 surge-ping = "0.8"
 easytier = { path = "./easytier" }
 # easytier = { git = "https://github.com/ldoubil/EasyTier", branch = "main" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.52.0", features = [
     "Win32_NetworkManagement_WindowsFirewall",
     "Win32_System_Com", 
@@ -57,6 +59,8 @@ windows-sys = { version = "0.52", features = [
     "Win32_System_Rpc"
 ] }
 rand = "0.9.1"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
