@@ -82,6 +82,10 @@ jobs:
         run: |
           flutter --version
 
+      - name: 🦀 安装 cargo-ndk
+        run: |
+          cargo install cargo-ndk
+
       - name: 🛠️ 构建 armeabi-v7a 架构 APK
         run: |
           flutter build apk --release --target-platform android-arm
