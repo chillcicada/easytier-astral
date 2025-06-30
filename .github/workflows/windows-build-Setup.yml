@@ -139,7 +139,7 @@ jobs:
       - name: 📤 上传 Inno Setup 安装程序
         uses: actions/upload-artifact@v4
         with:
-          name: setup
+          name: astral-windows-x64-setup
           path: ${{ github.workspace }}/Output/Astralsetup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

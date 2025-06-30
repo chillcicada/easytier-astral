@@ -8,7 +8,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class UpdateChecker {
   /// GitHub 仓库所有者
@@ -26,61 +25,69 @@ class UpdateChecker {
     this.branch = 'main',
   });
 
-/// 检查更新
-Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = true}) async {
-  try {
-    final releaseInfo = await _fetchLatestRelease(includePrereleases: Aps().beta.value);
-    if (releaseInfo == null) {
-      _showUpdateDialog(
-        context,
-        '检查更新失败',
-        '无法获取最新版本信息',
-        'https://github.com/$owner/$repo/releases',
+  /// 检查更新
+  Future<void> checkForUpdates(
+    BuildContext context, {
+    bool showNoUpdateMessage = true,
+  }) async {
+    try {
+      final releaseInfo = await _fetchLatestRelease(
+        includePrereleases: Aps().beta.value,
       );
-      return;
-    }
+      if (releaseInfo == null) {
+        _showUpdateDialog(
+          context,
+          '检查更新失败',
+          '无法获取最新版本信息',
+          'https://github.com/$owner/$repo/releases',
+        );
+        return;
+      }
 
-    // 获取当前应用版本
-    final currentVersion = await _getCurrentVersion();
-    debugPrint('当前版本: $currentVersion');
-    debugPrint('服务器版本: ${releaseInfo['tag_name']}');
-    
-    // 比较版本号，如果有新版本则显示更新弹窗
-    // 在 checkForUpdates 方法中修改 _showUpdateDialog 调用
-    if (_shouldUpdate(currentVersion, releaseInfo['tag_name'])) {
+      // 获取当前应用版本
+      final currentVersion = await _getCurrentVersion();
+      debugPrint('当前版本: $currentVersion');
+      debugPrint('服务器版本: ${releaseInfo['tag_name']}');
+
+      // 比较版本号，如果有新版本则显示更新弹窗
+      // 在 checkForUpdates 方法中修改 _showUpdateDialog 调用
+      if (_shouldUpdate(currentVersion, releaseInfo['tag_name'])) {
+        _showUpdateDialog(
+          context,
+          releaseInfo['tag_name'],
+          releaseInfo['body'] ?? '新版本已发布',
+          releaseInfo['html_url'],
+          releaseInfo: releaseInfo, // 传递完整的 release 信息
+        );
+      } else if (showNoUpdateMessage) {
+        _showUpdateDialog(
+          context,
+          '当前已是最新版本',
+          '当前版本为: $currentVersion',
+          'https://github.com/$owner/$repo/releases',
+        );
+      }
+    } catch (e) {
       _showUpdateDialog(
         context,
-        releaseInfo['tag_name'],
-        releaseInfo['body'] ?? '新版本已发布',
-        releaseInfo['html_url'],
-        releaseInfo: releaseInfo, // 传递完整的 release 信息
-      );
-    } else if (showNoUpdateMessage) {
-      _showUpdateDialog(
-        context,
-        '当前已是最新版本',
-        '当前版本为: $currentVersion',
+        '更新检查失败',
+        '检查更新时发生错误: $e',
         'https://github.com/$owner/$repo/releases',
       );
     }
-  } catch (e) {
-    _showUpdateDialog(
-      context,
-      '更新检查失败',
-      '检查更新时发生错误: $e',
-      'https://github.com/$owner/$repo/releases',
-    );
   }
-}
 
   /// 获取最新发布版本信息
-  Future<Map<String, dynamic>?> _fetchLatestRelease({bool includePrereleases = false}) async {
+  Future<Map<String, dynamic>?> _fetchLatestRelease({
+    bool includePrereleases = false,
+  }) async {
     try {
       // 根据 includePrereleases 参数选择不同的 API 端点
-      final apiUrl = includePrereleases 
-          ? 'https://api.github.com/repos/$owner/$repo/releases'  // 获取所有版本
-          : 'https://api.github.com/repos/$owner/$repo/releases/latest';  // 只获取最新稳定版
-      
+      final apiUrl =
+          includePrereleases
+              ? 'https://api.github.com/repos/$owner/$repo/releases' // 获取所有版本
+              : 'https://api.github.com/repos/$owner/$repo/releases/latest'; // 只获取最新稳定版
+
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {
@@ -189,40 +196,141 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _UpdateDialog(
-        version: version,
-        releaseNotes: releaseNotes,
-        downloadUrl: downloadUrl,
-        isLatestVersion: isLatestVersion,
-        releaseInfo: releaseInfo,
-        onDownload: releaseInfo != null ? () => _handleDownload(context, releaseInfo) : null,
-      ),
+      builder:
+          (context) => _UpdateDialog(
+            version: version,
+            releaseNotes: releaseNotes,
+            downloadUrl: downloadUrl,
+            isLatestVersion: isLatestVersion,
+            releaseInfo: releaseInfo,
+            onDownload:
+                releaseInfo != null
+                    ? () => _handleDownload(context, releaseInfo)
+                    : null,
+          ),
     );
   }
 
   /// 处理下载逻辑
-  Future<void> _handleDownload(BuildContext context, Map<String, dynamic> releaseInfo) async {
-    final downloadUrlPath = _getDownloadUrl(releaseInfo);
-    if (downloadUrlPath == null) return;
+  Future<void> _handleDownload(
+    BuildContext context,
+    Map<String, dynamic> releaseInfo,
+  ) async {
+    if (Platform.isAndroid) {
+      // Android 平台显示架构选择对话框
+      _showArchitectureSelectionDialog(context, releaseInfo);
+    } else {
+      // 其他平台直接下载
+      final downloadUrlPath = _getDownloadUrl(releaseInfo);
+      if (downloadUrlPath == null) return;
+      final downloadUrl = Aps().downloadAccelerate.value + downloadUrlPath;
+      final fileName = _getPlatformFileName();
+
+      // 显示下载进度对话框
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => _DownloadProgressDialog(
+              onDownload:
+                  (onProgress) =>
+                      _downloadFile(downloadUrl, fileName, onProgress),
+              fileName: fileName,
+            ),
+      );
+    }
+  }
+
+  /// 显示架构选择对话框 (仅 Android)
+  void _showArchitectureSelectionDialog(
+    BuildContext context,
+    Map<String, dynamic> releaseInfo,
+  ) {
+    final architectures = [
+      {
+        'name': 'ARM64 (推荐)',
+        'file': 'astral-arm64-v8a.apk',
+        'desc': '适用于大多数现代 Android 设备',
+      },
+      {'name': '通用版本', 'file': 'astral-universal.apk', 'desc': '兼容所有架构，文件较大'},
+      {
+        'name': 'ARMv7',
+        'file': 'astral-armeabi-v7a.apk',
+        'desc': '适用于较旧的 32 位设备',
+      },
+      {
+        'name': 'x86_64',
+        'file': 'astral-x86_64.apk',
+        'desc': '适用于 Intel/AMD 处理器',
+      },
+    ];
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('选择设备架构'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  architectures
+                      .map(
+                        (arch) => ListTile(
+                          title: Text(arch['name']!),
+                          subtitle: Text(arch['desc']!),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            _startDownload(context, releaseInfo, arch['file']!);
+                          },
+                        ),
+                      )
+                      .toList(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  /// 开始下载指定文件
+  void _startDownload(
+    BuildContext context,
+    Map<String, dynamic> releaseInfo,
+    String fileName,
+  ) {
+    final downloadUrlPath = _getDownloadUrlForFile(releaseInfo, fileName);
+    if (downloadUrlPath == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('未找到 $fileName 的下载链接')));
+      return;
+    }
+
     final downloadUrl = Aps().downloadAccelerate.value + downloadUrlPath;
 
-    final fileName = _getPlatformFileName();
-    
     // 显示下载进度对话框
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _DownloadProgressDialog(
-        onDownload: (onProgress) => _downloadFile(downloadUrl, fileName, onProgress),
-        fileName: fileName,
-      ),
+      builder:
+          (context) => _DownloadProgressDialog(
+            onDownload:
+                (onProgress) =>
+                    _downloadFile(downloadUrl, fileName, onProgress),
+            fileName: fileName,
+          ),
     );
   }
 
   /// 根据平台获取对应的下载文件名
   String _getPlatformFileName() {
     if (Platform.isAndroid) {
-      return 'app-release-arm64-v8a.apk';
+      // 默认使用 arm64-v8a 架构，这是目前最常见的 Android 架构
+      return 'astral-arm64-v8a.apk';
     } else if (Platform.isWindows) {
       return 'Astralsetup.exe';
     } else {
@@ -236,6 +344,14 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
     final fileName = _getPlatformFileName();
     if (fileName.isEmpty) return null;
 
+    return _getDownloadUrlForFile(releaseInfo, fileName);
+  }
+
+  /// 从release信息中获取指定文件的下载链接
+  String? _getDownloadUrlForFile(
+    Map<String, dynamic> releaseInfo,
+    String fileName,
+  ) {
     final assets = releaseInfo['assets'] as List<dynamic>?;
     if (assets == null) return null;
 
@@ -248,46 +364,51 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
   }
 
   /// 下载文件并显示进度 - 修复版本
-  Future<String?> _downloadFile(String url, String fileName, Function(double) onProgress) async {
+  Future<String?> _downloadFile(
+    String url,
+    String fileName,
+    Function(double) onProgress,
+  ) async {
     IOSink? sink;
     try {
       final request = http.Request('GET', Uri.parse(url));
       final response = await request.send();
-      
+
       if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+        throw Exception(
+          'HTTP ${response.statusCode}: ${response.reasonPhrase}',
+        );
       }
-  
+
       final contentLength = response.contentLength;
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$fileName');
-      
+
       // 检查文件是否存在，如果存在则删除
       if (await file.exists()) {
         await file.delete();
       }
-      
+
       sink = file.openWrite();
       int downloadedBytes = 0;
-      
+
       // 使用 await for 替代 listen
       await for (final chunk in response.stream) {
         sink.add(chunk);
         downloadedBytes += chunk.length;
-        
+
         if (contentLength != null && contentLength > 0) {
           final progress = downloadedBytes / contentLength;
           onProgress(progress);
         }
       }
-      
+
       await sink.flush();
       await sink.close();
       sink = null;
-      
+
       onProgress(1.0); // 确保进度达到100%
       return file.path;
-      
     } catch (e) {
       // 确保文件流被关闭
       if (sink != null) {
@@ -295,7 +416,7 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
           await sink.close();
         } catch (_) {}
       }
-      
+
       // 清理可能创建的不完整文件
       try {
         final dir = await getTemporaryDirectory();
@@ -304,12 +425,11 @@ Future<void> checkForUpdates(BuildContext context, {bool showNoUpdateMessage = t
           await file.delete();
         }
       } catch (_) {}
-      
+
       debugPrint('下载失败: $e');
       return null;
     }
   }
-
 }
 
 class AppInfoUtil {
@@ -430,7 +550,8 @@ class _DownloadProgressDialog extends StatefulWidget {
   });
 
   @override
-  State<_DownloadProgressDialog> createState() => _DownloadProgressDialogState();
+  State<_DownloadProgressDialog> createState() =>
+      _DownloadProgressDialogState();
 }
 
 class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
@@ -477,7 +598,9 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_isDownloading ? '正在下载更新' : (_error != null ? '下载失败' : '下载完成')),
+      title: Text(
+        _isDownloading ? '正在下载更新' : (_error != null ? '下载失败' : '下载完成'),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -526,9 +649,9 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
         // Android平台需要特殊处理
         final result = await OpenFile.open(
           filePath,
-          type: "application/vnd.android.package-archive"
+          type: "application/vnd.android.package-archive",
         );
-        
+
         if (result.type != ResultType.done) {
           throw Exception('安装失败: ${result.message}');
         }

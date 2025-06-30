@@ -123,5 +123,5 @@ jobs:
       - name: 📤 上传全架构 APK 到 Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-all
+          name: astral-universal-apk
           path: build/app/outputs/flutter-apk/app-release.apk

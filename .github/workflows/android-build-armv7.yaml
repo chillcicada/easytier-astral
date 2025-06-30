@@ -126,5 +126,5 @@ jobs:
       - name: 📤 上传 armeabi-v7a 架构 APK 到 Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-armeabi-v7a
+          name: astral-armeabi-v7a-apk
           path: build/app/outputs/flutter-apk/app-release.apk

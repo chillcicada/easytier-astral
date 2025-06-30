@@ -71,5 +71,5 @@ jobs:
       - name: 📤 上传压缩后的 Release 目录
         uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: astral-windows-x64-zip
           path: ${{ github.workspace }}/astral-windows.zip
