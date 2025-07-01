@@ -245,6 +245,5 @@ jobs:
             ./downloaded/linux/*.tar.gz
             ./downloaded/linux/*.deb
             ./downloaded/linux/*.rpm
-            ./downloaded/linux/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

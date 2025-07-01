@@ -84,14 +84,6 @@ jobs:
           fpm -s dir -t rpm -n astral -v 1.0.0 --prefix /opt/astral -C build/linux/x64/release/bundle .
           mv *.rpm $GITHUB_WORKSPACE/release/astral-linux-x64.rpm
 
-      - name: 📦 打包 AppImage
-        run: |
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage -O appimagetool
-          chmod +x appimagetool
-          mkdir -p AppDir/usr/bin
-          cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
-          ./appimagetool AppDir $GITHUB_WORKSPACE/release/astral-linux-x64.AppImage
-
       - name: 📤 上传所有 Linux 构建产物
         uses: actions/upload-artifact@v4
         with:
@@ -100,5 +92,4 @@ jobs:
             release/astral-linux-x64.tar.gz
             release/astral-linux-x64.deb
             release/astral-linux-x64.rpm
-            release/astral-linux-x64.AppImage
           retention-days: 7
