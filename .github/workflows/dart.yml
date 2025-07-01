@@ -69,6 +69,24 @@ jobs:
           if_no_artifact_found: warn
       - run: mv ./downloaded/universal/* ./downloaded/universal/astral-universal.apk
 
+      - name: 📦 下载 WindowsSetup 构件
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: "windows-build-Setup.yml"
+          name: astral-windows-x64-setup
+          path: ./downloaded/WindowsSetup
+          search_artifacts: true
+          if_no_artifact_found: warn
+
+      - name: 📦 下载 Windows zip 构件
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: "windows-build.yml"
+          name: astral-windows-x64-zip
+          path: ./downloaded/windows
+          search_artifacts: true
+          if_no_artifact_found: warn
+
       - name: 📦 下载 linux 构件
         uses: dawidd6/action-download-artifact@v6
         with:
