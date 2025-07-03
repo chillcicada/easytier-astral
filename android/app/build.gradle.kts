@@ -44,6 +44,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // 添加对多窗口模式的配置
+        manifestPlaceholders["isResizeableActivity"] = "true"
     }
 
   signingConfigs {
@@ -68,6 +71,9 @@ android {
 // 添加 dependencies 块
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // 添加对窗口模式的支持
+    implementation("androidx.window:window:1.2.0-beta05")
+    implementation("androidx.window:window-java:1.2.0-beta05")
 }
 
 flutter {

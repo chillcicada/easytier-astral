@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:astral/fun/up.dart';
 import 'package:astral/k/app_s/aps.dart';
+import 'package:astral/k/mod/small_window_adapter.dart'; // 导入小窗口适配器
 import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
 import 'package:astral/screens/server_page.dart';
@@ -65,9 +66,25 @@ class _MainScreenState extends State<MainScreen>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
+    // 确保context可用
+    if (!mounted) return;
+    
     // 屏幕尺寸变化时更新
-    final screenWidth = MediaQuery.of(context).size.width;
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+    
+    // 记录小窗口状态变化
+    bool isSmallWindow = screenWidth < 300 || screenHeight < 400;
+    print('Screen size changed: $screenWidth x $screenHeight, isSmallWindow: $isSmallWindow');
+    
+    // 更新分割宽度
     Aps().updateScreenSplitWidth(screenWidth);
+    
+    // 强制刷新UI以适应新的尺寸
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   // 定义导航项列表
@@ -112,29 +129,53 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     // 获取当前主题的颜色方案
     final colorScheme = Theme.of(context).colorScheme;
+    final isSmallWindow = SmallWindowAdapter.shouldApplyAdapter(context);
 
     // 构建Scaffold组件
     return Scaffold(
       // 自定义应用栏
-      appBar: StatusBar(),
+      appBar: isSmallWindow ? null : StatusBar(),
       // 主体内容：使用Row布局
       body: Row(
         children: [
           // 根据是否为桌面端决定是否显示左侧导航
-          if (Aps().isDesktop.watch(context))
+          if (Aps().isDesktop.watch(context) && !isSmallWindow)
             LeftNav(items: navigationItems, colorScheme: colorScheme),
           // 主要内容区域
           Expanded(
-            child: IndexedStack(
-              index: Aps().selectedIndex.watch(context), // 当前选中的页面索引
-              children: _pages, // 页面列表
+            child: Column(
+              children: [
+                // 在小窗口模式下显示简化的状态栏
+                if (isSmallWindow)
+                  Container(
+                    height: 36,
+                    color: colorScheme.primaryContainer.withOpacity(0.4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      navigationItems[Aps().selectedIndex.watch(context)].label,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                // 主内容区域
+                Expanded(
+                  child: IndexedStack(
+                    index: Aps().selectedIndex.watch(context), // 当前选中的页面索引
+                    children: _pages, // 页面列表
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
-      // 底部导航栏：仅在非桌面端显示
+      // 底部导航栏：在非桌面端或小窗口模式下显示
       bottomNavigationBar:
-          Aps().isDesktop.watch(context)
+          (Aps().isDesktop.watch(context) && !isSmallWindow)
               ? null
               : BottomNav(
                 navigationItems: navigationItems,

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:astral/k/app_s/aps.dart';
+import 'package:astral/k/mod/small_window_adapter.dart'; // 导入小窗口适配器
 import 'package:astral/wid/theme_selector.dart';
 import 'package:astral/wid/windows_controls.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,48 @@ class StatusBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     // 获取当前主题的配色方案
     final colorScheme = Theme.of(context).colorScheme;
+    final bool isSmallWindow = SmallWindowAdapter.shouldApplyAdapter(context);
+
+    // 在小窗口模式下使用更简洁的状态栏
+    if (isSmallWindow) {
+      return PreferredSize(
+        preferredSize: const Size.fromHeight(36),
+        child: AppBar(
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+          toolbarHeight: 32, // 在小窗口模式下降低高度
+          title: Text(
+            Aps().appName.watch(context),
+            style: TextStyle(
+              fontSize: 14, // 在小窗口模式下使用更小的字体
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                switch (Aps().themeMode.watch(context)) {
+                  ThemeMode.light => Icons.wb_sunny,
+                  ThemeMode.dark => Icons.nightlight_round,
+                  ThemeMode.system => Icons.auto_mode,
+                },
+                size: 16, // 在小窗口模式下使用更小的图标
+              ),
+              onPressed: () {
+                final currentMode = Aps().themeMode.value;
+                final newMode = switch (currentMode) {
+                  ThemeMode.light => ThemeMode.dark,
+                  ThemeMode.dark => ThemeMode.system,
+                  ThemeMode.system => ThemeMode.light,
+                };
+                Aps().updateThemeMode(newMode);
+              },
+              padding: const EdgeInsets.all(4), // 减小内边距
+            ),
+          ],
+        ),
+      );
+    }
 
     return PreferredSize(
       // 设置状态栏高度
