@@ -1150,7 +1150,6 @@ dependencies = [
  "tabled",
  "tachyonix",
  "thiserror 1.0.69",
- "thunk-rs",
  "time",
  "timedmap",
  "tokio",
@@ -4366,11 +4365,6 @@ checksum = "d050e60b33d41c19108b32cea32164033a9013fe3b46cbd4457559bfbf77afaa"
 dependencies = [
  "num_cpus",
 ]
-
-[[package]]
-name = "thunk-rs"
-version = "0.3.3"
-source = "git+https://github.com/easytier/thunk.git#5e8371a3100dbc18dda952a2036c6bd6fb0504db"
 
 [[package]]
 name = "time"
