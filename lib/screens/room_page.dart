@@ -1,12 +1,11 @@
-import 'package:astral/fun/e_d_room.dart';
 import 'package:astral/fun/random_name.dart';
 import 'package:astral/fun/show_add_room_dialog.dart';
 import 'package:astral/fun/show_edit_room_dialog.dart';
+import 'package:astral/fun/room_share_helper.dart';
 import 'package:astral/screens/user_page.dart';
 import 'package:astral/wid/room_card.dart';
 import 'package:astral/wid/room_reorder_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/k/models/room.dart';
@@ -44,12 +43,33 @@ class _RoomPageState extends State<RoomPage> {
       builder: (context) {
         String shareCode = '';
         return AlertDialog(
-          title: const Text('输入分享码'),
-          content: TextField(
-            onChanged: (value) {
-              shareCode = value;
-            },
-            decoration: const InputDecoration(hintText: '请输入分享码'),
+          title: const Text('导入房间'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  shareCode = value;
+                },
+                decoration: const InputDecoration(
+                  hintText: '请输入分享码或链接',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await RoomShareHelper.importFromClipboard(context);
+                  },
+                  icon: const Icon(Icons.paste),
+                  label: const Text('从剪贴板导入'),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -59,51 +79,13 @@ class _RoomPageState extends State<RoomPage> {
               child: const Text('取消'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (shareCode.isNotEmpty) {
-                  try {
-                    shareCode = shareCode.replaceAll(RegExp(r'\s+'), '');
-                    var room = decryptRoomFromJWT(shareCode);
-                    if (room != null) {
-                      // 检查是否已存在相同房间名和密码的房间
-                      //     final existingRoom = _aps.rooms.value
-                      //     .where((r) => r.roomName == room.roomName &&
-                      //                   r.password == room.password)
-                      //     .isNotEmpty
-                      //       ? _aps.rooms.value.firstWhere((r) =>
-                      //                 r.roomName == room.roomName &&
-                      //                   r.password == room.password)
-                      //       : null;
-
-                      // if (existingRoom != null) {
-                      //     Navigator.of(context).pop();
-                      //     showErrorDialog(
-                      //       context,
-                      //       '添加失败，已有相同房间',
-                      //     );
-                      //       return;
-                      //     }
-
-                      _aps.addRoom(room);
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('房间已成功导入：${room.name}')),
-                      );
-                    } else {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(const SnackBar(content: Text('分享码无效')));
-                    }
-                  } catch (e) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('分享码无效')));
-                  }
+                  Navigator.of(context).pop();
+                  await RoomShareHelper.importRoom(context, shareCode);
                 }
               },
-              child: const Text('确定'),
+              child: const Text('导入'),
             ),
           ],
         );
@@ -116,7 +98,6 @@ class _RoomPageState extends State<RoomPage> {
     final columnCount = _getColumnCount(constraints.maxWidth);
     final rooms = _aps.rooms.watch(context);
     final selectedRoom = _aps.selectroom.watch(context);
-    final isConnected = _aps.Connec_state.watch(context);
 
     // 如果是重排序模式，使用ReorderableListView
     if (_isReorderMode) {
@@ -177,11 +158,7 @@ class _RoomPageState extends State<RoomPage> {
                   _aps.deleteRoom(room.id);
                 },
                 onShare: () {
-                  var a = encryptRoomWithJWT(room);
-                  Clipboard.setData(ClipboardData(text: a));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('房间信息已复制到剪贴板')));
+                  RoomShareHelper.showShareDialog(context, room);
                 },
               );
             },
@@ -235,16 +212,10 @@ class _RoomPageState extends State<RoomPage> {
                         onTap:
                             isConnected == CoState.connected
                                 ? () {
-                                  var shareCode = encryptRoomWithJWT(
+                                  RoomShareHelper.copyShareLink(
+                                    context,
                                     selectedRoom,
-                                  );
-                                  Clipboard.setData(
-                                    ClipboardData(text: shareCode),
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('房间信息已复制到剪贴板'),
-                                    ),
+                                    linkOnly: true,
                                   );
                                 }
                                 : () {},
