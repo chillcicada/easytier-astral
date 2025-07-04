@@ -1,22 +1,40 @@
 # Astral [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ldoubil/astral)
 
 ![访问次数](https://count.getloli.com/@astral?name=astral-home&theme=original-new&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
-### 重要声明
+
+
+> 感谢浪浪云提供服务器赞助  
+> <div style="margin: 15px 0; text-align: center;">
+>   <a href="https://langlangy.cn/?ife9268:https://astral.fan/images/%E8%B5%9E%E5%8A%A9/logo%20(1).png" style="display: inline-block;">
+>     <img src="https://astral.fan/images/%E8%B5%9E%E5%8A%A9/logo%20(1).png" 
+>          style="width: 200px; max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+>          alt="浪浪云赞助">
+>   </a>
+> </div>
+
+
+## 开源许可协议
 Shield: [![CC BY-NC-ND 4.0][cc-by-nc-nd-shield]][cc-by-nc-nd]
 
-This work is licensed under a
-[Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International License][cc-by-nc-nd].
+本作品采用 [知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议][cc-by-nc-nd] 进行许可。
 
-[![CC BY-NC-ND 4.0][cc-by-nc-nd-image]][cc-by-nc-nd]
+<div style="text-align: center; margin: 10px 0;">
+  <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans" target="_blank">
+    <img src="https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png" alt="CC BY-NC-ND 4.0 许可协议" style="max-width: 100%;">
+  </a>
+</div>
+
+#### 使用限制说明
+⚠️ 本软件仅供学习和非商业用途使用，使用时需遵守以下条款：
+- ❌ **禁止商业使用** - 不得将本软件用于任何商业目的
+- ❌ **禁止修改软件名称** - 不得更改 "Astral" 软件名称以混淆身份或进行二次售卖
+- ✅ **保留原作者信息** - 必须完整保留所有原作者的版权信息
+- ✅ **遵循开源协议** - 严格遵守上述开源许可协议的全部条款
+
 
 [cc-by-nc-nd]: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.zh-hans
 [cc-by-nc-nd-image]: https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png
 [cc-by-nc-nd-shield]: https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg
-⚠️ 本软件仅供学习和非商业用途使用
-- ❌ 禁止商业使用 - 本软件不得用于任何商业目的
-- ❌ 禁止修改软件名称 - 不得更改 "Astral" 软件名称试图混淆以及二次售卖
-- ✅ 保留原作者信息 - 必须保留所有原作者版权信息
-- ✅ 开源协议 - 遵循开源许可证条款
 
 ## 项目简介
 
