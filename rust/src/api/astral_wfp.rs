@@ -460,32 +460,65 @@ impl WfpController {
         let is_ipv6 = rule.local.as_ref().map_or(false, |ip| ip.contains(":")) || 
                      rule.remote.as_ref().map_or(false, |ip| ip.contains(":"));
         
-        match rule.direction {
-            Direction::Outbound => {
-                if is_ipv6 {
-                    layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V6);
-                } else {
-                    layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V4);
+        // 如果有应用程序路径，使用ALE层进行应用程序级别的过滤
+        if rule.app_path.is_some() {
+            println!("🎯 检测到应用程序路径，使用ALE层进行应用程序过滤");
+            match rule.direction {
+                Direction::Outbound => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V4);
+                    }
+                },
+                Direction::Inbound => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4);
+                    }
+                },
+                Direction::Both => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V6);
+                        layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V4);
+                        layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4);
+                    }
                 }
-            },
-            Direction::Inbound => {
-                if is_ipv6 {
-                    layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6);
-                } else {
-                    layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4);
-                }
-            },
-            Direction::Both => {
-                if is_ipv6 {
-                    layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V6);
-                    layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6);
-                } else {
-                    layers.push(FWPM_LAYER_ALE_AUTH_CONNECT_V4);
-                    layers.push(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4);
+            }
+        } else {
+            println!("🌐 未指定应用程序路径，使用网络层进行IP过滤");
+            // 如果没有应用程序路径，可以使用更底层的网络过滤
+            match rule.direction {
+                Direction::Outbound => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_OUTBOUND_IPPACKET_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_OUTBOUND_IPPACKET_V4);
+                    }
+                },
+                Direction::Inbound => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_INBOUND_IPPACKET_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_INBOUND_IPPACKET_V4);
+                    }
+                },
+                Direction::Both => {
+                    if is_ipv6 {
+                        layers.push(FWPM_LAYER_OUTBOUND_IPPACKET_V6);
+                        layers.push(FWPM_LAYER_INBOUND_IPPACKET_V6);
+                    } else {
+                        layers.push(FWPM_LAYER_OUTBOUND_IPPACKET_V4);
+                        layers.push(FWPM_LAYER_INBOUND_IPPACKET_V4);
+                    }
                 }
             }
         }
         
+        println!("📋 选择的WFP层: {:?}", layers.iter().map(|l| self.get_layer_name(l)).collect::<Vec<_>>());
         layers
     }
 
@@ -526,6 +559,8 @@ impl WfpController {
         
         // 添加应用程序路径条件
         if let Some(app_path) = &rule.app_path {
+            println!("🔍 处理应用程序路径: {}", app_path);
+            
             let appid_utf16: Vec<u16> = app_path
                 .encode_utf16()
                 .chain(std::iter::once(0))
@@ -535,6 +570,8 @@ impl WfpController {
                 size: (appid_utf16.len() * 2) as u32,
                 data: appid_utf16.as_ptr() as *mut u8,
             };
+            
+            println!("📦 应用程序ID blob大小: {} 字节", app_id.size);
             
             conditions.push(FWPM_FILTER_CONDITION0 {
                 fieldKey: FWPM_CONDITION_ALE_APP_ID,
@@ -546,6 +583,10 @@ impl WfpController {
                     },
                 },
             });
+            
+            println!("✅ 应用程序条件已添加");
+        } else {
+            println!("📝 未指定应用程序路径，规则将应用于所有程序");
         }
         
         // 添加本地IP条件
@@ -661,6 +702,23 @@ impl WfpController {
             FilterAction::Allow => FWP_ACTION_PERMIT,
             FilterAction::Block => FWP_ACTION_BLOCK,
         };
+        
+        println!("🔧 过滤器配置:");
+        println!("  📝 名称: {}", rule.name);
+        println!("  📁 应用程序路径: {:?}", rule.app_path);
+        println!("  🏠 本地地址: {:?}", rule.local);
+        println!("  🌐 远程地址: {:?}", rule.remote);
+        println!("  🔌 本地端口: {:?}", rule.local_port);
+        println!("  🔌 远程端口: {:?}", rule.remote_port);
+        println!("  📊 本地端口范围: {:?}", rule.local_port_range);
+        println!("  📊 远程端口范围: {:?}", rule.remote_port_range);
+        println!("  📡 协议: {:?}", rule.protocol);
+        println!("  ➡️ 方向: {:?}", rule.direction);
+        println!("  🎯 动作: {:?}", rule.action);
+        println!("  ⚡ 优先级: {}", rule.priority);
+        println!("  📄 描述: {:?}", rule.description);
+        println!("  🔢 条件数量: {}", num_conditions);
+        println!("  🎯 动作类型: {}", if action_type == FWP_ACTION_PERMIT { "允许" } else { "阻止" });
 
         let filter = FWPM_FILTER0 {
             filterKey: GUID::zeroed(),
@@ -818,6 +876,10 @@ impl WfpController {
             FWPM_LAYER_ALE_AUTH_CONNECT_V6 => "ALE_AUTH_CONNECT_V6",
             FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 => "ALE_AUTH_RECV_ACCEPT_V4",
             FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6 => "ALE_AUTH_RECV_ACCEPT_V6",
+            FWPM_LAYER_OUTBOUND_IPPACKET_V4 => "OUTBOUND_IPPACKET_V4",
+            FWPM_LAYER_OUTBOUND_IPPACKET_V6 => "OUTBOUND_IPPACKET_V6",
+            FWPM_LAYER_INBOUND_IPPACKET_V4 => "INBOUND_IPPACKET_V4",
+            FWPM_LAYER_INBOUND_IPPACKET_V6 => "INBOUND_IPPACKET_V6",
             _ => "UNKNOWN_LAYER",
         }
     }
