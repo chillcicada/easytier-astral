@@ -1,5 +1,6 @@
 import 'package:astral/src/rust/api/astral_wfp.dart';
 import 'package:isar/isar.dart';
+part 'wfp_model.g.dart';
 
 // WfpModel
 @collection
@@ -27,24 +28,19 @@ class WfpModel {
   int? remotePort;
 
   /// 本地端口范围
-  @Index()
   List<int>? localPortRange;
 
   /// 远程端口范围
-  @Index()
   List<int>? remotePortRange;
 
   /// 协议类型
-  @enumerated
-  Protocol? protocol;
+  String? protocol;
 
   /// 方向
-  @enumerated
-  Direction direction = Direction.both;
+  String direction = "both"; //   inbound, outbound, both
 
   /// 过滤动作
-  @enumerated
-  FilterAction action = FilterAction.block;
+  String action = "block"; // allow, block
 
   /// 优先级
   int? priority;
