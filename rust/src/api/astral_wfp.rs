@@ -543,10 +543,8 @@ impl WfpController {
         println!("✓ 模拟模式：已添加 {} 个过滤器", added_ids.len());
         Ok(added_ids)
     }
-
-    // 根据规则获取对应的WFP层
-    #[cfg(target_os = "windows")]
-    pub fn get_layers_for_rule(&self, rule: &FilterRule) -> Vec<GUID> {
+#[cfg(target_os = "windows")]
+    fn get_layers_for_rule(&self, rule: &FilterRule) -> Vec<GUID> {
         let mut layers = Vec::new();
         let is_ipv6 = rule.local.as_ref().map_or(false, |ip| ip.contains(":")) || 
                      rule.remote.as_ref().map_or(false, |ip| ip.contains(":"));
@@ -611,12 +609,6 @@ impl WfpController {
         
         println!("📋 选择的WFP层: {:?}", layers.iter().map(|l| self.get_layer_name(l)).collect::<Vec<_>>());
         layers
-    }
-
-    // 非Windows平台的模拟方法
-    #[cfg(not(target_os = "windows"))]
-    pub fn get_layers_for_rule(&self, _rule: &FilterRule) -> Vec<GUID> {
-        vec![GUID::zeroed()]
     }
 
     // 清理过滤器
