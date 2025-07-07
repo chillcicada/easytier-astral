@@ -1,17 +1,21 @@
-//! AstralWFP - Windows Filtering Platform 网络流量管理库
+//! AstralWFP - 跨平台网络流量管理库
 //! 
-//! 本模块提供了基于 Windows Filtering Platform (WFP) 的网络流量过滤功能，
-//! 支持应用程序级别的网络访问控制、IP地址过滤、端口过滤等多种功能。
+//! 本模块提供了网络流量过滤功能：
+//! - Windows: 基于 Windows Filtering Platform (WFP) 的完整实现
+//! - 其他平台: 提供模拟接口防止编译错误
 
-use std::{ffi::OsStr, os::windows::ffi::OsStringExt};
-use std::os::windows::ffi::OsStrExt;
-use std::ptr;
 pub use std::net::IpAddr;
 use std::fmt;
 use std::str::FromStr;
-
 use flutter_rust_bridge::frb;
 
+// Windows 平台特定导入
+#[cfg(target_os = "windows")]
+use std::{ffi::OsStr, os::windows::ffi::OsStringExt};
+#[cfg(target_os = "windows")]
+use std::os::windows::ffi::OsStrExt;
+#[cfg(target_os = "windows")]
+use std::ptr;
 #[cfg(target_os = "windows")]
 use windows::{
     Win32::Foundation::*, Win32::NetworkManagement::WindowsFilteringPlatform::*,
@@ -19,6 +23,41 @@ use windows::{
 };
 #[cfg(target_os = "windows")]
 pub use windows::core::GUID;
+
+// 非Windows平台的GUID模拟
+#[cfg(not(target_os = "windows"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GUID {
+    pub data1: u32,
+    pub data2: u16,
+    pub data3: u16,
+    pub data4: [u8; 8],
+}
+
+#[cfg(not(target_os = "windows"))]
+impl GUID {
+    pub fn zeroed() -> Self {
+        GUID {
+            data1: 0,
+            data2: 0,
+            data3: 0,
+            data4: [0; 8],
+        }
+    }
+}
+
+// Windows 平台特定常量
+#[cfg(target_os = "windows")]
+const FWP_ACTION_BLOCK: u32 = 0x00000001 | 0x00001000;
+#[cfg(target_os = "windows")]
+const FWP_ACTION_PERMIT: u32 = 0x00000002 | 0x00001000;
+
+// 跨平台句柄类型
+#[cfg(target_os = "windows")]
+pub type PlatformHandle = HANDLE;
+
+#[cfg(not(target_os = "windows"))]
+pub type PlatformHandle = i32;
 /// CIDR网段结构体，用于表示IP地址范围
 #[derive(Debug, Clone)]
 pub struct IpNetwork {
@@ -68,10 +107,6 @@ impl IpNetwork {
         Ok(Self { ip: network_ip, prefix_len })
     }
 }
-
-// WFP 常量定义
-const FWP_ACTION_BLOCK: u32 = 0x00000001 | 0x00001000;
-const FWP_ACTION_PERMIT: u32 = 0x00000002 | 0x00001000;
 
 /// 网络过滤规则结构体
 #[derive(Debug, Clone)]
@@ -339,7 +374,8 @@ impl FilterRule {
     }
 }
 
-// 创建宽字符字符串的辅助函数
+// Windows 平台特定的字符串转换函数
+#[cfg(target_os = "windows")]
 pub fn to_wide_string(s: &str) -> Vec<u16> {
     OsStr::new(s)
         .encode_wide()
@@ -347,32 +383,58 @@ pub fn to_wide_string(s: &str) -> Vec<u16> {
         .collect()
 }
 
-/// Windows Filtering Platform (WFP) 控制器
+// 非Windows平台的字符串转换函数（模拟）
+#[cfg(not(target_os = "windows"))]
+pub fn to_wide_string(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(std::iter::once(0)).collect()
+}
+
+/// 跨平台网络流量过滤控制器
 #[derive(Clone)]
 pub struct WfpController {
-    engine_handle: HANDLE,
+    engine_handle: PlatformHandle,
     pub filter_ids: Vec<u64>,
+    #[cfg(not(target_os = "windows"))]
+    platform_name: String,
 }
 
 impl std::fmt::Debug for WfpController {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WfpController")
-            .field("engine_handle", &"HANDLE")
+            .field("engine_handle", &"PlatformHandle")
             .field("filter_ids", &self.filter_ids)
             .finish()
     }
 }
 
 impl WfpController {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> anyhow::Result<Self> {
         Ok(Self {
+            #[cfg(target_os = "windows")]
             engine_handle: HANDLE::default(),
+            #[cfg(not(target_os = "windows"))]
+            engine_handle: 0,
             filter_ids: Vec::new(),
+            #[cfg(not(target_os = "windows"))]
+            platform_name: std::env::consts::OS.to_string(),
         })
     }
 
-    // 初始化WFP引擎
-    pub fn initialize(&mut self) -> Result<()> {
+    // 初始化过滤引擎
+    pub fn initialize(&mut self) -> anyhow::Result<()> {
+        #[cfg(target_os = "windows")]
+        {
+            self.initialize_windows()
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.initialize_non_windows()
+        }
+    }
+
+    // Windows 平台初始化
+    #[cfg(target_os = "windows")]
+    fn initialize_windows(&mut self) -> anyhow::Result<()> {
         unsafe {
             println!("正在初始化 Windows Filtering Platform...");
 
@@ -388,7 +450,7 @@ impl WfpController {
                 flags: FWPM_SESSION_FLAG_DYNAMIC,
                 txnWaitTimeoutInMSec: 0,
                 processId: 0,
-                sid: ptr::null_mut(),
+                sid: std::ptr::null_mut(),
                 username: PWSTR::null(),
                 kernelMode: FALSE,
             };
@@ -406,13 +468,35 @@ impl WfpController {
                 Ok(())
             } else {
                 println!("❌ 打开WFP引擎失败: {} (可能需要管理员权限)", result);
-                Err(Error::from_win32())
+                Err(anyhow::anyhow!("打开WFP引擎失败"))
             }
         }
     }
 
+    // 非Windows平台初始化
+    #[cfg(not(target_os = "windows"))]
+    fn initialize_non_windows(&mut self) -> anyhow::Result<()> {
+        println!("正在初始化网络过滤器 (平台: {})...", self.platform_name);
+        println!("⚠️ 当前平台不支持网络过滤功能，使用模拟模式");
+        println!("✓ 模拟模式已启用");
+        Ok(())
+    }
+
     // 添加过滤器规则
-    pub fn add_filters(&mut self, rules: &[FilterRule]) -> Result<Vec<u64>> {
+    pub fn add_filters(&mut self, rules: &[FilterRule]) -> anyhow::Result<Vec<u64>> {
+        #[cfg(target_os = "windows")]
+        {
+            self.add_filters_windows(rules)
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.add_filters_non_windows(rules)
+        }
+    }
+
+    // Windows 平台添加过滤器
+    #[cfg(target_os = "windows")]
+    fn add_filters_windows(&mut self, rules: &[FilterRule]) -> anyhow::Result<Vec<u64>> {
         let mut added_ids = Vec::new();
         let mut added_count = 0;
         
@@ -445,11 +529,33 @@ impl WfpController {
             Ok(added_ids)
         } else {
             println!("❌ 没有成功添加任何过滤器");
-            Err(Error::from_win32())
+            Err(anyhow::anyhow!("没有成功添加任何过滤器"))
         }
     }
 
+    // 非Windows平台添加过滤器（模拟）
+    #[cfg(not(target_os = "windows"))]
+    fn add_filters_non_windows(&mut self, rules: &[FilterRule]) -> anyhow::Result<Vec<u64>> {
+        let mut added_ids = Vec::new();
+        
+        for (i, rule) in rules.iter().enumerate() {
+            if let Err(e) = rule.validate() {
+                println!("❌ 规则验证失败: {}", e);
+                continue;
+            }
+            
+            let mock_id = (i + 1) as u64;
+            self.filter_ids.push(mock_id);
+            added_ids.push(mock_id);
+            println!("🔍 模拟添加规则 '{}' (ID: {})", rule.name, mock_id);
+        }
+        
+        println!("✓ 模拟模式：已添加 {} 个过滤器", added_ids.len());
+        Ok(added_ids)
+    }
+
     // 根据规则获取对应的WFP层
+    #[cfg(target_os = "windows")]
     pub fn get_layers_for_rule(&self, rule: &FilterRule) -> Vec<GUID> {
         let mut layers = Vec::new();
         let is_ipv6 = rule.local.as_ref().map_or(false, |ip| ip.contains(":")) || 
@@ -517,8 +623,27 @@ impl WfpController {
         layers
     }
 
+    // 非Windows平台的模拟方法
+    #[cfg(not(target_os = "windows"))]
+    pub fn get_layers_for_rule(&self, _rule: &FilterRule) -> Vec<GUID> {
+        vec![GUID::zeroed()]
+    }
+
     // 清理过滤器
-    pub fn cleanup(&mut self) -> Result<()> {
+    pub fn cleanup(&mut self) -> anyhow::Result<()> {
+        #[cfg(target_os = "windows")]
+        {
+            self.cleanup_windows()
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.cleanup_non_windows()
+        }
+    }
+
+    // Windows平台清理
+    #[cfg(target_os = "windows")]
+    fn cleanup_windows(&mut self) -> anyhow::Result<()> {
         unsafe {
             println!("🛑 停止过滤器，正在清理...");
 
@@ -534,19 +659,32 @@ impl WfpController {
             let result = FwpmEngineClose0(self.engine_handle);
             if WIN32_ERROR(result) != ERROR_SUCCESS {
                 println!("❌ 关闭WFP引擎失败: {}", result);
-                return Err(Error::from_win32());
+                return Err(anyhow::anyhow!("关闭WFP引擎失败"));
             }
             println!("✓ WFP引擎已关闭");
             Ok(())
         }
     }
 
-    // 添加网络过滤器的内部方法
+    // 非Windows平台清理（模拟）
+    #[cfg(not(target_os = "windows"))]
+    fn cleanup_non_windows(&mut self) -> anyhow::Result<()> {
+        println!("🛑 停止过滤器，正在清理...");
+        for filter_id in &self.filter_ids {
+            println!("✓ 模拟删除过滤器 {}", filter_id);
+        }
+        self.filter_ids.clear();
+        println!("✓ 模拟模式清理完成");
+        Ok(())
+    }
+
+    // 添加网络过滤器的内部方法 - 仅Windows
+    #[cfg(target_os = "windows")]
     pub fn add_network_filter(
         &self,
         rule: &FilterRule,
         layer_key: GUID,
-    ) -> Result<u64> {
+    ) -> anyhow::Result<u64> {
         let filter_name = to_wide_string(&rule.name);
         let filter_desc = to_wide_string(&format!("控制 {} 的网络流量", rule.name));
 
@@ -888,11 +1026,12 @@ impl WfpController {
                 _ => "未知错误",
             };
             println!("❌ 添加过滤器 '{}' 失败: {} (错误代码: {})", rule.name, error_msg, add_result);
-            Err(Error::from_win32())
+            Err(anyhow::anyhow!("添加过滤器失败: {}", error_msg))
         }
     }
 
-    // 添加IP条件的辅助方法
+    // 添加IP条件的辅助方法 - 仅Windows
+    #[cfg(target_os = "windows")]
     fn add_ip_condition(&self, conditions: &mut Vec<FWPM_FILTER_CONDITION0>, ip_str: &str, field_key: GUID) {
         if let Ok(ip) = ip_str.parse::<IpAddr>() {
             match ip {
@@ -977,21 +1116,41 @@ impl WfpController {
 
     // 获取层的名称用于调试
     pub fn get_layer_name(&self, layer_key: &GUID) -> &'static str {
-        match *layer_key {
-            FWPM_LAYER_ALE_AUTH_CONNECT_V4 => "ALE_AUTH_CONNECT_V4",
-            FWPM_LAYER_ALE_AUTH_CONNECT_V6 => "ALE_AUTH_CONNECT_V6",
-            FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 => "ALE_AUTH_RECV_ACCEPT_V4",
-            FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6 => "ALE_AUTH_RECV_ACCEPT_V6",
-            FWPM_LAYER_OUTBOUND_IPPACKET_V4 => "OUTBOUND_IPPACKET_V4",
-            FWPM_LAYER_OUTBOUND_IPPACKET_V6 => "OUTBOUND_IPPACKET_V6",
-            FWPM_LAYER_INBOUND_IPPACKET_V4 => "INBOUND_IPPACKET_V4",
-            FWPM_LAYER_INBOUND_IPPACKET_V6 => "INBOUND_IPPACKET_V6",
-            _ => "UNKNOWN_LAYER",
+        #[cfg(target_os = "windows")]
+        {
+            match *layer_key {
+                FWPM_LAYER_ALE_AUTH_CONNECT_V4 => "ALE_AUTH_CONNECT_V4",
+                FWPM_LAYER_ALE_AUTH_CONNECT_V6 => "ALE_AUTH_CONNECT_V6",
+                FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V4 => "ALE_AUTH_RECV_ACCEPT_V4",
+                FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6 => "ALE_AUTH_RECV_ACCEPT_V6",
+                FWPM_LAYER_OUTBOUND_IPPACKET_V4 => "OUTBOUND_IPPACKET_V4",
+                FWPM_LAYER_OUTBOUND_IPPACKET_V6 => "OUTBOUND_IPPACKET_V6",
+                FWPM_LAYER_INBOUND_IPPACKET_V4 => "INBOUND_IPPACKET_V4",
+                FWPM_LAYER_INBOUND_IPPACKET_V6 => "INBOUND_IPPACKET_V6",
+                _ => "UNKNOWN_LAYER",
+            }
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            "MOCK_LAYER"
         }
     }
 
     // 删除过滤器
-    pub fn delete_filters(&mut self, filter_ids: &[u64]) -> Result<u32> {
+    pub fn delete_filters(&mut self, filter_ids: &[u64]) -> anyhow::Result<u32> {
+        #[cfg(target_os = "windows")]
+        {
+            self.delete_filters_windows(filter_ids)
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.delete_filters_non_windows(filter_ids)
+        }
+    }
+
+    // Windows平台删除过滤器
+    #[cfg(target_os = "windows")]
+    fn delete_filters_windows(&mut self, filter_ids: &[u64]) -> anyhow::Result<u32> {
         unsafe {
             let mut deleted_count = 0;
             
@@ -1011,19 +1170,26 @@ impl WfpController {
             if deleted_count > 0 {
                 Ok(deleted_count)
             } else {
-                Err(Error::from_win32())
+                Err(anyhow::anyhow!("没有删除任何过滤器"))
             }
         }
     }
-}
 
-// 用于Dart端调用的暴露API
-#[frb(sync)]
-pub fn create_filter_rule(name: &str) -> FilterRule {
-    FilterRule::new(name)
-}
-
-#[frb(sync)]
-pub fn create_wfp_controller() -> Result<WfpController> {
-    WfpController::new()
+    // 非Windows平台删除过滤器（模拟）
+    #[cfg(not(target_os = "windows"))]
+    fn delete_filters_non_windows(&mut self, filter_ids: &[u64]) -> anyhow::Result<u32> {
+        let mut deleted_count = 0;
+        
+        for &filter_id in filter_ids {
+            if let Some(pos) = self.filter_ids.iter().position(|&id| id == filter_id) {
+                self.filter_ids.remove(pos);
+                deleted_count += 1;
+                println!("✓ 模拟删除过滤器 {}", filter_id);
+            } else {
+                println!("⚠️ 未找到过滤器 {}", filter_id);
+            }
+        }
+        
+        Ok(deleted_count)
+    }
 }

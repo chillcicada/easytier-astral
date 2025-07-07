@@ -7,17 +7,11 @@ import '../frb_generated.dart';
 import '../lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `action`, `add_ip_condition`, `app_path`, `description`, `direction`, `local_ip`, `local_port_range`, `local_port`, `priority`, `protocol`, `remote_ip`, `remote_port_range`, `remote_port`
+// These functions are ignored because they are not marked as `pub`: `action`, `add_filters_windows`, `add_ip_condition`, `app_path`, `cleanup_windows`, `delete_filters_windows`, `description`, `direction`, `initialize_windows`, `local_ip`, `local_port_range`, `local_port`, `priority`, `protocol`, `remote_ip`, `remote_port_range`, `remote_port`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`
 
 Future<Uint16List> toWideString({required String s}) =>
     RustLib.instance.api.crateApiAstralWfpToWideString(s: s);
-
-FilterRule createFilterRule({required String name}) =>
-    RustLib.instance.api.crateApiAstralWfpCreateFilterRule(name: name);
-
-WfpController createWfpController() =>
-    RustLib.instance.api.crateApiAstralWfpCreateWfpController();
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FilterRule>>
 abstract class FilterRule implements RustOpaqueInterface {

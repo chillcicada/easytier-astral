@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.10.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 442949411;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 482308212;
 
 // Section: executor
 
@@ -3113,37 +3113,6 @@ fn wire__crate__api__simple__close_server_impl(
         },
     )
 }
-fn wire__crate__api__astral_wfp__create_filter_rule_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "create_filter_rule",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_name = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let output_ok =
-                    Result::<_, ()>::Ok(crate::api::astral_wfp::create_filter_rule(&api_name))?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
 fn wire__crate__api__simple__create_server_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -3194,37 +3163,6 @@ fn wire__crate__api__simple__create_server_impl(
                     Ok(output_ok)
                 })())
             }
-        },
-    )
-}
-fn wire__crate__api__astral_wfp__create_wfp_controller_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "create_wfp_controller",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                (move || {
-                    let output_ok = crate::api::astral_wfp::create_wfp_controller()?;
-                    Ok(output_ok)
-                })(),
-            )
         },
     )
 }
@@ -4618,36 +4556,36 @@ fn pde_ffi_dispatcher_primary_impl(
             wire__crate__api__astral_wfp__WfpController_new_impl(port, ptr, rust_vec_len, data_len)
         }
         61 => wire__crate__api__simple__close_server_impl(port, ptr, rust_vec_len, data_len),
-        63 => wire__crate__api__simple__create_server_impl(port, ptr, rust_vec_len, data_len),
-        65 => wire__crate__api__simple__easytier_version_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__api__hops__get_all_interfaces_metrics_impl(
+        62 => wire__crate__api__simple__create_server_impl(port, ptr, rust_vec_len, data_len),
+        63 => wire__crate__api__simple__easytier_version_impl(port, ptr, rust_vec_len, data_len),
+        64 => wire__crate__api__hops__get_all_interfaces_metrics_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        67 => {
+        65 => {
             wire__crate__api__firewall__get_firewall_status_impl(port, ptr, rust_vec_len, data_len)
         }
-        68 => wire__crate__api__simple__get_ips_impl(port, ptr, rust_vec_len, data_len),
-        69 => wire__crate__api__simple__get_network_status_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__api__nt__get_nt_path_impl(port, ptr, rust_vec_len, data_len),
-        71 => {
+        66 => wire__crate__api__simple__get_ips_impl(port, ptr, rust_vec_len, data_len),
+        67 => wire__crate__api__simple__get_network_status_impl(port, ptr, rust_vec_len, data_len),
+        68 => wire__crate__api__nt__get_nt_path_impl(port, ptr, rust_vec_len, data_len),
+        69 => {
             wire__crate__api__simple__get_peer_route_pairs_impl(port, ptr, rust_vec_len, data_len)
         }
-        72 => wire__crate__api__simple__get_running_info_impl(port, ptr, rust_vec_len, data_len),
-        73 => wire__crate__api__simple__handle_event_impl(port, ptr, rust_vec_len, data_len),
-        74 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        75 => wire__crate__api__simple__is_easytier_running_impl(port, ptr, rust_vec_len, data_len),
-        76 => {
+        70 => wire__crate__api__simple__get_running_info_impl(port, ptr, rust_vec_len, data_len),
+        71 => wire__crate__api__simple__handle_event_impl(port, ptr, rust_vec_len, data_len),
+        72 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__api__simple__is_easytier_running_impl(port, ptr, rust_vec_len, data_len),
+        74 => {
             wire__crate__api__simple__send_udp_to_localhost_impl(port, ptr, rust_vec_len, data_len)
         }
-        77 => {
+        75 => {
             wire__crate__api__firewall__set_firewall_status_impl(port, ptr, rust_vec_len, data_len)
         }
-        78 => wire__crate__api__hops__set_interface_metric_impl(port, ptr, rust_vec_len, data_len),
-        79 => wire__crate__api__simple__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
-        80 => wire__crate__api__astral_wfp__to_wide_string_impl(port, ptr, rust_vec_len, data_len),
+        76 => wire__crate__api__hops__set_interface_metric_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__api__simple__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__api__astral_wfp__to_wide_string_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -4840,8 +4778,6 @@ fn pde_ffi_dispatcher_sync_impl(
             rust_vec_len,
             data_len,
         ),
-        62 => wire__crate__api__astral_wfp__create_filter_rule_impl(ptr, rust_vec_len, data_len),
-        64 => wire__crate__api__astral_wfp__create_wfp_controller_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
