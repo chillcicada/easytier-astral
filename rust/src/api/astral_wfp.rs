@@ -34,17 +34,6 @@ pub struct GUID {
     pub data4: [u8; 8],
 }
 
-#[cfg(not(target_os = "windows"))]
-impl GUID {
-    pub fn zeroed() -> Self {
-        GUID {
-            data1: 0,
-            data2: 0,
-            data3: 0,
-            data4: [0; 8],
-        }
-    }
-}
 
 // Windows 平台特定常量
 #[cfg(target_os = "windows")]
