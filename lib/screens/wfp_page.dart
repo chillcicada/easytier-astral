@@ -25,8 +25,6 @@ class _WfpPageState extends State<WfpPage> {
     super.initState();
   }
 
-
-
   Future<void> _startWfp() async {
     try {
       setState(() {
@@ -62,40 +60,47 @@ class _WfpPageState extends State<WfpPage> {
         }
 
         // 解析本地规则（支持多行）
-        final localRules = rule.localRule != null && rule.localRule!.isNotEmpty 
-            ? _parseRules(rule.localRule!) 
-            : [<String, dynamic>{}];
-            
+        final localRules =
+            rule.localRule != null && rule.localRule!.isNotEmpty
+                ? _parseRules(rule.localRule!)
+                : [<String, dynamic>{}];
+
         // 解析远程规则（支持多行）
-        final remoteRules = rule.remoteRule != null && rule.remoteRule!.isNotEmpty 
-            ? _parseRules(rule.remoteRule!) 
-            : [<String, dynamic>{}];
+        final remoteRules =
+            rule.remoteRule != null && rule.remoteRule!.isNotEmpty
+                ? _parseRules(rule.remoteRule!)
+                : [<String, dynamic>{}];
 
         // 为每个本地规则和远程规则的组合创建FilterRule
         for (int localIndex = 0; localIndex < localRules.length; localIndex++) {
-          for (int remoteIndex = 0; remoteIndex < remoteRules.length; remoteIndex++) {
+          for (
+            int remoteIndex = 0;
+            remoteIndex < remoteRules.length;
+            remoteIndex++
+          ) {
             final localParts = localRules[localIndex];
             final remoteParts = remoteRules[remoteIndex];
-            
+
             // 如果本地和远程规则都为空，但有应用程序路径，仍然创建规则
             // 如果本地和远程规则都为空且没有应用程序路径，则跳过
             if (localParts.isEmpty && remoteParts.isEmpty && ntPath == null) {
               continue;
             }
-            
+
             final localAddress = localParts['address'] as String?;
             final localPort = localParts['port'] as int?;
             final localPortRange = localParts['portRange'] as (int, int)?;
-            
+
             final remoteAddress = remoteParts['address'] as String?;
             final remotePort = remoteParts['port'] as int?;
             final remotePortRange = remoteParts['portRange'] as (int, int)?;
-            
+
             // 生成规则名称，如果有多个规则则添加序号
             String ruleName = rule.name;
             final totalCombinations = localRules.length * remoteRules.length;
             if (totalCombinations > 1) {
-              final combinationIndex = localIndex * remoteRules.length + remoteIndex + 1;
+              final combinationIndex =
+                  localIndex * remoteRules.length + remoteIndex + 1;
               ruleName = '${rule.name} #$combinationIndex';
             }
 
@@ -201,23 +206,23 @@ class _WfpPageState extends State<WfpPage> {
   /// 支持多行规则，每行一个规则
   List<Map<String, dynamic>> _parseRules(String rules) {
     final result = <Map<String, dynamic>>[];
-    
+
     // 按行分割规则
     final lines = rules.split('\n');
-    
+
     for (final line in lines) {
       final trimmedLine = line.trim();
       if (trimmedLine.isEmpty) continue; // 跳过空行
-      
+
       final ruleData = _parseSingleRule(trimmedLine);
       if (ruleData.isNotEmpty) {
         result.add(ruleData);
       }
     }
-    
+
     return result;
   }
-  
+
   /// 解析单行规则
   Map<String, dynamic> _parseSingleRule(String rule) {
     final result = <String, dynamic>{};
@@ -261,7 +266,7 @@ class _WfpPageState extends State<WfpPage> {
 
     return result;
   }
-  
+
   /// 兼容性方法，保持向后兼容
   Map<String, dynamic> _parseRule(String rule) {
     final rules = _parseRules(rule);
@@ -292,8 +297,6 @@ class _WfpPageState extends State<WfpPage> {
       _ => FilterAction.block,
     };
   }
-
-
 
   // 批量切换规则状态
   Future<void> _toggleAllRules(bool enabled) async {
@@ -367,242 +370,228 @@ class _WfpPageState extends State<WfpPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('WFP 规则管理'),
-        actions: [
-          // 全局启用/禁用开关
-          ValueListenableBuilder<bool>(
-            valueListenable: Aps().wfpStatus as ValueNotifier<bool>,
-            builder: (context, isRunning, _) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isRunning ? '已启用' : '已禁用',
-                      style: TextStyle(
-                        color: isRunning ? Colors.green : Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Switch(
-                      value: isRunning,
-                      onChanged:
-                          _isInitializing
-                              ? null
-                              : (value) {
-                                if (value) {
-                                  _startWfp();
-                                } else {
-                                  _stopWfp();
-                                }
-                              },
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // WFP状态控制区域 - 简化版
+            // WFP状态控制和规则统计区域 - 合并版
             ValueListenableBuilder<bool>(
               valueListenable: Aps().wfpStatus as ValueNotifier<bool>,
               builder: (context, isRunning, _) {
-                return Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color:
-                                isRunning
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            isRunning
-                                ? Icons.security
-                                : Icons.security_outlined,
-                            color: isRunning ? Colors.green : Colors.grey,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'WFP 防火墙',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                return ValueListenableBuilder<List<WfpModel>>(
+                  valueListenable:
+                      Aps().wfpModels as ValueNotifier<List<WfpModel>>,
+                  builder: (context, rules, _) {
+                    final enabledRules = rules.where((r) => r.enabled).length;
+                    final disabledRules = rules.where((r) => !r.enabled).length;
+
+                    return Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // 第一行：WFP状态和开关
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isRunning
+                                            ? Colors.green.withOpacity(0.1)
+                                            : Colors.grey.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    isRunning
+                                        ? Icons.security
+                                        : Icons.security_outlined,
+                                    color:
+                                        isRunning ? Colors.green : Colors.grey,
+                                    size: 24,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isRunning ? '正在运行，规则已生效' : '已停止，规则未生效',
-                                style: TextStyle(
-                                  color: isRunning ? Colors.green : Colors.grey,
-                                  fontSize: 14,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '魔法墙',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colorScheme.primaryContainer,
+                                              borderRadius: BorderRadius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '共 ${rules.length} 条规则',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                color:
+                                                    colorScheme.onPrimaryContainer,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isRunning ? '正在运行，规则已生效' : '已停止，规则未生效',
+                                        style: TextStyle(
+                                          color:
+                                              isRunning
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_isInitializing)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 16.0),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                                if (_isInitializing)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 16.0),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      isRunning ? '已启用' : '已禁用',
+                                      style: TextStyle(
+                                        color:
+                                            isRunning
+                                                ? Colors.green
+                                                : Colors.grey,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Switch(
+                                      value: isRunning,
+                                      onChanged:
+                                          _isInitializing
+                                              ? null
+                                              : (value) {
+                                                if (value) {
+                                                  _startWfp();
+                                                } else {
+                                                  _stopWfp();
+                                                }
+                                              },
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ),
-                        ValueListenableBuilder<List<WfpModel>>(
-                          valueListenable:
-                              Aps().wfpModels as ValueNotifier<List<WfpModel>>,
-                          builder: (context, rules, _) {
-                            final enabledRules =
-                                rules.where((r) => r.enabled).length;
-                            return Chip(
-                              label: Text('$enabledRules/${rules.length} 规则'),
-                              backgroundColor: colorScheme.primaryContainer,
-                            );
-                          },
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
-            const SizedBox(height: 16),
 
             // 规则列表区域
             Expanded(
-              child: ValueListenableBuilder<List<WfpModel>>(
-                valueListenable:
-                    Aps().wfpModels as ValueNotifier<List<WfpModel>>,
-                builder: (context, rules, _) {
-                  return Column(
-                    children: [
-                      // 规则操作栏
-                      if (rules.isNotEmpty)
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '共 ${rules.length} 条规则',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  '已启用: ${rules.where((r) => r.enabled).length}',
-                                  style: TextStyle(
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  '已禁用: ${rules.where((r) => !r.enabled).length}',
-                                  style: TextStyle(color: Colors.grey.shade600),
-                                ),
-                                const Spacer(),
-                                if (!Aps().wfpStatus.value &&
-                                    rules.isNotEmpty) ...[
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      Icons.check_circle_outline,
-                                      size: 18,
-                                    ),
-                                    label: const Text('全部启用'),
-                                    onPressed: () => _toggleAllRules(true),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      Icons.cancel_outlined,
-                                      size: 18,
-                                    ),
-                                    label: const Text('全部禁用'),
-                                    onPressed: () => _toggleAllRules(false),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-
-                      // 规则列表
-                      Expanded(
-                        child:
-                            rules.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.security_outlined, size: 64, color: Colors.grey.shade400),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          '暂无防火墙规则',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.grey.shade600,
-                                            fontWeight: FontWeight.w500,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: Aps().wfpStatus as ValueNotifier<bool>,
+                builder: (context, isWfpRunning, _) {
+                  return ValueListenableBuilder<List<WfpModel>>(
+                    valueListenable:
+                        Aps().wfpModels as ValueNotifier<List<WfpModel>>,
+                    builder: (context, rules, _) {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          // 规则列表
+                          Expanded(
+                            child:
+                                rules.isEmpty
+                                    ? Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.security_outlined,
+                                            size: 64,
+                                            color: Colors.grey.shade400,
                                           ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text('点击下方按钮添加第一条规则', style: TextStyle(color: Colors.grey.shade500)),
-                                      ],
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            '暂无防火墙规则',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: Colors.grey.shade600,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            '点击下方按钮添加第一条规则',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    : _WfpRulesTable(
+                                      rules: rules,
+                                      isWfpRunning: isWfpRunning,
+                                      onEditRule: showEditDialog,
+                                      onDeleteRule: showDeleteConfirmDialog,
+                                      onToggleRule: _toggleRule,
                                     ),
-                                  )
-                                : _WfpRulesTable(
-                                  rules: rules,
-                                  isWfpRunning: Aps().wfpStatus.value,
-                                  onEditRule: showEditDialog,
-                                  onDeleteRule: showDeleteConfirmDialog,
-                                  onToggleRule: _toggleRule,
-                                ),
-                      ),
-
-                      // 添加规则按钮
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add),
-                          label: const Text('添加新规则'),
-                          onPressed:
-                              Aps().wfpStatus.value
-                                  ? null
-                                  : () => showEditDialog(context, null),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                        ),
-                      ),
-                    ],
+
+                          // 添加规则按钮
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: const Text('添加新规则'),
+                              onPressed:
+                                  isWfpRunning
+                                      ? null
+                                      : () => showEditDialog(context, null),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
