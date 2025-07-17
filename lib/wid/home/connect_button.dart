@@ -238,7 +238,7 @@ class _ConnectButtonState extends State<ConnectButton>
     devName: aps.devName.value,
     enableEncryption: aps.enableEncryption.value,
     enableIpv6: aps.enableIpv6.value,
-    mtu: aps.mtu.value,
+    mtu: aps.enableEncryption.value ? 1360 : 1380,
     multiThread: aps.multiThread.value,
     latencyFirst: aps.latencyFirst.value,
     enableExitNode: aps.enableExitNode.value,

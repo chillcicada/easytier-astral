@@ -79,12 +79,6 @@ class _WfpPageState extends State<WfpPage> {
             final localParts = localRules[localIndex];
             final remoteParts = remoteRules[remoteIndex];
 
-            // 如果本地和远程规则都为空，但有应用程序路径，仍然创建规则
-            // 如果本地和远程规则都为空且没有应用程序路径，则跳过
-            if (localParts.isEmpty && remoteParts.isEmpty && ntPath == null) {
-              continue;
-            }
-
             final localAddress = localParts['address'] as String?;
             final localPort = localParts['port'] as int?;
             final localPortRange = localParts['portRange'] as (int, int)?;

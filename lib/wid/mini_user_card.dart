@@ -209,39 +209,46 @@ class _MiniUserCardState extends State<MiniUserCard> {
   }
 }
 
-// 将NAT类型转换为NAT1-4显示
+// 将NAT类型转换为中文评级显示
 String _mapNatType(String natType) {
   switch (natType) {
     case 'Unknown':
-      return 'NAT?';
+      return '未知';
     case 'OpenInternet':
+      return '极好';
     case 'NoPat':
+      return '极好';
     case 'FullCone':
-      return 'NAT1';
+      return '优秀';
     case 'Restricted':
-      return 'NAT2';
+      return '良好';
     case 'PortRestricted':
-      return 'NAT3';
+      return '良好';
     case 'Symmetric':
+      return '极差';
     case 'SymUdpFirewall':
+      return '差';
     case 'SymmetricEasyInc':
+      return '差';
     case 'SymmetricEasyDec':
-      return 'NAT4';
+      return '差';
     default:
-      return 'NAT?';
+      return '未知';
   }
 }
 
 // 根据NAT类型获取图标
 IconData _getNatTypeIcon(String natType) {
   switch (natType) {
-    case 'NAT1':
+    case '极好':
+      return Icons.star;
+    case '优秀':
       return Icons.public;
-    case 'NAT2':
+    case '良好':
       return Icons.shield;
-    case 'NAT3':
-      return Icons.security;
-    case 'NAT4':
+    case '差':
+      return Icons.warning;
+    case '极差':
       return Icons.sync_alt;
     default:
       return Icons.help_outline;
@@ -251,13 +258,15 @@ IconData _getNatTypeIcon(String natType) {
 // 根据NAT类型获取颜色
 Color _getNatTypeColor(String natType) {
   switch (natType) {
-    case 'NAT1':
+    case '极好':
+      return Colors.purple;
+    case '优秀':
       return Colors.green;
-    case 'NAT2':
+    case '良好':
       return Colors.lightGreen;
-    case 'NAT3':
+    case '差':
       return Colors.orange;
-    case 'NAT4':
+    case '极差':
       return Colors.red;
     default:
       return Colors.grey;
