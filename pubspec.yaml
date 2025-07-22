@@ -2,7 +2,7 @@ name: astral
 description: 'astral'
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.22
+version: 2.1.23
 
 environment:
   sdk: ^3.7.2
@@ -54,6 +54,8 @@ dependencies:
   file_picker: ^10.2.0
   easy_localization: ^3.0.7+1
   easy_localization_loader: ^2.0.2
+  http: ^1.1.0
+  flutter_local_notifications: ^19.3.1
 
 dev_dependencies:
   flutter_test:

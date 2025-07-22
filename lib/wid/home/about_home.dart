@@ -17,13 +17,13 @@ class AboutHome extends StatefulWidget {
 
 class _AboutHomeState extends State<AboutHome> {
   String version = '';
+  
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     easytierVersion().then((value) {
       setState(() {
-        version = value; // 异步完成后更新状态
+        version = value;
       });
     });
   }

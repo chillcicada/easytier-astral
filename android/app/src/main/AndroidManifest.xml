@@ -10,6 +10,10 @@
     <!-- 添加安装权限 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     
+    <!-- 添加通知权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
     <!-- 声明使用VPN服务 -->
     <uses-feature android:name="android.software.vpn" android:required="false"/>
     

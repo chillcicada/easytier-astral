@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:vpn_service_plugin/vpn_service_plugin.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:astral/generated/locale_keys.g.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class ConnectButton extends StatefulWidget {
   const ConnectButton({super.key});
@@ -29,6 +30,11 @@ class _ConnectButtonState extends State<ConnectButton>
   Timer? _connectionTimer;
   Timer? _timeoutTimer;
   int _connectionDuration = 0; // 连接持续时间（秒）
+  
+  // 添加通知插件（仅安卓平台）
+  final FlutterLocalNotificationsPlugin? _notificationsPlugin = 
+      Platform.isAndroid ? FlutterLocalNotificationsPlugin() : null;
+  static const int _notificationId = 1001;
 
   // 添加超时时间常量
   static const int connectionTimeoutSeconds = 15;
@@ -82,6 +88,9 @@ class _ConnectButtonState extends State<ConnectButton>
     )..repeat(reverse: true);
 
     if (Platform.isAndroid) {
+      // 初始化通知
+      _initializeNotifications();
+      
       // 监听VPN服务启动事件
       vpnPlugin?.onVpnServiceStarted.listen((data) {
         setTunFd(fd: data['fd']);
@@ -105,7 +114,75 @@ class _ConnectButtonState extends State<ConnectButton>
   void dispose() {
     _animationController.dispose();
     _timeoutTimer?.cancel(); // 组件销毁时也要取消
+    _connectionTimer?.cancel();
+    if (Platform.isAndroid) {
+      _cancelNotification();
+    }
     super.dispose();
+  }
+
+  // 初始化通知
+  Future<void> _initializeNotifications() async {
+    if (_notificationsPlugin == null) return;
+    
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    
+    await _notificationsPlugin!.initialize(initializationSettings);
+  }
+
+  // 显示或更新连接状态通知
+  Future<void> _showConnectionNotification({
+    required String status,
+    required String ip,
+    required String duration,
+  }) async {
+    if (_notificationsPlugin == null) return;
+
+    const AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      'astral_connection',
+      'Astral 连接状态',
+      channelDescription: '显示 Astral VPN 连接状态和信息',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      autoCancel: false,
+      showWhen: false,
+      icon: '@mipmap/ic_launcher',
+    );
+
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails);
+
+    await _notificationsPlugin!.show(
+      _notificationId,
+      'Astral VPN - $status',
+      'IP: $ip | 连接时间: $duration',
+      notificationDetails,
+    );
+  }
+
+  // 取消通知
+  Future<void> _cancelNotification() async {
+    if (_notificationsPlugin == null) return;
+    await _notificationsPlugin!.cancel(_notificationId);
+  }
+
+  // 格式化连接时间
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+    
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    } else {
+      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
   }
 
   /// 开始连接流程的方法
@@ -269,6 +346,15 @@ class _ConnectButtonState extends State<ConnectButton>
       _progress = 0.0;
     });
 
+    // 在安卓平台显示连接中通知
+    if (Platform.isAndroid) {
+      await _showConnectionNotification(
+        status: '连接中',
+        ip: '正在获取...',
+        duration: '00:00',
+      );
+    }
+
     // 设置连接超时
     _setupConnectionTimeout();
 
@@ -280,6 +366,9 @@ class _ConnectButtonState extends State<ConnectButton>
     _timeoutTimer = Timer(Duration(seconds: connectionTimeoutSeconds), () {
       if (Aps().Connec_state.value == CoState.connecting) {
         debugPrint("连接超时");
+        if (Platform.isAndroid) {
+          _cancelNotification();
+        }
         _disconnect();
       }
     });
@@ -332,6 +421,12 @@ class _ConnectButtonState extends State<ConnectButton>
     Aps().isConnecting.value = true;
     if (Platform.isAndroid) {
       _startVpn(ipv4Addr: Aps().ipv4.value, mtu: Aps().mtu.value);
+      // 显示连接成功通知
+      await _showConnectionNotification(
+        status: '已连接',
+        ip: Aps().ipv4.value.isNotEmpty ? Aps().ipv4.value : '获取中...',
+        duration: _formatDuration(_connectionDuration),
+      );
     }
     if (Platform.isWindows) {
       if (Aps().autoSetMTU.value) {
@@ -363,6 +458,15 @@ class _ConnectButtonState extends State<ConnectButton>
 
       Aps().updateIpv4(_extractIpv4Address(data));
       Aps().netStatus.value = await getNetworkStatus();
+      
+      // 在安卓平台更新通知
+      if (Platform.isAndroid && Aps().Connec_state.value == CoState.connected) {
+        await _showConnectionNotification(
+          status: '已连接',
+          ip: Aps().ipv4.value.isNotEmpty ? Aps().ipv4.value : '获取中...',
+          duration: _formatDuration(_connectionDuration),
+        );
+      }
     } catch (e) {
       // 监控过程中出现错误时保持连接状态，但记录错误
       debugPrint('Network monitoring error: $e');
@@ -376,6 +480,8 @@ class _ConnectButtonState extends State<ConnectButton>
     Aps().isConnecting.value = false;
     if (Platform.isAndroid) {
       vpnPlugin?.stopVpn();
+      // 取消通知
+      _cancelNotification();
     }
     // 取消计时器
     _connectionTimer?.cancel();
