@@ -1,7 +1,6 @@
 
 
 <div align="center">
-  <img width="160" src="https://astral.fan/images/%E8%B5%9E%E5%8A%A9/logo%20(1).png" alt="Astral Logo">
   <h1 id="astral"><a href="https://astral.fan/" target="_blank">Astral</a></h1>
 
   [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ldoubil/astral)
