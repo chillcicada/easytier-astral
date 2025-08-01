@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:astral/src/rust/api/simple.dart';
+import 'package:astral/src/rust/api/utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:astral/fun/up.dart';
 import 'package:astral/fun/reg.dart'; // 添加这行导入
@@ -12,8 +14,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:astral/src/rust/frb_generated.dart';
 import 'package:astral/app.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
+  await RustLib.init();
+  // initApp();
+
   // Linux 下检测是否为 root 权限
   if (!kIsWeb && Platform.isLinux) {
     final env = Platform.environment;
@@ -24,17 +30,30 @@ void main() async {
       exit(1);
     }
   }
+
   WidgetsFlutterBinding.ensureInitialized();
+  
+  if (Platform.isMacOS) {
+    checkSudo().then((elevated) {
+      if (!elevated) {
+        exit(0); // 当前进程退出，交由新进程运行
+      }
+    });
+  }
   await EasyLocalization.ensureInitialized();
   await AppDatabase().init();
   AppInfoUtil.init();
-  await RustLib.init();
+  
   await LogCapture().startCapture();
   await UrlSchemeRegistrar.registerUrlScheme();
   await _initAppLinks();
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     await WindowManagerUtils.initializeWindow();
   }
+  _runApp();
+}
+
+void _runApp() {
   runApp(
     EasyLocalization(
       supportedLocales: const [
@@ -54,6 +73,7 @@ void main() async {
     ),
   );
 }
+
 
 Future<void> _initAppLinks() async {
   final registry = AppLinkRegistry();

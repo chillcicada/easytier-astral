@@ -10,7 +10,7 @@ use std::{
     time::SystemTime,
 };
 
-use dashmap::DashMap;
+use dashmap::{DashMap, DashSet};
 use tokio::{
     sync::{
         mpsc::{self, UnboundedReceiver, UnboundedSender},
@@ -25,17 +25,18 @@ use crate::{
         error::Error,
         global_ctx::{ArcGlobalCtx, GlobalCtx, GlobalCtxEvent, NetworkIdentity},
         join_joinset_background,
-        stun::MockStunInfoCollector,
         token_bucket::TokenBucket,
         PeerId,
     },
+    peer_center::instance::{PeerCenterInstance, PeerMapWithPeerRpcManager},
     peers::route_trait::{Route, RouteInterface},
     proto::{
         cli::{ForeignNetworkEntryPb, ListForeignNetworkResponse, PeerInfo},
-        common::{LimiterConfig, NatType},
+        common::LimiterConfig,
         peer_rpc::DirectConnectorRpcServer,
     },
     tunnel::packet_def::{PacketType, ZCPacket},
+    use_global_var,
 };
 
 use super::{
@@ -71,6 +72,8 @@ struct ForeignNetworkEntry {
     packet_recv: Mutex<Option<PacketRecvChanReceiver>>,
 
     bps_limiter: Arc<TokenBucket>,
+
+    peer_center: Arc<PeerCenterInstance>,
 
     tasks: Mutex<JoinSet<()>>,
 
@@ -115,6 +118,13 @@ impl ForeignNetworkEntry {
             .token_bucket_manager()
             .get_or_create(&network.network_name, limiter_config.into());
 
+        let peer_center = Arc::new(PeerCenterInstance::new(Arc::new(
+            PeerMapWithPeerRpcManager {
+                peer_map: peer_map.clone(),
+                rpc_mgr: peer_rpc.clone(),
+            },
+        )));
+
         Self {
             my_peer_id,
 
@@ -133,6 +143,8 @@ impl ForeignNetworkEntry {
 
             tasks: Mutex::new(JoinSet::new()),
 
+            peer_center,
+
             lock: Mutex::new(()),
         }
     }
@@ -146,9 +158,8 @@ impl ForeignNetworkEntry {
         config.set_hostname(Some(format!("PublicServer_{}", global_ctx.get_hostname())));
 
         let foreign_global_ctx = Arc::new(GlobalCtx::new(config));
-        foreign_global_ctx.replace_stun_info_collector(Box::new(MockStunInfoCollector {
-            udp_nat_type: NatType::Unknown,
-        }));
+        foreign_global_ctx
+            .replace_stun_info_collector(Box::new(global_ctx.get_stun_info_collector().clone()));
 
         let mut feature_flag = global_ctx.get_feature_flags();
         feature_flag.is_public_server = true;
@@ -269,6 +280,10 @@ impl ForeignNetworkEntry {
             .await
             .unwrap();
 
+        route
+            .set_route_cost_fn(self.peer_center.get_cost_calculator())
+            .await;
+
         self.peer_map.add_route(Arc::new(Box::new(route))).await;
     }
 
@@ -350,6 +365,7 @@ impl ForeignNetworkEntry {
         self.prepare_route(accessor).await;
         self.start_packet_recv().await;
         self.peer_rpc.run();
+        self.peer_center.init().await;
     }
 }
 
@@ -366,14 +382,14 @@ impl Drop for ForeignNetworkEntry {
 
 struct ForeignNetworkManagerData {
     network_peer_maps: DashMap<String, Arc<ForeignNetworkEntry>>,
-    peer_network_map: DashMap<PeerId, String>,
+    peer_network_map: DashMap<PeerId, DashSet<String>>,
     network_peer_last_update: DashMap<String, SystemTime>,
     accessor: Arc<Box<dyn GlobalForeignNetworkAccessor>>,
     lock: std::sync::Mutex<()>,
 }
 
 impl ForeignNetworkManagerData {
-    fn get_peer_network(&self, peer_id: PeerId) -> Option<String> {
+    fn get_peer_network(&self, peer_id: PeerId) -> Option<DashSet<String>> {
         self.peer_network_map.get(&peer_id).map(|v| v.clone())
     }
 
@@ -383,7 +399,10 @@ impl ForeignNetworkManagerData {
 
     fn remove_peer(&self, peer_id: PeerId, network_name: &String) {
         let _l = self.lock.lock().unwrap();
-        self.peer_network_map.remove(&peer_id);
+        self.peer_network_map.remove_if(&peer_id, |_, v| {
+            let _ = v.remove(network_name);
+            v.is_empty()
+        });
         if let Some(_) = self
             .network_peer_maps
             .remove_if(network_name, |_, v| v.peer_map.is_empty())
@@ -405,7 +424,10 @@ impl ForeignNetworkManagerData {
 
     fn remove_network(&self, network_name: &String) {
         let _l = self.lock.lock().unwrap();
-        self.peer_network_map.retain(|_, v| v != network_name);
+        self.peer_network_map.iter().for_each(|v| {
+            v.value().remove(network_name);
+        });
+        self.peer_network_map.retain(|_, v| !v.is_empty());
         self.network_peer_maps.remove(network_name);
         self.network_peer_last_update.remove(network_name);
     }
@@ -438,7 +460,9 @@ impl ForeignNetworkManagerData {
             .clone();
 
         self.peer_network_map
-            .insert(dst_peer_id, network_identity.network_name.clone());
+            .entry(dst_peer_id)
+            .or_insert_with(|| DashSet::new())
+            .insert(network_identity.network_name.clone());
 
         self.network_peer_last_update
             .insert(network_identity.network_name.clone(), SystemTime::now());
@@ -553,6 +577,19 @@ impl ForeignNetworkManager {
 
         if new_added {
             self.start_event_handler(&entry).await;
+        } else {
+            if let Some(peer) = entry.peer_map.get_peer_by_id(peer_conn.get_peer_id()) {
+                let direct_conns_len = peer.get_directly_connections().len();
+                let max_count = use_global_var!(MAX_DIRECT_CONNS_PER_PEER_IN_FOREIGN_NETWORK);
+                if direct_conns_len >= max_count as usize {
+                    return Err(anyhow::anyhow!(
+                        "too many direct conns, cur: {}, max: {}",
+                        direct_conns_len,
+                        max_count
+                    )
+                    .into());
+                }
+            }
         }
 
         Ok(entry.peer_map.add_new_peer_conn(peer_conn).await)
@@ -651,6 +688,23 @@ impl ForeignNetworkManager {
             Err(Error::RouteError(Some("network not found".to_string())))
         }
     }
+
+    pub async fn close_peer_conn(
+        &self,
+        peer_id: PeerId,
+        conn_id: &super::peer_conn::PeerConnId,
+    ) -> Result<(), Error> {
+        let network_names = self.data.get_peer_network(peer_id).unwrap_or_default();
+        for network_name in network_names {
+            if let Some(entry) = self.data.get_network_entry(&network_name) {
+                let ret = entry.peer_map.close_peer_conn(peer_id, conn_id).await;
+                if ret.is_ok() || !matches!(ret.as_ref().unwrap_err(), Error::NotFound) {
+                    return ret;
+                }
+            }
+        }
+        Err(Error::NotFound)
+    }
 }
 
 impl Drop for ForeignNetworkManager {
@@ -661,7 +715,7 @@ impl Drop for ForeignNetworkManager {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::{
         common::global_ctx::tests::get_mock_global_ctx_with_network,
         connector::udp_hole_punch::tests::{
@@ -697,7 +751,7 @@ mod tests {
         peer_mgr
     }
 
-    async fn create_mock_peer_manager_for_foreign_network(network: &str) -> Arc<PeerManager> {
+    pub async fn create_mock_peer_manager_for_foreign_network(network: &str) -> Arc<PeerManager> {
         create_mock_peer_manager_for_foreign_network_ext(network, network).await
     }
 
@@ -1204,5 +1258,32 @@ mod tests {
         assert_eq!(1, pma_net4.list_routes().await.len());
         assert_eq!(1, pmb_net4.list_routes().await.len());
         assert_eq!(1, pmc_net4.list_routes().await.len());
+    }
+
+    #[tokio::test]
+    async fn test_foreign_network_manager_cluster_max_direct_conns() {
+        set_global_var!(MAX_DIRECT_CONNS_PER_PEER_IN_FOREIGN_NETWORK, 1);
+
+        let pm_center1 = create_mock_peer_manager_with_mock_stun(NatType::Unknown).await;
+
+        let pma_net1 = create_mock_peer_manager_for_foreign_network("net1").await;
+
+        connect_peer_manager(pma_net1.clone(), pm_center1.clone()).await;
+        wait_for_condition(
+            || async { pma_net1.list_routes().await.len() == 1 },
+            Duration::from_secs(5),
+        )
+        .await;
+
+        println!("routes: {:?}", pma_net1.list_routes().await);
+
+        let (a_ring, b_ring) = crate::tunnel::ring::create_ring_tunnel_pair();
+        let a_mgr_copy = pma_net1.clone();
+        tokio::spawn(async move {
+            a_mgr_copy.add_client_tunnel(a_ring, false).await.unwrap();
+        });
+        let b_mgr_copy = pm_center1.clone();
+
+        assert!(b_mgr_copy.add_tunnel_as_server(b_ring, true).await.is_err());
     }
 }

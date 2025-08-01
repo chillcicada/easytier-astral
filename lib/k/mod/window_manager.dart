@@ -7,7 +7,7 @@ import 'package:astral/k/app_s/aps.dart';
 class WindowManagerUtils {
   static Future<void> initializeWindow() async {
     // 检查当前平台是否为 Windows、MacOS 或 Linux
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux ) {
       // 确保窗口管理器已初始化
       await windowManager.ensureInitialized();
       //添加信号监听

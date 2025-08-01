@@ -44,6 +44,10 @@ class AppDatabase {
       final homeDir = Platform.environment['HOME'] ?? '.';
       dbDir =
           Directory(path.join(homeDir, '.local', 'share', 'astral', 'db')).path;
+    } else if (Platform.isMacOS) {
+      // macOS平台使用应用支持目录
+      final appSupportDir = await getApplicationSupportDirectory();
+      dbDir = Directory(path.join(appSupportDir.path, 'astral', 'db')).path;
     } else {
       // 其他平台使用可执行文件所在目录
       final executablePath = Platform.resolvedExecutable;

@@ -29,6 +29,8 @@ class _WindowControlsState extends State<WindowControls>
   Future<void> _initTray() async {
     if (Platform.isWindows) {
       await trayManager.setIcon('assets/icon.ico');
+    } else if (Platform.isMacOS) {
+      await trayManager.setIcon('assets/logo.png');
     } else {
       await trayManager.setIcon('assets/logo.png');
     }
@@ -101,7 +103,10 @@ class _WindowControlsState extends State<WindowControls>
         IconButton(
           icon: const Icon(Icons.remove),
           onPressed: () async {
+            
+              print('Minimize button was pressed!');
             await windowManager.minimize();
+            
           },
           tooltip: '最小化',
           iconSize: 20,

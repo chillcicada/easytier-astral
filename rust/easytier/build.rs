@@ -128,13 +128,13 @@ fn check_locale() {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // enable thunk-rs when target os is windows and arch is x86_64 or i686
-    // #[cfg(target_os = "windows")]
-    // if !std::env::var("TARGET")
-    //     .unwrap_or_default()
-    //     .contains("aarch64")
-    // {
-    //     thunk::thunk();
-    // }
+    #[cfg(target_os = "windows")]
+    if !std::env::var("TARGET")
+        .unwrap_or_default()
+        .contains("aarch64")
+    {
+        thunk::thunk();
+    }
 
     #[cfg(target_os = "windows")]
     WindowsBuild::check_for_win();
@@ -147,6 +147,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "src/proto/cli.proto",
         "src/proto/web.proto",
         "src/proto/magic_dns.proto",
+        "src/proto/acl.proto",
     ];
 
     for proto_file in proto_files.iter().chain(proto_files_reflect.iter()) {
@@ -156,6 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = prost_build::Config::new();
     config
         .protoc_arg("--experimental_allow_proto3_optional")
+        .type_attribute(".acl", "#[derive(serde::Serialize, serde::Deserialize)]")
         .type_attribute(".common", "#[derive(serde::Serialize, serde::Deserialize)]")
         .type_attribute(".error", "#[derive(serde::Serialize, serde::Deserialize)]")
         .type_attribute(".cli", "#[derive(serde::Serialize, serde::Deserialize)]")
@@ -170,7 +172,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .type_attribute("common.RpcDescriptor", "#[derive(Hash, Eq)]")
         .field_attribute(".web.NetworkConfig", "#[serde(default)]")
         .service_generator(Box::new(rpc_build::ServiceGenerator::new()))
-        .btree_map(["."]);
+        .btree_map(["."])
+        .skip_debug(&[".common.Ipv4Addr", ".common.Ipv6Addr", ".common.UUID"]);
 
     config.compile_protos(&proto_files, &["src/proto/"])?;
 

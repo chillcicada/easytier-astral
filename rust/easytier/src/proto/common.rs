@@ -1,4 +1,7 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{self, Display},
+    str::FromStr,
+};
 
 use anyhow::Context;
 
@@ -33,8 +36,14 @@ impl From<String> for Uuid {
     }
 }
 
-impl Display for Uuid {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", uuid::Uuid::from(self.clone()))
+    }
+}
+
+impl fmt::Debug for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", uuid::Uuid::from(self.clone()))
     }
 }
@@ -109,8 +118,8 @@ impl From<Ipv4Inet> for cidr::Ipv4Inet {
     }
 }
 
-impl std::fmt::Display for Ipv4Inet {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Ipv4Inet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", cidr::Ipv4Inet::from(self.clone()))
     }
 }
@@ -122,6 +131,78 @@ impl FromStr for Ipv4Inet {
         Ok(Ipv4Inet::from(
             cidr::Ipv4Inet::from_str(s).with_context(|| "Failed to parse Ipv4Inet")?,
         ))
+    }
+}
+
+impl From<cidr::Ipv6Inet> for Ipv6Inet {
+    fn from(value: cidr::Ipv6Inet) -> Self {
+        Ipv6Inet {
+            address: Some(value.address().into()),
+            network_length: value.network_length() as u32,
+        }
+    }
+}
+
+impl From<Ipv6Inet> for cidr::Ipv6Inet {
+    fn from(value: Ipv6Inet) -> Self {
+        cidr::Ipv6Inet::new(
+            value.address.unwrap_or_default().into(),
+            value.network_length as u8,
+        )
+        .unwrap()
+    }
+}
+
+impl fmt::Display for Ipv6Inet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", cidr::Ipv6Inet::from(self.clone()))
+    }
+}
+
+impl FromStr for Ipv6Inet {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Ipv6Inet::from(
+            cidr::Ipv6Inet::from_str(s).with_context(|| "Failed to parse Ipv6Inet")?,
+        ))
+    }
+}
+
+impl From<cidr::IpInet> for IpInet {
+    fn from(value: cidr::IpInet) -> Self {
+        match value {
+            cidr::IpInet::V4(v4) => IpInet {
+                ip: Some(ip_inet::Ip::Ipv4(Ipv4Inet::from(v4))),
+            },
+            cidr::IpInet::V6(v6) => IpInet {
+                ip: Some(ip_inet::Ip::Ipv6(Ipv6Inet::from(v6))),
+            },
+        }
+    }
+}
+
+impl From<IpInet> for cidr::IpInet {
+    fn from(value: IpInet) -> Self {
+        match value.ip {
+            Some(ip_inet::Ip::Ipv4(v4)) => cidr::IpInet::V4(v4.into()),
+            Some(ip_inet::Ip::Ipv6(v6)) => cidr::IpInet::V6(v6.into()),
+            None => panic!("IpInet is None"),
+        }
+    }
+}
+
+impl Display for IpInet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", cidr::IpInet::from(self.clone()))
+    }
+}
+
+impl FromStr for IpInet {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(IpInet::from(cidr::IpInet::from_str(s)?))
     }
 }
 
@@ -149,8 +230,8 @@ impl FromStr for Url {
     }
 }
 
-impl Display for Url {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Url {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.url)
     }
 }
@@ -216,5 +297,19 @@ impl TryFrom<CompressorAlgo> for CompressionAlgoPb {
             CompressorAlgo::ZstdDefault => Ok(CompressionAlgoPb::Zstd),
             CompressorAlgo::None => Ok(CompressionAlgoPb::None),
         }
+    }
+}
+
+impl fmt::Debug for Ipv4Addr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let std_ipv4_addr = std::net::Ipv4Addr::from(self.clone());
+        write!(f, "{}", std_ipv4_addr)
+    }
+}
+
+impl fmt::Debug for Ipv6Addr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let std_ipv6_addr = std::net::Ipv6Addr::from(self.clone());
+        write!(f, "{}", std_ipv6_addr)
     }
 }

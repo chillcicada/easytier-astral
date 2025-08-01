@@ -25,7 +25,7 @@ pub enum Error {
     NotFound,
     #[error("Invalid Url: {0}")]
     InvalidUrl(String),
-    #[error("and error: {0}")]
+    #[error("Shell Command error: {0}")]
     ShellCommandError(String),
     // #[error("Rpc listen error: {0}")]
     // RpcListenError(String),

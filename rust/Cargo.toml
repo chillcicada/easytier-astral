@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.10.0"
+flutter_rust_bridge = "=2.11.1"
 lazy_static =  "1.4"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -18,7 +18,9 @@ humansize = "1.1.1"
 tokio = { version = "1.39.2", features = ["full"] }
 anyhow = "1.0.95"
 surge-ping = "0.8"
+
 easytier = { path = "./easytier" }
+elevated-command = "1.1.2"
 # easytier = { git = "https://github.com/ldoubil/EasyTier", branch = "main" }
 
 [target.'cfg(target_os = "windows")'.dependencies]

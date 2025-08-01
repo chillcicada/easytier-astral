@@ -31,6 +31,8 @@ pub use std::collections::BTreeMap;
 use std::sync::Mutex;
 use tokio::runtime::Runtime;
 pub use tokio::task::JoinHandle;
+
+use crate::api::utils::check_sudo;
 pub static DEFAULT_ET_DNS_ZONE: &str = "as.net.";
 
 static INSTANCE: Mutex<Option<NetworkInstance>> = Mutex::new(None);
@@ -697,6 +699,7 @@ pub fn get_peer_route_pairs() -> Result<Vec<PeerRoutePair>, String> {
                 let my_route = proto::cli::Route {
                     peer_id: my_peer_id,
                     ipv4_addr: my_node_info.virtual_ipv4.clone(),
+                    ipv6_addr: None, // 添加ipv6地址字段,目前暂不支持ipv6
                     next_hop_peer_id: my_peer_id, // 指向自己
                     cost: 0,                      // 到自己的成本为0
                     path_latency: 0,              // 到自己的延迟为0
