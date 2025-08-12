@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::common::config::ProxyNetworkConfig;
+use crate::common::stats_manager::StatsManager;
 use crate::common::token_bucket::TokenBucketManager;
 use crate::peers::acl_filter::AclFilter;
 use crate::proto::cli::PeerConnInfo;
@@ -83,6 +84,8 @@ pub struct GlobalCtx {
 
     token_bucket_manager: TokenBucketManager,
 
+    stats_manager: Arc<StatsManager>,
+
     acl_filter: Arc<AclFilter>,
 }
 
@@ -150,6 +153,8 @@ impl GlobalCtx {
             quic_proxy_port: AtomicCell::new(None),
 
             token_bucket_manager: TokenBucketManager::new(),
+
+            stats_manager: Arc::new(StatsManager::new()),
 
             acl_filter: Arc::new(AclFilter::new()),
         }
@@ -291,6 +296,29 @@ impl GlobalCtx {
         key
     }
 
+    pub fn get_256_key(&self) -> [u8; 32] {
+        let mut key = [0u8; 32];
+        let secret = self
+            .config
+            .get_network_identity()
+            .network_secret
+            .unwrap_or_default();
+        // fill key according to network secret
+        let mut hasher = DefaultHasher::new();
+        hasher.write(secret.as_bytes());
+        hasher.write(b"easytier-256bit-key"); // 添加固定盐值以区分128位和256位密钥
+
+        // 生成32字节密钥
+        for i in 0..4 {
+            let chunk_start = i * 8;
+            let chunk_end = chunk_start + 8;
+            hasher.write(&key[0..chunk_start]);
+            hasher.write(&[i as u8]); // 添加索引以确保每个8字节块都不同
+            key[chunk_start..chunk_end].copy_from_slice(&hasher.finish().to_be_bytes());
+        }
+        key
+    }
+
     pub fn enable_exit_node(&self) -> bool {
         self.enable_exit_node
     }
@@ -321,6 +349,10 @@ impl GlobalCtx {
 
     pub fn token_bucket_manager(&self) -> &TokenBucketManager {
         &self.token_bucket_manager
+    }
+
+    pub fn stats_manager(&self) -> &Arc<StatsManager> {
+        &self.stats_manager
     }
 
     pub fn get_acl_filter(&self) -> &Arc<AclFilter> {

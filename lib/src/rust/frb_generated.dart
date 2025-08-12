@@ -259,7 +259,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiAstralWfpWfpControllerGetLayerName({
     required WfpController that,
-    required GUID layerKey,
+    required Guid layerKey,
   });
 
   Future<void> crateApiAstralWfpWfpControllerInitialize({
@@ -341,6 +341,12 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_FilterRule;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_FilterRulePtr;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Guid;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Guid;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_GuidPtr;
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_IpAddr;
 
@@ -1744,7 +1750,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<void> crateApiAstralWfpWfpControllerGetLayerName({
     required WfpController that,
-    required GUID layerKey,
+    required Guid layerKey,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -1754,7 +1760,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_box_autoadd_guid(layerKey, serializer);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+            layerKey,
+            serializer,
+          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2456,6 +2465,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get rust_arc_decrement_strong_count_FilterRule =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFilterRule;
 
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Guid =>
+      wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Guid =>
+      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID;
+
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_IpAddr =>
       wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpAddr;
@@ -2621,6 +2636,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Guid
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return GuidImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   IpNetwork
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     dynamic raw,
@@ -2654,6 +2678,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FilterRuleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  Guid
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return GuidImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2728,12 +2761,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FlagsC dco_decode_box_autoadd_flags_c(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_flags_c(raw);
-  }
-
-  @protected
-  GUID dco_decode_box_autoadd_guid(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_guid(raw);
   }
 
   @protected
@@ -2828,20 +2855,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       bindAddr: dco_decode_String(arr[0]),
       dstAddr: dco_decode_String(arr[1]),
       proto: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  GUID dco_decode_guid(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return GUID(
-      data1: dco_decode_u_32(arr[0]),
-      data2: dco_decode_u_16(arr[1]),
-      data3: dco_decode_u_16(arr[2]),
-      data4: dco_decode_u_8_array_8(arr[3]),
     );
   }
 
@@ -3080,12 +3093,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  U8Array8 dco_decode_u_8_array_8(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return U8Array8(dco_decode_list_prim_u_8_strict(raw));
-  }
-
-  @protected
   void dco_decode_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return;
@@ -3249,6 +3256,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Guid
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return GuidImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   IpNetwork
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     SseDeserializer deserializer,
@@ -3291,6 +3310,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return FilterRuleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  Guid
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return GuidImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3385,12 +3416,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FlagsC sse_decode_box_autoadd_flags_c(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_flags_c(deserializer));
-  }
-
-  @protected
-  GUID sse_decode_box_autoadd_guid(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_guid(deserializer));
   }
 
   @protected
@@ -3510,21 +3535,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       bindAddr: var_bindAddr,
       dstAddr: var_dstAddr,
       proto: var_proto,
-    );
-  }
-
-  @protected
-  GUID sse_decode_guid(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_data1 = sse_decode_u_32(deserializer);
-    var var_data2 = sse_decode_u_16(deserializer);
-    var var_data3 = sse_decode_u_16(deserializer);
-    var var_data4 = sse_decode_u_8_array_8(deserializer);
-    return GUID(
-      data1: var_data1,
-      data2: var_data2,
-      data3: var_data3,
-      data4: var_data4,
     );
   }
 
@@ -3853,13 +3863,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  U8Array8 sse_decode_u_8_array_8(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_list_prim_u_8_strict(deserializer);
-    return U8Array8(inner);
-  }
-
-  @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
   }
@@ -4037,6 +4040,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    Guid self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as GuidImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIpNetwork(
     IpNetwork self,
     SseSerializer serializer,
@@ -4083,6 +4099,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as FilterRuleImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+    Guid self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as GuidImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -4184,12 +4213,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_guid(GUID self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_guid(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_protocol(
     Protocol self,
     SseSerializer serializer,
@@ -4278,15 +4301,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.bindAddr, serializer);
     sse_encode_String(self.dstAddr, serializer);
     sse_encode_String(self.proto, serializer);
-  }
-
-  @protected
-  void sse_encode_guid(GUID self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.data1, serializer);
-    sse_encode_u_16(self.data2, serializer);
-    sse_encode_u_16(self.data3, serializer);
-    sse_encode_u_8_array_8(self.data4, serializer);
   }
 
   @protected
@@ -4577,12 +4591,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_u_8_array_8(U8Array8 self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_prim_u_8_strict(self.inner, serializer);
-  }
-
-  @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
   }
@@ -4757,6 +4765,26 @@ class FilterRuleImpl extends RustOpaque implements FilterRule {
 }
 
 @sealed
+class GuidImpl extends RustOpaque implements Guid {
+  // Not to be used by end users
+  GuidImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  GuidImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_Guid,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_Guid,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_GuidPtr,
+  );
+}
+
+@sealed
 class IpAddrImpl extends RustOpaque implements IpAddr {
   // Not to be used by end users
   IpAddrImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -4925,7 +4953,7 @@ class WfpControllerImpl extends RustOpaque implements WfpController {
         filterIds: filterIds,
       );
 
-  Future<void> getLayerName({required GUID layerKey}) =>
+  Future<void> getLayerName({required Guid layerKey}) =>
       RustLib.instance.api.crateApiAstralWfpWfpControllerGetLayerName(
         that: this,
         layerKey: layerKey,

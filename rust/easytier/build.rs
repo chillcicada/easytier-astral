@@ -83,7 +83,16 @@ impl WindowsBuild {
         } else {
             Self::download_protoc()
         };
-        std::env::set_var("PROTOC", protoc_path);
+        std::env::set_var("PROTOC", &protoc_path);
+
+        // Set PROTOC_INCLUDE if not already set by download_protoc
+        if std::env::var_os("PROTOC_INCLUDE").is_none() {
+            let protoc_dir = protoc_path.parent().unwrap();
+            let include_dir = protoc_dir.join("../include"); // Assuming protoc is in bin/ and include is in root
+            if include_dir.exists() {
+                std::env::set_var("PROTOC_INCLUDE", include_dir);
+            }
+        }
     }
 }
 

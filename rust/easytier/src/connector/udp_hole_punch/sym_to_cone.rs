@@ -342,7 +342,7 @@ impl PunchSymToConeHoleClient {
     async fn get_rpc_stub(
         &self,
         dst_peer_id: PeerId,
-    ) -> Box<(dyn UdpHolePunchRpc<Controller = BaseController> + std::marker::Send + 'static)> {
+    ) -> Box<dyn UdpHolePunchRpc<Controller = BaseController> + std::marker::Send + 'static> {
         self.peer_mgr
             .get_peer_rpc_mgr()
             .rpc_client()
@@ -437,7 +437,7 @@ impl PunchSymToConeHoleClient {
             )
             .await;
 
-        let resp = handle_rpc_result(resp, dst_peer_id, self.blacklist.clone())?;
+        let resp = handle_rpc_result(resp, dst_peer_id, &self.blacklist)?;
 
         let remote_mapped_addr = resp.listener_mapped_addr.ok_or(anyhow::anyhow!(
             "select_punch_listener response missing listener_mapped_addr"

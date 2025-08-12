@@ -7,8 +7,8 @@ import '../frb_generated.dart';
 import '../lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `add_filters_non_windows`, `cleanup_non_windows`, `delete_filters_non_windows`, `initialize_non_windows`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`
+// These functions are ignored because they are not marked as `pub`: `add_filters_windows`, `add_ip_condition`, `add_network_filter`, `cleanup_windows`, `delete_filters_windows`, `get_layers_for_rule`, `initialize_windows`, `validate_rule_layer_compatibility`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from_str`
 
 Future<Uint16List> toWideString({required String s}) =>
     RustLib.instance.api.crateApiAstralWfpToWideString(s: s);
@@ -100,6 +100,9 @@ abstract class FilterRule implements RustOpaqueInterface {
   Future<void> validate();
 }
 
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>>
+abstract class Guid implements RustOpaqueInterface {}
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IpNetwork>>
 abstract class IpNetwork implements RustOpaqueInterface {
   IpAddr get ip;
@@ -127,7 +130,7 @@ abstract class WfpController implements RustOpaqueInterface {
 
   Future<int> deleteFilters({required Uint64List filterIds});
 
-  Future<void> getLayerName({required GUID layerKey});
+  Future<void> getLayerName({required Guid layerKey});
 
   Future<void> initialize();
 
@@ -141,34 +144,6 @@ enum Direction { inbound, outbound, both }
 
 /// 过滤动作类型
 enum FilterAction { allow, block }
-
-class GUID {
-  final int data1;
-  final int data2;
-  final int data3;
-  final U8Array8 data4;
-
-  const GUID({
-    required this.data1,
-    required this.data2,
-    required this.data3,
-    required this.data4,
-  });
-
-  @override
-  int get hashCode =>
-      data1.hashCode ^ data2.hashCode ^ data3.hashCode ^ data4.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GUID &&
-          runtimeType == other.runtimeType &&
-          data1 == other.data1 &&
-          data2 == other.data2 &&
-          data3 == other.data3 &&
-          data4 == other.data4;
-}
 
 /// 网络协议类型
 enum Protocol { tcp, udp }

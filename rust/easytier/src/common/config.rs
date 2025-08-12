@@ -1,5 +1,5 @@
 use std::{
-    net::{Ipv4Addr, SocketAddr},
+    net::{IpAddr, SocketAddr},
     path::PathBuf,
     sync::{Arc, Mutex},
     u64,
@@ -40,14 +40,85 @@ pub fn gen_default_flags() -> Flags {
         bind_device: true,
         enable_kcp_proxy: false,
         disable_kcp_input: false,
-        disable_relay_kcp: true,
+        disable_relay_kcp: false,
+        enable_relay_foreign_network_kcp: false,
         accept_dns: false,
         private_mode: false,
         enable_quic_proxy: false,
         disable_quic_input: false,
         foreign_relay_bps_limit: u64::MAX,
         multi_thread_count: 2,
+        encryption_algorithm: "".to_string(), // 空字符串表示使用默认的 AES-GCM
     }
+}
+
+pub enum EncryptionAlgorithm {
+    AesGcm,
+    Aes256Gcm,
+    Xor,
+    #[cfg(feature = "wireguard")]
+    ChaCha20,
+
+    #[cfg(feature = "openssl-crypto")]
+    OpensslAesGcm,
+    #[cfg(feature = "openssl-crypto")]
+    OpensslChacha20,
+    #[cfg(feature = "openssl-crypto")]
+    OpensslAes256Gcm,
+}
+
+impl std::fmt::Display for EncryptionAlgorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::AesGcm => write!(f, "aes-gcm"),
+            Self::Aes256Gcm => write!(f, "aes-256-gcm"),
+            Self::Xor => write!(f, "xor"),
+            #[cfg(feature = "wireguard")]
+            Self::ChaCha20 => write!(f, "chacha20"),
+            #[cfg(feature = "openssl-crypto")]
+            Self::OpensslAesGcm => write!(f, "openssl-aes-gcm"),
+            #[cfg(feature = "openssl-crypto")]
+            Self::OpensslChacha20 => write!(f, "openssl-chacha20"),
+            #[cfg(feature = "openssl-crypto")]
+            Self::OpensslAes256Gcm => write!(f, "openssl-aes-256-gcm"),
+        }
+    }
+}
+
+impl TryFrom<&str> for EncryptionAlgorithm {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "aes-gcm" => Ok(Self::AesGcm),
+            "aes-256-gcm" => Ok(Self::Aes256Gcm),
+            "xor" => Ok(Self::Xor),
+            #[cfg(feature = "wireguard")]
+            "chacha20" => Ok(Self::ChaCha20),
+            #[cfg(feature = "openssl-crypto")]
+            "openssl-aes-gcm" => Ok(Self::OpensslAesGcm),
+            #[cfg(feature = "openssl-crypto")]
+            "openssl-chacha20" => Ok(Self::OpensslChacha20),
+            #[cfg(feature = "openssl-crypto")]
+            "openssl-aes-256-gcm" => Ok(Self::OpensslAes256Gcm),
+            _ => Err(anyhow::anyhow!("invalid encryption algorithm")),
+        }
+    }
+}
+
+pub fn get_avaliable_encrypt_methods() -> Vec<&'static str> {
+    let mut r = vec!["aes-gcm", "aes-256-gcm", "xor"];
+    if cfg!(feature = "wireguard") {
+        r.push("chacha20");
+    }
+    if cfg!(feature = "openssl-crypto") {
+        r.extend(vec![
+            "openssl-aes-gcm",
+            "openssl-chacha20",
+            "openssl-aes-256-gcm",
+        ]);
+    }
+    r
 }
 
 #[auto_impl::auto_impl(Box, &)]
@@ -107,8 +178,8 @@ pub trait ConfigLoader: Send + Sync {
     fn get_flags(&self) -> Flags;
     fn set_flags(&self, flags: Flags);
 
-    fn get_exit_nodes(&self) -> Vec<Ipv4Addr>;
-    fn set_exit_nodes(&self, nodes: Vec<Ipv4Addr>);
+    fn get_exit_nodes(&self) -> Vec<IpAddr>;
+    fn set_exit_nodes(&self, nodes: Vec<IpAddr>);
 
     fn get_routes(&self) -> Option<Vec<cidr::Ipv4Cidr>>;
     fn set_routes(&self, routes: Option<Vec<cidr::Ipv4Cidr>>);
@@ -121,6 +192,12 @@ pub trait ConfigLoader: Send + Sync {
 
     fn get_acl(&self) -> Option<Acl>;
     fn set_acl(&self, acl: Option<Acl>);
+
+    fn get_tcp_whitelist(&self) -> Vec<String>;
+    fn set_tcp_whitelist(&self, whitelist: Vec<String>);
+
+    fn get_udp_whitelist(&self) -> Vec<String>;
+    fn set_udp_whitelist(&self, whitelist: Vec<String>);
 
     fn dump(&self) -> String;
 }
@@ -230,7 +307,7 @@ pub struct VpnPortalConfig {
     pub wireguard_listen: SocketAddr,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
 pub struct PortForwardConfig {
     pub bind_addr: SocketAddr,
     pub dst_addr: SocketAddr,
@@ -277,7 +354,7 @@ struct Config {
     network_identity: Option<NetworkIdentity>,
     listeners: Option<Vec<url::Url>>,
     mapped_listeners: Option<Vec<url::Url>>,
-    exit_nodes: Option<Vec<Ipv4Addr>>,
+    exit_nodes: Option<Vec<IpAddr>>,
 
     peer: Option<Vec<PeerConfig>>,
     proxy_network: Option<Vec<ProxyNetworkConfig>>,
@@ -299,6 +376,9 @@ struct Config {
     flags_struct: Option<Flags>,
 
     acl: Option<Acl>,
+
+    tcp_whitelist: Option<Vec<String>>,
+    udp_whitelist: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -615,7 +695,7 @@ impl ConfigLoader for TomlConfigLoader {
         self.config.lock().unwrap().flags_struct = Some(flags);
     }
 
-    fn get_exit_nodes(&self) -> Vec<Ipv4Addr> {
+    fn get_exit_nodes(&self) -> Vec<IpAddr> {
         self.config
             .lock()
             .unwrap()
@@ -624,7 +704,7 @@ impl ConfigLoader for TomlConfigLoader {
             .unwrap_or_default()
     }
 
-    fn set_exit_nodes(&self, nodes: Vec<Ipv4Addr>) {
+    fn set_exit_nodes(&self, nodes: Vec<IpAddr>) {
         self.config.lock().unwrap().exit_nodes = Some(nodes);
     }
 
@@ -663,6 +743,32 @@ impl ConfigLoader for TomlConfigLoader {
 
     fn set_acl(&self, acl: Option<Acl>) {
         self.config.lock().unwrap().acl = acl;
+    }
+
+    fn get_tcp_whitelist(&self) -> Vec<String> {
+        self.config
+            .lock()
+            .unwrap()
+            .tcp_whitelist
+            .clone()
+            .unwrap_or_default()
+    }
+
+    fn set_tcp_whitelist(&self, whitelist: Vec<String>) {
+        self.config.lock().unwrap().tcp_whitelist = Some(whitelist);
+    }
+
+    fn get_udp_whitelist(&self) -> Vec<String> {
+        self.config
+            .lock()
+            .unwrap()
+            .udp_whitelist
+            .clone()
+            .unwrap_or_default()
+    }
+
+    fn set_udp_whitelist(&self, whitelist: Vec<String>) {
+        self.config.lock().unwrap().udp_whitelist = Some(whitelist);
     }
 
     fn dump(&self) -> String {

@@ -4,7 +4,7 @@
 extern crate rust_i18n;
 
 use std::{
-    net::{Ipv4Addr, SocketAddr},
+    net::{IpAddr, SocketAddr},
     path::PathBuf,
     process::ExitCode,
     sync::Arc,
@@ -18,8 +18,9 @@ use clap_complete::Shell;
 use easytier::{
     common::{
         config::{
-            ConfigLoader, ConsoleLoggerConfig, FileLoggerConfig, LoggingConfigLoader,
-            NetworkIdentity, PeerConfig, PortForwardConfig, TomlConfigLoader, VpnPortalConfig,
+            get_avaliable_encrypt_methods, ConfigLoader, ConsoleLoggerConfig, FileLoggerConfig,
+            LoggingConfigLoader, NetworkIdentity, PeerConfig, PortForwardConfig, TomlConfigLoader,
+            VpnPortalConfig,
         },
         constants::EASYTIER_VERSION,
         global_ctx::GlobalCtx,
@@ -29,10 +30,7 @@ use easytier::{
     connector::create_connector_by_url,
     instance_manager::NetworkInstanceManager,
     launcher::{add_proxy_network_to_config, ConfigSource},
-    proto::{
-        acl::{Acl, AclV1, Action, Chain, ChainType, Protocol, Rule},
-        common::{CompressionAlgoPb, NatType},
-    },
+    proto::common::{CompressionAlgoPb, NatType},
     tunnel::{IpVersion, PROTO_PORT_OFFSET},
     utils::{init_logger, setup_panic_handler},
     web_client,
@@ -54,6 +52,11 @@ use jemalloc_ctl::{epoch, stats, Access as _, AsName as _};
 #[cfg(feature = "jemalloc")]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+#[cfg(feature = "jemalloc-prof")]
+#[allow(non_upper_case_globals)]
+#[export_name = "malloc_conf"]
+pub static malloc_conf: &[u8] = b"prof:true,prof_active:true,lg_prof_sample:19\0";
 
 fn set_prof_active(_active: bool) {
     #[cfg(feature = "jemalloc-prof")]
@@ -283,6 +286,15 @@ struct NetworkOptions {
 
     #[arg(
         long,
+        env = "ET_ENCRYPTION_ALGORITHM",
+        help = t!("core_clap.encryption_algorithm").to_string(),
+        default_value = "aes-gcm",
+        value_parser = get_avaliable_encrypt_methods()
+    )]
+    encryption_algorithm: Option<String>,
+
+    #[arg(
+        long,
         env = "ET_MULTI_THREAD",
         help = t!("core_clap.multi_thread").to_string(),
         num_args = 0..=1,
@@ -336,7 +348,7 @@ struct NetworkOptions {
         help = t!("core_clap.exit_nodes").to_string(),
         num_args = 0..
     )]
-    exit_nodes: Vec<Ipv4Addr>,
+    exit_nodes: Vec<IpAddr>,
 
     #[arg(
         long,
@@ -513,7 +525,7 @@ struct NetworkOptions {
     #[arg(
         long,
         value_delimiter = ',',
-        help = "TCP port whitelist. Supports single ports (80) and ranges (8000-9000)",
+        help = t!("core_clap.tcp_whitelist").to_string(),
         num_args = 0..
     )]
     tcp_whitelist: Vec<String>,
@@ -521,10 +533,28 @@ struct NetworkOptions {
     #[arg(
         long,
         value_delimiter = ',',
-        help = "UDP port whitelist. Supports single ports (53) and ranges (5000-6000)",
+        help = t!("core_clap.udp_whitelist").to_string(),
         num_args = 0..
     )]
     udp_whitelist: Vec<String>,
+
+    #[arg(
+        long,
+        env = "ET_DISABLE_RELAY_KCP",
+        help = t!("core_clap.disable_relay_kcp").to_string(),
+        num_args = 0..=1,
+        default_missing_value = "true"
+    )]
+    disable_relay_kcp: Option<bool>,
+
+    #[arg(
+        long,
+        env = "ET_ENABLE_RELAY_FOREIGN_NETWORK_KCP",
+        help = t!("core_clap.enable_relay_foreign_network_kcp").to_string(),
+        num_args = 0..=1,
+        default_missing_value = "true"
+    )]
+    enable_relay_foreign_network_kcp: Option<bool>,
 }
 
 #[derive(Parser, Debug)]
@@ -620,115 +650,6 @@ impl NetworkOptions {
             return true;
         }
         false
-    }
-
-    fn parse_port_list(port_list: &[String]) -> anyhow::Result<Vec<String>> {
-        let mut ports = Vec::new();
-
-        for port_spec in port_list {
-            if port_spec.contains('-') {
-                // Handle port range like "8000-9000"
-                let parts: Vec<&str> = port_spec.split('-').collect();
-                if parts.len() != 2 {
-                    return Err(anyhow::anyhow!("Invalid port range format: {}", port_spec));
-                }
-
-                let start: u16 = parts[0]
-                    .parse()
-                    .with_context(|| format!("Invalid start port in range: {}", port_spec))?;
-                let end: u16 = parts[1]
-                    .parse()
-                    .with_context(|| format!("Invalid end port in range: {}", port_spec))?;
-
-                if start > end {
-                    return Err(anyhow::anyhow!(
-                        "Start port must be <= end port in range: {}",
-                        port_spec
-                    ));
-                }
-
-                // acl can handle port range
-                ports.push(port_spec.clone());
-            } else {
-                // Handle single port
-                let port: u16 = port_spec
-                    .parse()
-                    .with_context(|| format!("Invalid port number: {}", port_spec))?;
-                ports.push(port.to_string());
-            }
-        }
-
-        Ok(ports)
-    }
-
-    fn generate_acl_from_whitelists(&self) -> anyhow::Result<Option<Acl>> {
-        if self.tcp_whitelist.is_empty() && self.udp_whitelist.is_empty() {
-            return Ok(None);
-        }
-
-        let mut acl = Acl {
-            acl_v1: Some(AclV1 { chains: vec![] }),
-        };
-
-        let acl_v1 = acl.acl_v1.as_mut().unwrap();
-
-        // Create inbound chain for whitelist rules
-        let mut inbound_chain = Chain {
-            name: "inbound_whitelist".to_string(),
-            chain_type: ChainType::Inbound as i32,
-            description: "Auto-generated inbound whitelist from CLI".to_string(),
-            enabled: true,
-            rules: vec![],
-            default_action: Action::Drop as i32, // Default deny
-        };
-
-        let mut rule_priority = 1000u32;
-
-        // Add TCP whitelist rules
-        if !self.tcp_whitelist.is_empty() {
-            let tcp_ports = Self::parse_port_list(&self.tcp_whitelist)?;
-            let tcp_rule = Rule {
-                name: "tcp_whitelist".to_string(),
-                description: "Auto-generated TCP whitelist rule".to_string(),
-                priority: rule_priority,
-                enabled: true,
-                protocol: Protocol::Tcp as i32,
-                ports: tcp_ports,
-                source_ips: vec![],
-                destination_ips: vec![],
-                source_ports: vec![],
-                action: Action::Allow as i32,
-                rate_limit: 0,
-                burst_limit: 0,
-                stateful: true,
-            };
-            inbound_chain.rules.push(tcp_rule);
-            rule_priority -= 1;
-        }
-
-        // Add UDP whitelist rules
-        if !self.udp_whitelist.is_empty() {
-            let udp_ports = Self::parse_port_list(&self.udp_whitelist)?;
-            let udp_rule = Rule {
-                name: "udp_whitelist".to_string(),
-                description: "Auto-generated UDP whitelist rule".to_string(),
-                priority: rule_priority,
-                enabled: true,
-                protocol: Protocol::Udp as i32,
-                ports: udp_ports,
-                source_ips: vec![],
-                destination_ips: vec![],
-                source_ports: vec![],
-                action: Action::Allow as i32,
-                rate_limit: 0,
-                burst_limit: 0,
-                stateful: false,
-            };
-            inbound_chain.rules.push(udp_rule);
-        }
-
-        acl_v1.chains.push(inbound_chain);
-        Ok(Some(acl))
     }
 
     fn merge_into(&self, cfg: &mut TomlConfigLoader) -> anyhow::Result<()> {
@@ -935,6 +856,9 @@ impl NetworkOptions {
         if let Some(v) = self.disable_encryption {
             f.enable_encryption = !v;
         }
+        if let Some(algorithm) = &self.encryption_algorithm {
+            f.encryption_algorithm = algorithm.clone();
+        }
         if let Some(v) = self.disable_ipv6 {
             f.enable_ipv6 = !v;
         }
@@ -982,16 +906,23 @@ impl NetworkOptions {
             .foreign_relay_bps_limit
             .unwrap_or(f.foreign_relay_bps_limit);
         f.multi_thread_count = self.multi_thread_count.unwrap_or(f.multi_thread_count);
+        f.disable_relay_kcp = self.disable_relay_kcp.unwrap_or(f.disable_relay_kcp);
+        f.enable_relay_foreign_network_kcp = self
+            .enable_relay_foreign_network_kcp
+            .unwrap_or(f.enable_relay_foreign_network_kcp);
         cfg.set_flags(f);
 
         if !self.exit_nodes.is_empty() {
             cfg.set_exit_nodes(self.exit_nodes.clone());
         }
 
-        // Handle port whitelists by generating ACL configuration
-        if let Some(acl) = self.generate_acl_from_whitelists()? {
-            cfg.set_acl(Some(acl));
-        }
+        let mut old_tcp_whitelist = cfg.get_tcp_whitelist();
+        old_tcp_whitelist.extend(self.tcp_whitelist.clone());
+        cfg.set_tcp_whitelist(old_tcp_whitelist);
+
+        let mut old_udp_whitelist = cfg.get_udp_whitelist();
+        old_udp_whitelist.extend(self.udp_whitelist.clone());
+        cfg.set_udp_whitelist(old_udp_whitelist);
 
         Ok(())
     }
@@ -1220,6 +1151,14 @@ async fn run_main(cli: Cli) -> anyhow::Result<()> {
 
     tokio::select! {
         _ = manager.wait() => {
+            let infos = manager.collect_network_infos()?;
+            let errs = infos
+                .into_values()
+                .filter_map(|info| info.error_msg)
+                .collect::<Vec<_>>();
+            if errs.len() > 0 {
+                return Err(anyhow::anyhow!("some instances stopped with errors"));
+            }
         }
         _ = tokio::signal::ctrl_c() => {
             println!("ctrl-c received, exiting...");

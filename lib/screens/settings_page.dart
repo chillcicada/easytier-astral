@@ -8,7 +8,6 @@ import 'package:astral/src/rust/api/hops.dart';
 import 'package:astral/screens/logs_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:astral/generated/locale_keys.g.dart';
@@ -57,7 +56,13 @@ class _SettingsPageState extends State<SettingsPage> {
       await _checkInstallPermission(); // 重新检查权限状态
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(status.isGranted ? LocaleKeys.permission_install_success.tr() : LocaleKeys.permission_install_failed.tr())),
+        SnackBar(
+          content: Text(
+            status.isGranted
+                ? LocaleKeys.permission_install_success.tr()
+                : LocaleKeys.permission_install_failed.tr(),
+          ),
+        ),
       );
 
       // 如果权限被永久拒绝，提示用户去设置页面
@@ -66,9 +71,11 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(LocaleKeys.permission_install_request_failed.tr())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(LocaleKeys.permission_install_request_failed.tr()),
+        ),
+      );
     }
   }
 
@@ -136,7 +143,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 },
                               ),
                               title: Text(
-                                manager.name.isEmpty ? LocaleKeys.unnamed_group.tr() : manager.name,
+                                manager.name.isEmpty
+                                    ? LocaleKeys.unnamed_group.tr()
+                                    : manager.name,
                               ),
                               subtitle: Text(
                                 '${manager.connections.length} ${LocaleKeys.connections_count.tr()}',
@@ -174,13 +183,17 @@ class _SettingsPageState extends State<SettingsPage> {
                                     title: Text(
                                       '${conn.bindAddr} → ${conn.dstAddr}',
                                     ),
-                                    subtitle: Text('${LocaleKeys.protocol.tr()}: ${conn.proto}'),
+                                    subtitle: Text(
+                                      '${LocaleKeys.protocol.tr()}: ${conn.proto}',
+                                    ),
                                   ),
                                 ),
                                 if (manager.connections.isEmpty)
                                   ListTile(
                                     dense: true,
-                                    title: Text(LocaleKeys.no_connection_config.tr()),
+                                    title: Text(
+                                      LocaleKeys.no_connection_config.tr(),
+                                    ),
                                   ),
                               ],
                             ),
@@ -228,7 +241,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         context: context,
                         builder:
                             (context) => AlertDialog(
-                              title: Text(LocaleKeys.network_adapter_hop_list.tr()),
+                              title: Text(
+                                LocaleKeys.network_adapter_hop_list.tr(),
+                              ),
                               content: SingleChildScrollView(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -248,12 +263,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                       );
                     } catch (e, s) {
-                      await Sentry.captureException(e, stackTrace: s);
                       if (!context.mounted) return;
 
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(LocaleKeys.get_hop_list_failed.tr())));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(LocaleKeys.get_hop_list_failed.tr()),
+                        ),
+                      );
                     }
                   },
                 ),
@@ -330,19 +346,24 @@ class _SettingsPageState extends State<SettingsPage> {
                                     context: context,
                                     builder:
                                         (context) => AlertDialog(
-                                          title: Text(LocaleKeys.edit_listen_item.tr()),
+                                          title: Text(
+                                            LocaleKeys.edit_listen_item.tr(),
+                                          ),
                                           content: TextField(
                                             controller: controller,
                                             autofocus: true,
                                             decoration: InputDecoration(
-                                              labelText: LocaleKeys.listen_item.tr(),
+                                              labelText:
+                                                  LocaleKeys.listen_item.tr(),
                                             ),
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed:
                                                   () => Navigator.pop(context),
-                                              child: Text(LocaleKeys.cancel.tr()),
+                                              child: Text(
+                                                LocaleKeys.cancel.tr(),
+                                              ),
                                             ),
                                             TextButton(
                                               onPressed:
@@ -373,8 +394,14 @@ class _SettingsPageState extends State<SettingsPage> {
                                     context: context,
                                     builder:
                                         (context) => AlertDialog(
-                                          title: Text(LocaleKeys.confirm_delete.tr()),
-                                          content: Text(LocaleKeys.confirm_delete_listen_item.tr(namedArgs: {'item': item})),
+                                          title: Text(
+                                            LocaleKeys.confirm_delete.tr(),
+                                          ),
+                                          content: Text(
+                                            LocaleKeys
+                                                .confirm_delete_listen_item
+                                                .tr(namedArgs: {'item': item}),
+                                          ),
                                           actions: [
                                             TextButton(
                                               onPressed:
@@ -382,7 +409,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                     context,
                                                     false,
                                                   ),
-                                              child: Text(LocaleKeys.cancel.tr()),
+                                              child: Text(
+                                                LocaleKeys.cancel.tr(),
+                                              ),
                                             ),
                                             TextButton(
                                               onPressed:
@@ -390,7 +419,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                     context,
                                                     true,
                                                   ),
-                                              child: Text(LocaleKeys.delete.tr()),
+                                              child: Text(
+                                                LocaleKeys.delete.tr(),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -481,11 +512,16 @@ class _SettingsPageState extends State<SettingsPage> {
                                       context: context,
                                       builder:
                                           (context) => AlertDialog(
-                                            title: Text(LocaleKeys.edit_cidr.tr()),
+                                            title: Text(
+                                              LocaleKeys.edit_cidr.tr(),
+                                            ),
                                             content: TextField(
                                               controller: controller,
                                               decoration: InputDecoration(
-                                                labelText: LocaleKeys.cidr_format_example.tr(),
+                                                labelText:
+                                                    LocaleKeys
+                                                        .cidr_format_example
+                                                        .tr(),
                                               ),
                                             ),
                                             actions: [
@@ -493,7 +529,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 onPressed:
                                                     () =>
                                                         Navigator.pop(context),
-                                                child: Text(LocaleKeys.cancel.tr()),
+                                                child: Text(
+                                                  LocaleKeys.cancel.tr(),
+                                                ),
                                               ),
                                               TextButton(
                                                 onPressed:
@@ -501,7 +539,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       controller.text,
                                                     ),
-                                                child: Text(LocaleKeys.save.tr()),
+                                                child: Text(
+                                                  LocaleKeys.save.tr(),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -521,9 +561,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                       context: context,
                                       builder:
                                           (context) => AlertDialog(
-                                            title: Text(LocaleKeys.confirm_delete.tr()),
+                                            title: Text(
+                                              LocaleKeys.confirm_delete.tr(),
+                                            ),
                                             content: Text(
-                                              LocaleKeys.confirm_delete_cidr.tr(namedArgs: {'cidr': cidr}),
+                                              LocaleKeys.confirm_delete_cidr.tr(
+                                                namedArgs: {'cidr': cidr},
+                                              ),
                                             ),
                                             actions: [
                                               TextButton(
@@ -532,7 +576,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       false,
                                                     ),
-                                                child: Text(LocaleKeys.cancel.tr()),
+                                                child: Text(
+                                                  LocaleKeys.cancel.tr(),
+                                                ),
                                               ),
                                               TextButton(
                                                 onPressed:
@@ -540,7 +586,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       true,
                                                     ),
-                                                child: Text(LocaleKeys.delete.tr()),
+                                                child: Text(
+                                                  LocaleKeys.delete.tr(),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -567,9 +615,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                     content: TextField(
                                       controller: controller,
                                       decoration: InputDecoration(
-                        labelText: LocaleKeys.cidr_format_example.tr(),
-                        hintText: LocaleKeys.cidr_input_hint.tr(),
-                      ),
+                                        labelText:
+                                            LocaleKeys.cidr_format_example.tr(),
+                                        hintText:
+                                            LocaleKeys.cidr_input_hint.tr(),
+                                      ),
                                     ),
                                     actions: [
                                       TextButton(
@@ -631,11 +681,16 @@ class _SettingsPageState extends State<SettingsPage> {
                                       context: context,
                                       builder:
                                           (context) => AlertDialog(
-                                            title: Text(LocaleKeys.edit_vpn_segment.tr()),
+                                            title: Text(
+                                              LocaleKeys.edit_vpn_segment.tr(),
+                                            ),
                                             content: TextField(
                                               controller: controller,
                                               decoration: InputDecoration(
-                                                labelText: LocaleKeys.vpn_segment_format_example.tr(),
+                                                labelText:
+                                                    LocaleKeys
+                                                        .vpn_segment_format_example
+                                                        .tr(),
                                               ),
                                             ),
                                             actions: [
@@ -643,7 +698,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 onPressed:
                                                     () =>
                                                         Navigator.pop(context),
-                                                child: Text(LocaleKeys.cancel.tr()),
+                                                child: Text(
+                                                  LocaleKeys.cancel.tr(),
+                                                ),
                                               ),
                                               TextButton(
                                                 onPressed:
@@ -651,7 +708,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       controller.text,
                                                     ),
-                                                child: Text(LocaleKeys.save.tr()),
+                                                child: Text(
+                                                  LocaleKeys.save.tr(),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -671,9 +730,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                       context: context,
                                       builder:
                                           (context) => AlertDialog(
-                                            title: Text(LocaleKeys.confirm_delete.tr()),
+                                            title: Text(
+                                              LocaleKeys.confirm_delete.tr(),
+                                            ),
                                             content: Text(
-                                              LocaleKeys.confirm_delete_vpn_segment.tr(namedArgs: {'vpn': vpn}),
+                                              LocaleKeys
+                                                  .confirm_delete_vpn_segment
+                                                  .tr(namedArgs: {'vpn': vpn}),
                                             ),
                                             actions: [
                                               TextButton(
@@ -682,7 +745,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       false,
                                                     ),
-                                                child: Text(LocaleKeys.cancel.tr()),
+                                                child: Text(
+                                                  LocaleKeys.cancel.tr(),
+                                                ),
                                               ),
                                               TextButton(
                                                 onPressed:
@@ -690,7 +755,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                       context,
                                                       true,
                                                     ),
-                                                child: Text(LocaleKeys.delete.tr()),
+                                                child: Text(
+                                                  LocaleKeys.delete.tr(),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -713,13 +780,20 @@ class _SettingsPageState extends State<SettingsPage> {
                               context: context,
                               builder:
                                   (context) => AlertDialog(
-                                    title: Text(LocaleKeys.add_vpn_segment.tr()),
+                                    title: Text(
+                                      LocaleKeys.add_vpn_segment.tr(),
+                                    ),
                                     content: TextField(
                                       controller: controller,
                                       decoration: InputDecoration(
-                        labelText: LocaleKeys.vpn_segment_format_example.tr(),
-                        hintText: LocaleKeys.vpn_segment_input_hint.tr(),
-                      ),
+                                        labelText:
+                                            LocaleKeys
+                                                .vpn_segment_format_example
+                                                .tr(),
+                                        hintText:
+                                            LocaleKeys.vpn_segment_input_hint
+                                                .tr(),
+                                      ),
                                     ),
                                     actions: [
                                       TextButton(
@@ -930,10 +1004,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       child: DropdownButton<int>(
                         value: Aps().dataCompressAlgo.watch(context),
-                        items:  [
+                        items: [
                           DropdownMenuItem(
                             value: 1,
-                            child: Text(LocaleKeys.no_compression.tr(), style: const TextStyle(fontSize: 14)),
+                            child: Text(
+                              LocaleKeys.no_compression.tr(),
+                              style: const TextStyle(fontSize: 14),
+                            ),
                           ),
                           DropdownMenuItem(
                             value: 2,
@@ -1054,7 +1131,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: const Icon(Icons.install_mobile),
                   title: Text(LocaleKeys.get_install_permission.tr()),
                   subtitle: Text(
-                    _hasInstallPermission ? LocaleKeys.install_permission_granted.tr() : LocaleKeys.install_permission_not_granted.tr(),
+                    _hasInstallPermission
+                        ? LocaleKeys.install_permission_granted.tr()
+                        : LocaleKeys.install_permission_not_granted.tr(),
                   ),
                   trailing:
                       _hasInstallPermission
@@ -1127,7 +1206,10 @@ class _SettingsPageState extends State<SettingsPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: Column(
             children: [
-              ListTile(leading: const Icon(Icons.info), title: Text(LocaleKeys.about.tr())),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: Text(LocaleKeys.about.tr()),
+              ),
               ListTile(
                 leading: Hero(
                   tag: "logs_hero",
@@ -1172,9 +1254,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 onTap: () async {
                   const qqGroup = '808169040'; // 替换为实际QQ群号
                   await Clipboard.setData(const ClipboardData(text: qqGroup));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(LocaleKeys.group_number_copied.tr())));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(LocaleKeys.group_number_copied.tr()),
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -1260,19 +1344,6 @@ class _SettingsPageState extends State<SettingsPage> {
     if (feedback != null &&
         feedback['feedback']?.trim().isNotEmpty == true &&
         feedback['email']?.trim().isNotEmpty == true &&
-        feedback['name']?.trim().isNotEmpty == true) {
-      final sentryId = Sentry.captureMessage(
-        "User Feedback from Settings Page",
-      );
-
-      final userFeedback = SentryUserFeedback(
-        eventId: await sentryId,
-        comments: feedback['feedback']!,
-        email: feedback['email']!,
-        name: feedback['name']!,
-      );
-
-      await Sentry.captureUserFeedback(userFeedback);
-    }
+        feedback['name']?.trim().isNotEmpty == true) {}
   }
 }

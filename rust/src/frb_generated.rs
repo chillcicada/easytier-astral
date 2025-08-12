@@ -1931,28 +1931,40 @@ fn wire__crate__api__astral_wfp__WfpController_get_layer_name_impl(
             let api_that = <RustOpaqueMoi<
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<WfpController>,
             >>::sse_decode(&mut deserializer);
-            let api_layer_key = <crate::api::astral_wfp::GUID>::sse_decode(&mut deserializer);
+            let api_layer_key = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>,
+            >>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let mut api_that_guard = None;
+                    let mut api_layer_key_guard = None;
                     let decode_indices_ =
                         flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
                             flutter_rust_bridge::for_generated::LockableOrderInfo::new(
                                 &api_that, 0, false,
                             ),
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_layer_key,
+                                1,
+                                false,
+                            ),
                         ]);
                     for i in decode_indices_ {
                         match i {
                             0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            1 => {
+                                api_layer_key_guard = Some(api_layer_key.lockable_decode_sync_ref())
+                            }
                             _ => unreachable!(),
                         }
                     }
                     let api_that_guard = api_that_guard.unwrap();
+                    let api_layer_key_guard = api_layer_key_guard.unwrap();
                     let output_ok = Result::<_, ()>::Ok({
                         crate::api::astral_wfp::WfpController::get_layer_name(
                             &*api_that_guard,
-                            &api_layer_key,
+                            &*api_layer_key_guard,
                         );
                     })?;
                     Ok(output_ok)
@@ -2355,12 +2367,12 @@ fn wire__crate__api__nt__get_nt_path_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api__dos_path = <String>::sse_decode(&mut deserializer);
+            let api_dos_path = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok =
-                        Result::<_, ()>::Ok(crate::api::nt::get_nt_path(&api__dos_path))?;
+                        Result::<_, ()>::Ok(crate::api::nt::get_nt_path(&api_dos_path))?;
                     Ok(output_ok)
                 })())
             }
@@ -2625,15 +2637,15 @@ fn wire__crate__api__hops__set_interface_metric_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api__interface_name = <String>::sse_decode(&mut deserializer);
-            let api__metric = <u32>::sse_decode(&mut deserializer);
+            let api_interface_name = <String>::sse_decode(&mut deserializer);
+            let api_metric = <u32>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::hops::set_interface_metric(
-                            &api__interface_name,
-                            api__metric,
+                            &api_interface_name,
+                            api_metric,
                         )?;
                         Ok(output_ok)
                     })(),
@@ -2717,6 +2729,9 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FilterRule>
+);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
+    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IpAddr>
@@ -2840,6 +2855,14 @@ impl SseDecode
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FilterRule>>
 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return decode_rust_opaque_moi(inner);
+    }
+}
+
+impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -3027,22 +3050,6 @@ impl SseDecode for crate::api::simple::Forward {
             bind_addr: var_bindAddr,
             dst_addr: var_dstAddr,
             proto: var_proto,
-        };
-    }
-}
-
-impl SseDecode for crate::api::astral_wfp::GUID {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_data1 = <u32>::sse_decode(deserializer);
-        let mut var_data2 = <u16>::sse_decode(deserializer);
-        let mut var_data3 = <u16>::sse_decode(deserializer);
-        let mut var_data4 = <[u8; 8]>::sse_decode(deserializer);
-        return crate::api::astral_wfp::GUID {
-            data1: var_data1,
-            data2: var_data2,
-            data3: var_data3,
-            data4: var_data4,
         };
     }
 }
@@ -3379,14 +3386,6 @@ impl SseDecode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap()
-    }
-}
-
-impl SseDecode for [u8; 8] {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <Vec<u8>>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::from_vec_to_array(inner);
     }
 }
 
@@ -3901,26 +3900,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::simple::Forward>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::astral_wfp::GUID {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.data1.into_into_dart().into_dart(),
-            self.data2.into_into_dart().into_dart(),
-            self.data3.into_into_dart().into_dart(),
-            self.data4.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::astral_wfp::GUID {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::astral_wfp::GUID>
-    for crate::api::astral_wfp::GUID
-{
-    fn into_into_dart(self) -> crate::api::astral_wfp::GUID {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::simple::KVNetworkStatus {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4132,6 +4111,15 @@ impl SseEncode
     }
 }
 
+impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
 impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IpAddr>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4295,16 +4283,6 @@ impl SseEncode for crate::api::simple::Forward {
         <String>::sse_encode(self.bind_addr, serializer);
         <String>::sse_encode(self.dst_addr, serializer);
         <String>::sse_encode(self.proto, serializer);
-    }
-}
-
-impl SseEncode for crate::api::astral_wfp::GUID {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.data1, serializer);
-        <u16>::sse_encode(self.data2, serializer);
-        <u16>::sse_encode(self.data3, serializer);
-        <[u8; 8]>::sse_encode(self.data4, serializer);
     }
 }
 
@@ -4583,19 +4561,6 @@ impl SseEncode for u8 {
     }
 }
 
-impl SseEncode for [u8; 8] {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<u8>>::sse_encode(
-            {
-                let boxed: Box<[_]> = Box::new(self);
-                boxed.into_vec()
-            },
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
@@ -4658,6 +4623,20 @@ mod io {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FilterRule>>::decrement_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_astral_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>>::increment_strong_count(ptr as _);
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_astral_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
@@ -4801,6 +4780,20 @@ mod web {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FilterRule>>::decrement_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>>::increment_strong_count(ptr as _);
+    }
+
+    #[wasm_bindgen]
+    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGUID(
+        ptr: *const std::ffi::c_void,
+    ) {
+        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GUID>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]

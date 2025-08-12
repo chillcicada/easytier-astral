@@ -6,4 +6,6 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// 检查是否具有管理员/sudo权限的函数
+/// 在非Android系统上可用
 Future<bool> checkSudo() => RustLib.instance.api.crateApiUtilsCheckSudo();
