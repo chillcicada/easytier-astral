@@ -19,67 +19,17 @@ jobs:
       - name: 🛠️ 检出代码仓库
         uses: actions/checkout@v4
 
-      # 安装 Rust
-      - name: 🦀 安装 Rust 1.89.0
+      # 安装Flutter
+      - name: 🐦 安装Flutter
         run: |
-          # 先清理可能存在的旧版本
-          if (Get-Command rustup -ErrorAction SilentlyContinue) {
-            Write-Host "卸载现有Rust安装..."
-            rustup self uninstall -y
-          }
-          
-          # 通过rustup安装指定版本的Rust
-          Write-Host "下载并安装Rust 1.89.0..."
-          curl.exe -sSf https://sh.rustup.rs -o rustup-init.exe
-          .\rustup-init.exe -y --default-toolchain 1.89.0 --profile minimal
-          Remove-Item .\rustup-init.exe
-          
-          # 将Rust添加到PATH并加载环境
-          $env:PATH = "$env:USERPROFILE\.cargo\bin;" + $env:PATH
-          echo "$env:USERPROFILE\.cargo\bin" >> $env:GITHUB_PATH
-          
-          # 加载rust环境
-          if (Test-Path "$env:USERPROFILE\.cargo\env.ps1") {
-            . "$env:USERPROFILE\.cargo\env.ps1"
-          }
-        shell: pwsh
-
-      # 验证 Rust 安装
-      - name: 🔍 验证 Rust 安装
-        run: |
-          # 确保使用正确的工具链
-          rustup default 1.89.0
-          
-          # 验证版本
-          Write-Host "Rust 版本："
-          rustc --version
-          Write-Host "Cargo 版本："
-          cargo --version
-          
-          # 设置环境变量
-          echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> $env:GITHUB_ENV
-          echo "RUST_BACKTRACE=1" >> $env:GITHUB_ENV
-        shell: pwsh
-
-      # 安装 Flutter
-      - name: 🐦 安装 Flutter
-        run: |
-          echo "正在克隆 Flutter 稳定分支..."
+          echo "正在克隆Flutter稳定分支..."
           git clone https://github.com/flutter/flutter.git --branch 3.29.3 $env:GITHUB_WORKSPACE/flutter --depth 1
 
-          echo "正在将 Flutter 添加到 PATH..."
+          echo "正在将Flutter添加到PATH..."
           echo "$env:GITHUB_WORKSPACE/flutter/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-          echo "Flutter 版本验证："
+          echo "Flutter版本验证："
           & "$env:GITHUB_WORKSPACE/flutter/bin/flutter.bat" --version
-        shell: pwsh
-
-      # 安装构建工具
-      - name: 🛠️ 安装构建工具
-        run: |
-          choco install ninja cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          echo "CMake 版本验证："
-          cmake --version
         shell: pwsh
 
       # 安装 Flutter 依赖
@@ -94,9 +44,10 @@ jobs:
       - name: 🛠️ 编译 Flutter Windows 应用
         run: |
           echo "正在编译 Flutter Windows Release 版本..."
-          flutter build windows --release --verbose
+          flutter build windows --release
           echo "Flutter Windows Release 编译完成！"
         shell: pwsh
+
 
       # 复制 DLL 文件到输出目录
       - name: 📂 复制 DLL 文件到 Release 目录
@@ -121,4 +72,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: astral-windows-x64-zip
-          path: ${{ github.workspace }}/astral-windows-x64-zip.zip
+          path: ${{ github.workspace }}/astral-windows-x64-zip.zip
