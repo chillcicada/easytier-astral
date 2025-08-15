@@ -31,6 +31,7 @@ jobs:
           sudo apt-get install -y libc6-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
           sudo apt-get install -y clang llvm libclang-dev
           sudo apt-get install -y libc-dev
+          sudo apt-get install -y libc6-dev-i386 gcc-multilib g++-multilib
           sudo apt-get install -y protobuf-compiler
 
       - name: 🎯 配置 Rust 目标架构
@@ -68,6 +69,11 @@ jobs:
       - name: 🦀 安装 cargo-ndk
         run: |
           cargo install cargo-ndk
+
+      - name: 🔧 设置 bindgen 环境变量
+        run: |
+          echo "BINDGEN_EXTRA_CLANG_ARGS=-I/usr/include -I/usr/include/x86_64-linux-gnu" >> $GITHUB_ENV
+          echo "LIBCLANG_PATH=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
 
       - name: 🔐 设置签名配置
         run: |
