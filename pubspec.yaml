@@ -19,7 +19,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   rust_lib_astral:
     path: rust_builder
-  flutter_rust_bridge: 2.10.0
+  flutter_rust_bridge: ^2.11.1
   signals_flutter: ^6.0.2
   isar_community_flutter_libs: # contains Isar Core
     version: *isar_version
