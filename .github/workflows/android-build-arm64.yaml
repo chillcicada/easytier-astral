@@ -48,7 +48,7 @@ jobs:
       - name: 🤖 设置 Android SDK
         uses: android-actions/setup-android@v3
         with:
-          ndk-version: '27.2.12479018'
+          ndk-version: '28.2.13676358'
           cmake-version: '3.18.1'
           
       - name: 🐦 安装 Flutter
