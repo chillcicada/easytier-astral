@@ -7,7 +7,7 @@ version: 2.5.5
 isar_version: &isar_version 3.3.0 # define the version to be used
 
 environment:
-  sdk: ^3.8.0
+  sdk: ^3.7.0
 
 dependencies:
   open_file: ^3.0.0
