@@ -37,7 +37,7 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/../../dlls"
-    "${CMAKE_INSTALL_PREFIX}/"
+    "$<TARGET_FILE_DIR:${BINARY_NAME}>"
   COMMENT "Copying DLL files to output directory"
   VERBATIM
 )

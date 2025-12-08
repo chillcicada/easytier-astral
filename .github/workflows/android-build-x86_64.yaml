@@ -12,6 +12,15 @@ jobs:
     permissions:
       contents: write  # 确保有写入权限
       packages: write
+    
+    env:
+      FLUTTER_VERSION: main
+      FLUTTER_CHANNEL: main
+      RUST_VERSION: 1.89.0
+      NDK_VERSION: 28.2.13676358
+      JDK_VERSION: 17
+      CMAKE_VERSION: 3.18.1
+    
     steps:
       - name: 🛠️ 检出代码仓库
         uses: actions/checkout@v4
@@ -55,11 +64,8 @@ jobs:
           
       - name: 🐦 安装 Flutter
         run: |
-          git clone https://github.com/flutter/flutter.git --branch 3.38.4 $HOME/flutter --depth 1
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
-          export PATH="$HOME/flutter/bin:$PATH"
-          chmod +x $HOME/flutter/bin/flutter
-          flutter --version
+          chmod +x $GITHUB_WORKSPACE/scripts/install_flutter.sh
+          $GITHUB_WORKSPACE/scripts/install_flutter.sh
 
       - name: 📚 安装 Flutter 依赖
         run: |

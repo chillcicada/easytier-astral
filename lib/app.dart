@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:astral/utils/net_astral_udp.dart';
 import 'package:astral/k/mod/small_window_adapter.dart'; // 导入小窗口适配器
 import 'package:astral/screens/main_screen.dart';
-import 'package:astral/src/rust/api/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:astral/k/app_s/aps.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,7 +19,6 @@ class _KevinAppState extends State<KevinApp> {
     super.initState();
     getIpv4AndIpV6Addresses();
     // 初始化链接服务
-      
   }
 
   @override

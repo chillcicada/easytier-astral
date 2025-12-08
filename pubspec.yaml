@@ -2,7 +2,7 @@ name: astral
 description: 'astral'
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.5.5
+version: 2.5.6
 
 isar_version: &isar_version 3.3.0 # define the version to be used
 
@@ -55,7 +55,6 @@ dependencies:
   easy_localization_loader: ^2.0.2
   http: ^1.1.0
   flutter_local_notifications: ^19.3.1
-  objectbox: ^4.3.0
 
 dev_dependencies:
   flutter_test:

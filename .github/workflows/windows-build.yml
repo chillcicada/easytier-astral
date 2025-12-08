@@ -14,13 +14,18 @@ jobs:
     permissions:
       contents: write  # 允许写入仓库内容（上传文件）
       packages: write
+    
+    env:
+      FLUTTER_VERSION: main
+      FLUTTER_CHANNEL: main
+      RUST_VERSION: 1.89.0
       
     steps:
       - name: 🛠️ 检出代码仓库
         uses: actions/checkout@v4
 
         # 安装 Rust
-      - name: 🦀 安装 Rust 1.89.0
+      - name: 🦀 安装 Rust ${{ env.RUST_VERSION }}
         run: |
           & "$env:GITHUB_WORKSPACE\scripts\install_rust.ps1"
         shell: pwsh
@@ -28,14 +33,7 @@ jobs:
       # 安装Flutter
       - name: 🐦 安装Flutter
         run: |
-          echo "正在克隆Flutter稳定分支..."
-          git clone https://github.com/flutter/flutter.git --branch 3.38.4 $env:GITHUB_WORKSPACE/flutter --depth 1
-
-          echo "正在将Flutter添加到PATH..."
-          echo "$env:GITHUB_WORKSPACE/flutter/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-          echo "Flutter版本验证："
-          & "$env:GITHUB_WORKSPACE/flutter/bin/flutter.bat" --version
+          & "$env:GITHUB_WORKSPACE\scripts\install_flutter.ps1"
         shell: pwsh
 
       # 安装 Flutter 依赖
