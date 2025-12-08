@@ -32,7 +32,7 @@ void main() async {
   }
 
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   if (Platform.isMacOS) {
     checkSudo().then((elevated) {
       if (!elevated) {
@@ -43,7 +43,7 @@ void main() async {
   await EasyLocalization.ensureInitialized();
   await AppDatabase().init();
   AppInfoUtil.init();
-  
+
   await LogCapture().startCapture();
   await UrlSchemeRegistrar.registerUrlScheme();
   await _initAppLinks();
@@ -73,7 +73,6 @@ void _runApp() {
     ),
   );
 }
-
 
 Future<void> _initAppLinks() async {
   final registry = AppLinkRegistry();
