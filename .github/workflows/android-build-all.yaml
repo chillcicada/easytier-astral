@@ -110,13 +110,6 @@ jobs:
           # 构建全架构 APK
           flutter build apk --release
 
-      - name: 🧹 清理Gradle缓存以释放空间
-        if: always()
-        run: |
-          rm -rf android/.gradle
-          rm -rf ~/.gradle
-          rm -rf rust/target
-          du -sh /home/runner/work/astral/astral/* 2>/dev/null | sort -rh | head -10
 
       - name: 📤 上传全架构 APK 到 Artifacts
         uses: actions/upload-artifact@v4

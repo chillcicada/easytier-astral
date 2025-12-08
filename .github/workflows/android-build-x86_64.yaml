@@ -106,14 +106,6 @@ jobs:
           # 构建 x86_64 架构 APK
           flutter build apk --release --target-platform android-x64
 
-      - name: 🧹 清理Rust编译产物以释放空间
-        if: always()
-        run: |
-          rm -rf rust/target
-          rm -rf android/.gradle
-          rm -rf ~/.gradle
-          echo "=== 构建后磁盘空间 ==="
-          df -h
 
       - name: 📤 上传 x86_64 架构 APK 到 Artifacts
         uses: actions/upload-artifact@v4
