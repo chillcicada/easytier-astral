@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Astral
+Comment=Astral desktop client
+Exec=/usr/bin/astral %u
+TryExec=/usr/bin/astral
+Icon=astral
+Terminal=false
+Type=Application
+Categories=Network;
+StartupNotify=true
+X-GNOME-UsesNotifications=true
+Keywords=VPN;Network;Proxy;

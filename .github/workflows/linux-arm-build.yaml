@@ -1,4 +1,4 @@
-name: 🐧 构建 Linux 应用
+name: 🐧 构建 Linux ARM64 应用
 
 on:
   workflow_dispatch:
@@ -7,16 +7,11 @@ on:
       - 'v*' # 当推送版本标签时触发
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-arm:
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
       packages: write
-    
-    env:
-      FLUTTER_VERSION: main
-      FLUTTER_CHANNEL: main
-      RUST_VERSION: 1.89.0
 
     steps:
       - name: 🛠️ 检出代码仓库
@@ -25,7 +20,7 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: 🦀 设置 Rust 工具链 ${{ env.RUST_VERSION }}
+      - name: 🦀 设置 Rust 工具链 1.89.0
         run: |
           chmod +x $GITHUB_WORKSPACE/scripts/install_rust.sh
           $GITHUB_WORKSPACE/scripts/install_rust.sh
@@ -36,11 +31,7 @@ jobs:
           sudo apt-get install -y build-essential ninja-build libgtk-3-dev
           sudo apt-get install -y clang cmake pkg-config libcurl4-openssl-dev
           sudo apt-get install -y protobuf-compiler
-          # 只安装 ayatana 版本的依赖
           sudo apt-get install -y libayatana-appindicator3-dev
-          # 移除冲突的包
-          # sudo apt-get install -y libappindicator3-dev
-          # 添加 patchelf
           sudo apt-get install -y patchelf
           sudo apt-get install -y ruby-dev
           sudo gem install --no-document fpm
@@ -48,8 +39,11 @@ jobs:
 
       - name: 🐦 安装 Flutter
         run: |
-          chmod +x $GITHUB_WORKSPACE/scripts/install_flutter.sh
-          $GITHUB_WORKSPACE/scripts/install_flutter.sh
+          git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          export PATH="$HOME/flutter/bin:$PATH"
+          chmod +x $HOME/flutter/bin/flutter
+          flutter --version
 
       - name: 🎯 启用 Linux 桌面支持
         run: |
@@ -60,7 +54,7 @@ jobs:
         run: |
           flutter pub get
 
-      - name: 🛠️ 构建 Linux 应用
+      - name: 🛠️ 构建 Linux ARM64 应用
         run: |
           flutter build linux --release
 
@@ -68,17 +62,17 @@ jobs:
         run: |
           set -e
           mkdir -p release
-          BUNDLE=build/linux/x64/release/bundle
+          BUNDLE=build/linux/arm64/release/bundle
           cd "$BUNDLE"
           patchelf astral --add-needed libisar.so --add-needed librust_lib_astral.so
-          tar -czf $GITHUB_WORKSPACE/release/astral-linux-x64.tar.gz *
+          tar -czf $GITHUB_WORKSPACE/release/astral-linux-arm64.tar.gz *
           echo "打包完成，检查文件大小："
           ls -lh $GITHUB_WORKSPACE/release/
 
       - name: 📂 准备打包目录
         run: |
           set -e
-          BUNDLE=$GITHUB_WORKSPACE/build/linux/x64/release/bundle
+          BUNDLE=$GITHUB_WORKSPACE/build/linux/arm64/release/bundle
           STAGING=$GITHUB_WORKSPACE/build/linux/pkgroot
           rm -rf "$STAGING"
           mkdir -p "$STAGING/opt/astral"
@@ -93,22 +87,22 @@ jobs:
           set -e
           mkdir -p release
           STAGING=$GITHUB_WORKSPACE/build/linux/pkgroot
-          fpm -s dir -t deb -n astral -v 1.0.0 -a amd64 -C "$STAGING" .
-          mv *.deb $GITHUB_WORKSPACE/release/astral-linux-x64.deb
+          fpm -s dir -t deb -n astral -v 1.0.0 -a arm64 -C "$STAGING" .
+          mv *.deb $GITHUB_WORKSPACE/release/astral-linux-arm64.deb
 
       - name: 📦 打包 rpm 包
         run: |
           set -e
           STAGING=$GITHUB_WORKSPACE/build/linux/pkgroot
-          fpm -s dir -t rpm -n astral -v 1.0.0 -a amd64 -C "$STAGING" .
-          mv *.rpm $GITHUB_WORKSPACE/release/astral-linux-x64.rpm
+          fpm -s dir -t rpm -n astral -v 1.0.0 -a arm64 -C "$STAGING" .
+          mv *.rpm $GITHUB_WORKSPACE/release/astral-linux-arm64.rpm
 
-      - name: 📤 上传所有 Linux 构建产物
+      - name: 📤 上传所有 Linux ARM64 构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: astral-linux-x64-all
+          name: astral-linux-arm64-all
           path: |
-            release/astral-linux-x64.tar.gz
-            release/astral-linux-x64.deb
-            release/astral-linux-x64.rpm
+            release/astral-linux-arm64.tar.gz
+            release/astral-linux-arm64.deb
+            release/astral-linux-arm64.rpm
           retention-days: 7
