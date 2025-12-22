@@ -50,22 +50,39 @@ pub fn get_all_interfaces_metrics() -> io::Result<Vec<(String, u32)>> {
 
 #[cfg(target_os = "windows")]
 pub fn set_interface_metric(interface_name: &str, metric: u32) -> io::Result<()> {
-    let cmd = format!("chcp 65001 >nul && netsh interface ipv4 set interface \"{}\" metric={}", interface_name, metric);
-    let output = Command::new("cmd")
-        .args(&["/c", &cmd])
+    // 设置 IPv4 跃点
+    let cmd_ipv4 = format!("chcp 65001 >nul && netsh interface ipv4 set interface \"{}\" metric={}", interface_name, metric);
+    let output_ipv4 = Command::new("cmd")
+        .args(&["/c", &cmd_ipv4])
         .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .output()?;
 
-    if output.status.success() {
-        Ok(())
-    } else {
-        let error_msg = String::from_utf8(output.stderr.clone())
-            .unwrap_or_else(|_| String::from_utf8_lossy(&output.stderr).to_string());
-        Err(io::Error::new(
+    if !output_ipv4.status.success() {
+        let error_msg = String::from_utf8(output_ipv4.stderr.clone())
+            .unwrap_or_else(|_| String::from_utf8_lossy(&output_ipv4.stderr).to_string());
+        return Err(io::Error::new(
             io::ErrorKind::Other,
-            error_msg,
-        ))
+            format!("Failed to set IPv4 metric: {}", error_msg),
+        ));
     }
+
+    // 设置 IPv6 跃点
+    let cmd_ipv6 = format!("chcp 65001 >nul && netsh interface ipv6 set interface \"{}\" metric={}", interface_name, metric);
+    let output_ipv6 = Command::new("cmd")
+        .args(&["/c", &cmd_ipv6])
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
+        .output()?;
+
+    if !output_ipv6.status.success() {
+        let error_msg = String::from_utf8(output_ipv6.stderr.clone())
+            .unwrap_or_else(|_| String::from_utf8_lossy(&output_ipv6.stderr).to_string());
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("Failed to set IPv6 metric: {}", error_msg),
+        ));
+    }
+
+    Ok(())
 }
 
 #[cfg(not(target_os = "windows"))]

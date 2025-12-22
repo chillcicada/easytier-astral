@@ -26,7 +26,7 @@ pub fn gen_default_flags() -> Flags {
         dev_name: "".to_string(),
         enable_encryption: true,
         enable_ipv6: true,
-        mtu: 1380,
+        mtu: 1360,
         latency_first: false,
         enable_exit_node: false,
         proxy_forward_by_system: false,

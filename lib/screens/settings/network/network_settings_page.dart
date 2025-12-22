@@ -93,15 +93,6 @@ class NetworkSettingsPage extends StatelessWidget {
                 ),
 
                 SwitchListTile(
-                  title: Text(LocaleKeys.magic_dns.tr()),
-                  subtitle: Text(LocaleKeys.magic_dns_desc.tr()),
-                  value: Aps().accept_dns.watch(context),
-                  onChanged: (value) {
-                    Aps().updateAcceptDns(value);
-                  },
-                ),
-
-                SwitchListTile(
                   title: Text(LocaleKeys.tun_device.tr()),
                   subtitle: Text(LocaleKeys.tun_device_desc.tr()),
                   value: Aps().noTun.watch(context),
@@ -126,37 +117,6 @@ class NetworkSettingsPage extends StatelessWidget {
                 ),
 
                 const Divider(),
-
-                SwitchListTile(
-                  title: Row(
-                    children: [
-                      Text(LocaleKeys.smoltcp_stack.tr()),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red[100],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          LocaleKeys.not_recommended.tr(),
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Text(LocaleKeys.smoltcp_stack_desc.tr()),
-                  value: Aps().useSmoltcp.watch(context),
-                  onChanged: (value) {
-                    Aps().updateUseSmoltcp(value);
-                  },
-                ),
 
                 SwitchListTile(
                   title: Text(LocaleKeys.disable_p2p.tr()),
@@ -184,15 +144,6 @@ class NetworkSettingsPage extends StatelessWidget {
                   value: Aps().disableUdpHolePunching.watch(context),
                   onChanged: (value) {
                     Aps().updateDisableUdpHolePunching(value);
-                  },
-                ),
-
-                SwitchListTile(
-                  title: Text(LocaleKeys.enable_multi_thread.tr()),
-                  subtitle: Text(LocaleKeys.enable_multi_thread_desc.tr()),
-                  value: Aps().multiThread.watch(context),
-                  onChanged: (value) {
-                    Aps().updateMultiThread(value);
                   },
                 ),
 
@@ -255,15 +206,6 @@ class NetworkSettingsPage extends StatelessWidget {
                 ),
 
                 SwitchListTile(
-                  title: Text(LocaleKeys.kcp_input.tr()),
-                  subtitle: Text(LocaleKeys.kcp_input_desc.tr()),
-                  value: Aps().disableKcpInput.watch(context),
-                  onChanged: (value) {
-                    Aps().updateDisableKcpInput(value);
-                  },
-                ),
-
-                SwitchListTile(
                   title: Text(LocaleKeys.disable_relay_kcp.tr()),
                   subtitle: Text(LocaleKeys.disable_relay_kcp_desc.tr()),
                   value: Aps().disableRelayKcp.watch(context),
@@ -273,29 +215,11 @@ class NetworkSettingsPage extends StatelessWidget {
                 ),
 
                 SwitchListTile(
-                  title: Text(LocaleKeys.private_mode.tr()),
-                  subtitle: Text(LocaleKeys.private_mode_desc.tr()),
-                  value: Aps().privateMode.watch(context),
-                  onChanged: (value) {
-                    Aps().updatePrivateMode(value);
-                  },
-                ),
-
-                SwitchListTile(
                   title: Text(LocaleKeys.enable_quic_proxy.tr()),
                   subtitle: Text(LocaleKeys.enable_quic_proxy_desc.tr()),
                   value: Aps().enableQuicProxy.watch(context),
                   onChanged: (value) {
                     Aps().updateEnableQuicProxy(value);
-                  },
-                ),
-
-                SwitchListTile(
-                  title: Text(LocaleKeys.disable_quic_input.tr()),
-                  subtitle: Text(LocaleKeys.disable_quic_input_desc.tr()),
-                  value: Aps().disableQuicInput.watch(context),
-                  onChanged: (value) {
-                    Aps().updateDisableQuicInput(value);
                   },
                 ),
               ],

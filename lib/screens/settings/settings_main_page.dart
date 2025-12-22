@@ -2,10 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:astral/generated/locale_keys.g.dart';
-import 'package:astral/screens/settings/network/forwarding_management_page.dart';
-import 'package:astral/screens/settings/network/network_adapter_page.dart';
 import 'package:astral/screens/settings/network/listen_list_page.dart';
-import 'package:astral/screens/settings/network/subnet_proxy_page.dart';
 import 'package:astral/screens/settings/network/vpn_segment_page.dart';
 import 'package:astral/screens/settings/network/network_settings_page.dart';
 import 'package:astral/screens/settings/general/startup_page.dart';
@@ -26,28 +23,6 @@ class SettingsMainPage extends StatelessWidget {
           _buildSectionHeader(context, LocaleKeys.network_settings.tr()),
           const SizedBox(height: 8),
 
-          if (Platform.isWindows) ...[
-            _buildSettingsCard(
-              context,
-              icon: Icons.broadcast_on_personal,
-              title: LocaleKeys.forwarding_management.tr(),
-              subtitle: '管理网络转发规则',
-              onTap:
-                  () => _navigateToPage(
-                    context,
-                    const ForwardingManagementPage(),
-                  ),
-            ),
-
-            _buildSettingsCard(
-              context,
-              icon: Icons.network_check,
-              title: LocaleKeys.network_adapter_hop_settings.tr(),
-              subtitle: '配置网络适配器跳数',
-              onTap: () => _navigateToPage(context, const NetworkAdapterPage()),
-            ),
-          ],
-
           _buildSettingsCard(
             context,
             icon: Icons.list_alt,
@@ -55,15 +30,6 @@ class SettingsMainPage extends StatelessWidget {
             subtitle: '管理网络监听地址',
             onTap: () => _navigateToPage(context, const ListenListPage()),
           ),
-
-          if (!Platform.isAndroid)
-            _buildSettingsCard(
-              context,
-              icon: Icons.route,
-              title: LocaleKeys.subnet_proxy_cidr.tr(),
-              subtitle: '配置子网代理规则',
-              onTap: () => _navigateToPage(context, const SubnetProxyPage()),
-            ),
 
           if (Platform.isAndroid)
             _buildSettingsCard(
