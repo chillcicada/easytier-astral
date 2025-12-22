@@ -174,6 +174,15 @@ class _BannerCarouselState extends State<BannerCarousel> {
             style: TextStyle(height: 1.5),
           ),
           actions: [
+            TextButton.icon(
+              onPressed: () {
+                Aps().updateEnableBannerCarousel(false);
+                Aps().updateHasShownBannerTip(true);
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.visibility_off),
+              label: const Text('隐藏轮播图'),
+            ),
             FilledButton.icon(
               onPressed: () {
                 Aps().updateHasShownBannerTip(true);
@@ -408,6 +417,14 @@ class _BannerCarouselState extends State<BannerCarousel> {
                                 style: TextStyle(height: 1.5),
                               ),
                               actions: [
+                                TextButton.icon(
+                                  onPressed: () {
+                                    Aps().updateEnableBannerCarousel(false);
+                                    Navigator.of(context).pop();
+                                  },
+                                  icon: const Icon(Icons.visibility_off),
+                                  label: const Text('隐藏轮播图'),
+                                ),
                                 FilledButton.icon(
                                   onPressed: () => Navigator.of(context).pop(),
                                   icon: const Icon(Icons.thumb_up),
