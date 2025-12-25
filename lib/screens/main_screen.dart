@@ -4,7 +4,6 @@ import 'package:astral/k/app_s/aps.dart';
 import 'package:astral/k/mod/small_window_adapter.dart'; // 导入小窗口适配器
 import 'package:astral/screens/home_page.dart';
 import 'package:astral/screens/room_page.dart';
-import 'package:astral/screens/server_page.dart';
 import 'package:astral/screens/settings_page.dart';
 import 'package:astral/widgets/bottom_nav.dart';
 import 'package:astral/widgets/left_nav.dart';
@@ -99,31 +98,16 @@ class _MainScreenState extends State<MainScreen>
     ),
 
     NavigationItem(
-      icon: Icons.room_preferences_outlined, // 未选中时的图标
-      activeIcon: Icons.room_preferences, // 选中时的图标Icon(Icons.room_preferences)
-      label: LocaleKeys.nav_room.tr(), // 导航项标签
-      page: const RoomPage(), // 对应的页面
-    ),
-
-    // 临时移除魔法墙功能
-    // if (Platform.isWindows)
-    //   NavigationItem(
-    //     icon: Icons.shield_outlined, // 未选中时的图标（防火墙）
-    //     activeIcon: Icons.shield, // 选中时的图标（防火墙）
-    //     label: LocaleKeys.nav_firewall.tr(), // 导航项标签
-    //     page: const WfpPage(), // 对应的页面
-    //   ),
-    NavigationItem(
-      icon: Icons.dns_outlined, // 未选中时的图标
-      activeIcon: Icons.dns, // 选中时的图标Icon(Icons.room_preferences)
-      label: LocaleKeys.nav_server.tr(), // 导航项标签
-      page: const ServerPage(), // 对应的页面
+      icon: Icons.room_preferences_outlined,
+      activeIcon: Icons.room_preferences,
+      label: LocaleKeys.nav_room.tr(),
+      page: const RoomPage(),
     ),
     NavigationItem(
-      icon: Icons.settings_outlined, // 未选中时的图标
-      activeIcon: Icons.settings, // 选中时的图标
-      label: LocaleKeys.nav_settings.tr(), // 导航项标签
-      page: const SettingsPage(), // 对应的页面
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings,
+      label: LocaleKeys.nav_settings.tr(),
+      page: const SettingsPage(),
     ),
   ];
 
