@@ -14,8 +14,8 @@ class ServerCz {
     if (await _isar.serverMods.count() == 0) {
       final defaultServers = [
         ServerMod(
-          name: "[小探赞助][江苏]",
-          url: "turn.js.629957.xyz:11012",
+          name: "[小探][可中转A]",
+          url: "js.629957.xyz:11012",
           enable: true,
           tcp: true,
           udp: false,
@@ -25,10 +25,22 @@ class ServerCz {
           wg: false,
         ),
         ServerMod(
-          name: "[小探赞助][内蒙古]",
-          url: "turn.nmg.629957.xyz:11010",
+          name: "[小探][可中转B]",
+          url: "nmg.629957.xyz:11010",
           enable: true,
           tcp: true,
+          udp: false,
+          ws: false,
+          wss: false,
+          quic: false,
+          wg: false,
+        ),
+        ServerMod(
+          name: "[小探][不可中转][faketcp]",
+          url: "nmg.629957.xyz:11010",
+          enable: false,
+          tcp: false,
+          faketcp: true,
           udp: false,
           ws: false,
           wss: false,
